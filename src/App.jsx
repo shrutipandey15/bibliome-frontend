@@ -118,12 +118,13 @@ function buildDashboardStats(entries) {
 }
 
 function ReadingRoomHeader({ user, tab, onTab, theme, onToggleTheme, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
-  // Four tabs — Shelf · Patterns · DNA · Echo. [F5.5]
+  // Three tabs — Shelf · DNA · Echo. Patterns folded into DNA: both surfaced the
+  // same emotion data, so the aggregate now reads as the closing section of the
+  // DNA scroll rather than a competing tab.
   const tabs = [
-    { id: "shelf",    label: "Shelf",    count: entriesCount },
-    { id: "patterns", label: "Patterns" },
-    { id: "dna",      label: "DNA"      },
-    { id: "echoes",   label: "Echo"     },
+    { id: "shelf",    label: "Shelf", count: entriesCount },
+    { id: "dna",      label: "DNA"   },
+    { id: "echoes",   label: "Echo"  },
   ];
   const initial = (user?.display_name || user?.username || "R").trim().charAt(0).toUpperCase();
   return (
@@ -335,9 +336,12 @@ function Dashboard() {
   // Tabs are URL-driven so each view is deep-linkable and the browser back
   // button moves between them. `?view=` is the source of truth. [F1.6 / P5-4]
   const [searchParams, setSearchParams] = useSearchParams();
-  const VALID_TABS = ["shelf", "patterns", "dna"];
+  const VALID_TABS = ["shelf", "dna"];
   const viewParam = searchParams.get("view");
-  const tab = VALID_TABS.includes(viewParam) ? viewParam : "shelf";
+  // `?view=patterns` was its own tab before the fold; keep old links working by
+  // landing them on DNA, which now carries the patterns section.
+  const normalized = viewParam === "patterns" ? "dna" : viewParam;
+  const tab = VALID_TABS.includes(normalized) ? normalized : "shelf";
   const setTab = (id) => {
     if (id === "echoes") { navigate("/echoes"); return; }
     // Keep the URL clean: the default tab drops the param entirely. A new history
@@ -367,8 +371,9 @@ function Dashboard() {
   const dnaCardRef = useRef(null);
 
   useEffect(() => {
-    if (tab === "patterns") ensureFresh("patterns");
-    if (tab === "dna") ensureFresh("profile");
+    // The DNA tab now renders the mirror AND the aggregate patterns section, so
+    // it needs both payloads fresh.
+    if (tab === "dna") { ensureFresh("profile"); ensureFresh("patterns"); }
   }, [tab, ensureFresh]);
 
   // Ask "what do you read for?" ONCE — at the moment the user first opens DNA,
@@ -516,26 +521,29 @@ function Dashboard() {
           </ErrorBoundary>
         )}
 
-        {tab === "patterns" && (
-          <ErrorBoundary name="Patterns">
-            {stale.stats || stale.heatmap
-              ? <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Reading your patterns...</div></div>
-              : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} />}
-          </ErrorBoundary>
-        )}
+        {tab === "dna" && (
+          <>
+            <ErrorBoundary name="DNA">
+              <DNAView
+                profile={analytics.profile}
+                username={user?.username}
+                onSave={handleSaveCard}
+                onEditReadFor={() => setShowReadFor(true)}
+                cardRef={dnaCardRef}
+                bookCount={entries.length}
+              />
+            </ErrorBoundary>
 
-{tab === "dna" && (
-  <ErrorBoundary name="DNA">
-    <DNAView
-      profile={analytics.profile}
-      username={user?.username}
-      onSave={handleSaveCard}
-      onEditReadFor={() => setShowReadFor(true)}
-      cardRef={dnaCardRef}
-      bookCount={entries.length}
-    />
-  </ErrorBoundary>
-)}
+            {/* The aggregate, folded in below the mirror. Deliberately OUTSIDE the
+                DNA gate — patterns are real from the first book, so a reader under
+                the 5-book gate still gets their own numbers, not an empty tab. */}
+            <ErrorBoundary name="Patterns">
+              {stale.stats || stale.heatmap
+                ? <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Reading your patterns...</div></div>
+                : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} embedded />}
+            </ErrorBoundary>
+          </>
+        )}
       </main>
 
       {modal && (

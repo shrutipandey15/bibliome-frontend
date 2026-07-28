@@ -11,7 +11,7 @@ const SEED_SHELVES = [
 const AFTER_STEPS = [
   { n: "01", t: "You log it",         d: "Title + author. We find the cover." },
   { n: "02", t: "You tag what it did", d: "Emotions, intensity, the line that hit." },
-  { n: "03", t: "You shelve it",       d: "Three books = DNA. Five = patterns. Ten = portrait." },
+  { n: "03", t: "You shelve it",       d: "Five books = DNA. Ten = the portrait sharpens." },
 ];
 
 export default function EmptyShelf({ onAddClick, onImport }) {

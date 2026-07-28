@@ -21,11 +21,11 @@ const ARCHETYPES_PREVIEW = [
 ];
 
 const HERO_SHELF = [
-  { id: 1, title: "The Secret History", author: "Donna Tartt",     intensity: 9, emotions: [{ emotion_id: "obsession" }] },
+  { id: 1, title: "The Secret History", author: "Donna Tartt",     intensity: 9, emotions: [{ emotion_id: "desire" }] },
   { id: 2, title: "Beloved",            author: "Toni Morrison",   intensity: 10, emotions: [{ emotion_id: "awe" }] },
   { id: 3, title: "Bluets",             author: "Maggie Nelson",   intensity: 8, emotions: [{ emotion_id: "grief" }] },
   { id: 4, title: "Piranesi",           author: "Susanna Clarke",  intensity: 8, emotions: [{ emotion_id: "awe" }] },
-  { id: 5, title: "Crying in H Mart",   author: "Michelle Zauner", intensity: 9, emotions: [{ emotion_id: "healing" }] },
+  { id: 5, title: "Crying in H Mart",   author: "Michelle Zauner", intensity: 9, emotions: [{ emotion_id: "catharsis" }] },
   { id: 6, title: "Babel",              author: "R.F. Kuang",      intensity: 9, emotions: [{ emotion_id: "rage" }] },
   { id: 7, title: "On Earth We're Briefly Gorgeous", author: "Ocean Vuong", intensity: 9, emotions: [{ emotion_id: "grief" }] },
 ];
@@ -33,7 +33,7 @@ const HERO_SHELF = [
 const STEPS = [
   { n: "01", t: "Shelve what you've read",
     d: "Search any title — we'll find it across Google Books, Open Library, and our own growing catalog. Tag the emotions it triggered. Score the intensity. Add the line you can't forget." },
-  { n: "02", t: "Three books is enough",
+  { n: "02", t: "Five books is enough",
     d: "Our engine begins reading you back. Patterns emerge from the small data: what you gravitate toward, what you avoid, what co-occurs without you noticing." },
   { n: "03", t: "Receive your DNA",
     d: "A typeset archetype card — one of twelve — based on the geometry of your shelf. Yours to keep, share, or print and tape inside your favorite book." },
@@ -206,7 +206,7 @@ export default function LandingPage({ onGetStarted }) {
           <em>Now see how.</em>
         </h2>
         <p className="lrr-final-dek">
-          Three books. Two minutes. One quietly devastating portrait of the reader you've become.
+          Five books. Two minutes. One quietly devastating portrait of the reader you've become.
         </p>
         <button className="btn brass" onClick={onGetStarted} style={{ fontSize: 15, padding: "14px 28px" }}>
           <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 18 }}>Begin</span>

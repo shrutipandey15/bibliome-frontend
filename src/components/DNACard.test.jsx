@@ -15,7 +15,7 @@ const profile = {
     description: "You read toward the ache.",
     color: "#6B4F8E",
     glyph: "◈",
-    blind_spots: ["wit", "chaos"],
+    blind_spots: ["boredom", "revulsion"],
   },
   top_emotions: [
     { emotion_id: "grief", count: 9 },

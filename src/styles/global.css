@@ -66,20 +66,6 @@
   --shadow-sm: 0 1px 2px rgba(20,8,0,.18), 0 1px 1px rgba(20,8,0,.08);
   --shadow-md: 0 6px 22px -8px rgba(20,8,0,.32), 0 2px 6px rgba(20,8,0,.12);
   --shadow-lg: 0 24px 60px -20px rgba(20,8,0,.45), 0 8px 22px rgba(20,8,0,.18);
-
-  --emo-rage:      #c4553a;
-  --emo-dread:     #5a5a8a;
-  --emo-chaos:     #c47a3a;
-  --emo-desire:    #6b3a5d;
-  --emo-comfort:   #7a8b6f;
-  --emo-catharsis: #5a8b6f;
-  --emo-seen:      #b8964e;
-  --emo-melancholy:#3a5a6b;
-  --emo-wit:       #8d5a9b;
-  --emo-awe:       #4e8cb8;
-  --emo-nostalgia: #b87a4e;
-  --emo-empty:     #6a6a6a;
-  --emo-2am:       #4b4b6a;
 }
 
 /* ---------- TOKENS — Lamplight (dark) ---------- */

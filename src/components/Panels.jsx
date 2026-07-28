@@ -162,8 +162,13 @@ export function Heatmap({ data }) {
 
 // Patterns — the merged "what does my reading look like in aggregate?" view.
 // One scroll: headline figures → heatmap → emotion ledger → rail. [F5.2]
-export function Patterns({ stats, heatmap }) {
+//
+// `embedded` renders it as the closing section of the DNA tab rather than a page
+// of its own: the heading drops to an h2 (the DNA view owns the h1) and the empty
+// state stays silent, since the DNA gate above it already says "not enough yet".
+export function Patterns({ stats, heatmap, embedded = false }) {
   if (!stats || stats.total_books === 0) {
+    if (embedded) return null;
     return (
       <div className="empty-state">
         <div className="empty-glyph">№</div>
@@ -195,7 +200,9 @@ export function Patterns({ stats, heatmap }) {
       <div className="st-masthead">
         <div>
           <div className="label" style={{ marginBottom: 14 }}>fig. 03 · the patterns</div>
-          <h1 className="st-h1">Your <em>Patterns</em>.</h1>
+          {embedded
+            ? <h2 className="st-h1">Your <em>Patterns</em>.</h2>
+            : <h1 className="st-h1">Your <em>Patterns</em>.</h1>}
         </div>
         <div className="label">your shelf · in aggregate</div>
       </div>

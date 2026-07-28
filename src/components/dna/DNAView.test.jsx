@@ -10,7 +10,7 @@ import DNAView from "./DNAView";
 const fullProfile = {
   enough: true,
   book_count: 47,
-  archetype: { id: "grief-romantic", name: "The Grief Romantic", description: "You read toward the ache.", color: "#6B4F8E", glyph: "◈", blind_spots: ["wit"] },
+  archetype: { id: "grief-romantic", name: "The Grief Romantic", description: "You read toward the ache.", color: "#6B4F8E", glyph: "◈", blind_spots: ["boredom"] },
   insights: [
     { category: "contradiction", variant: "a", text: "You said you read for comfort. You rate the ones that hurt 2.3 points higher.", n: 47, surprise: 0.9 },
     { category: "blind_spot", variant: "rare", text: "47 books. Never once: tenderness.", n: 47, surprise: 0.7 },
