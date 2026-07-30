@@ -1,0 +1,385 @@
+/* The journal — paper, and as little else as possible.
+   Tokens from styles/global.css so light (Vellum) and dark (Lamplight) both work
+   without a second palette here. */
+
+.jr-shell {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 6rem;
+  min-height: 100vh;
+  background: var(--bg-paper);
+  background-image: var(--paper-grain);
+}
+
+/* ── Chrome ── */
+.jr-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+.jr-tabs { display: flex; gap: 1.25rem; flex: 1; justify-content: center; }
+.jr-tab {
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+}
+.jr-tab:hover { color: var(--ink-quiet); }
+.jr-tab.is-on { color: var(--ink); border-bottom-color: var(--ink); }
+
+.jr-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem; height: 2rem;
+  border: none; background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  border-radius: 50%;
+}
+.jr-icon-btn:hover { color: var(--ink); background: var(--bg-sunken); }
+
+/* ── Screen 1: the blank page ── */
+.jr-page { position: relative; }
+.jr-page-date {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-bottom: 1.25rem;
+}
+.jr-writing {
+  width: 100%;
+  min-height: 60vh;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.85;
+  padding: 0;
+}
+.jr-writing::placeholder { color: transparent; }
+
+/* The whisper. Fixed, quiet, and never in the way of the cursor. */
+.jr-whisper {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.5rem;
+  min-height: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-ghost);
+  transition: color 0.4s ease;
+}
+.jr-whisper-error {
+  color: var(--oxblood);
+  max-width: 20rem;
+  text-align: right;
+  line-height: 1.5;
+}
+
+/* ── Screen 2: continuous read-back ── */
+.jr-read { max-height: calc(100vh - 12rem); overflow-y: auto; scroll-behavior: smooth; }
+.jr-day { padding: 2rem 0; border-top: 1px solid var(--rule-soft); }
+.jr-day:first-child { border-top: none; }
+.jr-day-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.jr-day-head h3 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* The ribbon: a silk marker at the day you last read down to. */
+.jr-ribbon {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, var(--oxblood), transparent);
+  border-radius: 2px;
+}
+.jr-day-body p {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  line-height: 1.85;
+  color: var(--ink-soft);
+  margin: 0 0 1rem;
+  white-space: pre-wrap;
+}
+.jr-day-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.jr-tag {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  color: var(--tag, var(--ink-quiet));
+  border: 1px solid color-mix(in srgb, var(--tag, var(--rule)) 40%, transparent);
+}
+.jr-unreadable {
+  margin: 2rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--rule);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ink-quiet);
+}
+
+/* ── The unnamed-days prompt. A line, not a modal. ── */
+.jr-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule-soft);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ink-quiet);
+}
+
+/* ── Screen 3: naming days ── */
+.jr-tagger { max-width: 30rem; }
+.jr-tagger-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.jr-tagger-excerpt { margin-bottom: 1.5rem; }
+.jr-tagger-excerpt p {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.jr-tagger-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+.jr-tagger-actions > * { flex: 1; }
+
+.jr-families { display: flex; flex-direction: column; gap: 0.25rem; }
+.jr-family { border-bottom: 1px solid var(--rule-soft); }
+.jr-family-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink);
+  text-align: left;
+}
+.jr-family-chosen { margin-left: auto; font-size: 0.75rem; color: var(--ink-faint); }
+.jr-family-body { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 0 0.9rem 1.4rem; }
+.jr-emo {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: none;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.jr-emo:hover { border-color: var(--tag); color: var(--ink); }
+.jr-emo.is-on {
+  border-color: var(--tag);
+  background: color-mix(in srgb, var(--tag) 14%, transparent);
+  color: var(--ink);
+}
+
+/* ── Search ── */
+.jr-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.5rem;
+  color: var(--ink-faint);
+}
+.jr-search-box .jr-input { border: none; background: none; padding: 0; }
+.jr-search-results { margin-top: 1.5rem; display: flex; flex-direction: column; }
+.jr-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.9rem 0;
+  border: none;
+  border-bottom: 1px solid var(--rule-soft);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.jr-result-date {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+.jr-result-snippet {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+/* ── Setup + lock ── */
+.jr-setup, .jr-lock {
+  max-width: 30rem;
+  margin: 3rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.jr-setup h2, .jr-lock h2 {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 0;
+}
+.jr-setup p, .jr-lock p {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--ink-quiet);
+  margin: 0;
+}
+.jr-setup-glyph { color: var(--ink-faint); }
+.jr-setup-cost {
+  border-left: 2px solid var(--oxblood);
+  padding-left: 0.9rem;
+  color: var(--ink-soft) !important;
+}
+
+/* The code itself. Monospace, generous, and unmissable — this is the one string
+   in the product the user has to physically move somewhere else. */
+.jr-code {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: 1.1rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--bg-vellum);
+  color: var(--ink);
+  user-select: all;
+  word-break: break-all;
+}
+.jr-code-actions { display: flex; gap: 0.6rem; }
+.jr-confirm { display: flex; flex-direction: column; gap: 0.4rem; }
+.jr-confirm span, .jr-field span {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--ink-quiet);
+}
+.jr-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.jr-ack {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.jr-ack input { margin-top: 0.25rem; }
+
+/* ── Shared atoms ── */
+.jr-input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--bg-field);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+.jr-input:focus { outline: none; border-color: var(--ink-faint); }
+.jr-input-code { font-family: var(--font-mono); letter-spacing: 0.08em; }
+
+.jr-primary {
+  padding: 0.7rem 1.1rem;
+  border: none;
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--bg-page);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+.jr-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.jr-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: none;
+  color: var(--ink-quiet);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.jr-ghost:hover { border-color: var(--ink-faint); color: var(--ink); }
+
+.jr-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ink-quiet);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.jr-link:hover { color: var(--ink); }
+.jr-link-quiet { color: var(--ink-ghost); }
+
+.jr-quiet {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  padding: 2rem 0;
+}
+.jr-fineprint {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--ink-ghost);
+  margin: 0;
+}
+.jr-error {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--oxblood);
+}
+
+@media (max-width: 640px) {
+  .jr-shell { padding: 1rem 1rem 5rem; }
+  .jr-writing { font-size: 1.05rem; }
+  .jr-code { font-size: 0.95rem; }
+}

@@ -3,6 +3,8 @@ import { Settings } from "lucide-react";
 import { Routes, Route, useParams, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
+import { JournalKeyProvider } from "./contexts/JournalKeyContext";
+import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
 import { saveCardAsImage } from "./utils/cardUtils";
 import { getSharedDNA, getEmotionVocab, setReadFor } from "./services/api";
 import AuthPage from "./pages/AuthPage";
@@ -50,6 +52,7 @@ const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const EchoesPage = lazy(() => import("./pages/EchoesPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const JournalPage = lazy(() => import("./pages/JournalPage"));
 
 
 function SharedProfile() {
@@ -122,6 +125,9 @@ function ReadingRoomHeader({ user, tab, onTab, theme, onToggleTheme, onAddBook, 
     { id: "shelf",    label: "Shelf", count: entriesCount },
     { id: "dna",      label: "DNA"   },
     { id: "echoes",   label: "Echo"  },
+    // Deliberately unadorned: no streak, no count, no "you haven't written in
+    // 4 days". A journal that nags is a journal you start lying to.
+    { id: "journal",  label: "Journal" },
   ];
   const initial = (user?.display_name || user?.username || "R").trim().charAt(0).toUpperCase();
   return (
@@ -345,6 +351,7 @@ function Dashboard() {
   const tab = VALID_TABS.includes(normalized) ? normalized : "shelf";
   const setTab = (id) => {
     if (id === "echoes") { navigate("/echoes"); return; }
+    if (id === "journal") { navigate("/journal"); return; }
     // Keep the URL clean: the default tab drops the param entirely. A new history
     // entry (not replace) is what makes Back return to the previous tab.
     setSearchParams(id === "shelf" ? {} : { view: id });
@@ -455,7 +462,7 @@ function Dashboard() {
       <ReadingRoomHeader
         user={user}
         tab={tab}
-        onTab={(id) => id === "echoes" ? navigate("/echoes") : setTab(id)}
+        onTab={setTab}
         theme={theme}
         onToggleTheme={toggleTheme}
         onAddBook={() => setModal("new")}
@@ -641,7 +648,15 @@ function AuthedLayout() {
   if (!authed) return <Navigate to="/login" replace />;
   return (
     <JournalProvider>
-      <Outlet />
+      {/* The journal's key state is mounted here, not on /journal, so the
+          password captured at login can unwrap the data key while it still
+          exists in memory. Both providers are inert until the journal is
+          unlocked, and PrivateJournalProvider fetches nothing before then. */}
+      <JournalKeyProvider>
+        <PrivateJournalProvider>
+          <Outlet />
+        </PrivateJournalProvider>
+      </JournalKeyProvider>
     </JournalProvider>
   );
 }
@@ -683,6 +698,7 @@ export default function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="echoes" element={<EchoesPage />} />
+          <Route path="journal" element={<JournalPage />} />
           <Route path="me" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="admin" element={<AdminPage />} />

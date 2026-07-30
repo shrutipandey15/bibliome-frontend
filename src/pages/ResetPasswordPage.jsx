@@ -112,6 +112,10 @@ function ResetForm({ token }) {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // What the server says about the journal once the reset lands. Shape:
+  // { locked, recoverable_with_recovery_code, message } — present only if this
+  // account had a journal. [journalCryptoContract.md §5]
+  const [journal, setJournal] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -124,8 +128,11 @@ function ResetForm({ token }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, new_password: password }),
       });
-      if (res.ok) setDone(true);
-      else {
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setJournal(data.journal || null);
+        setDone(true);
+      } else {
         const data = await res.json().catch(() => ({}));
         setError(data.detail || "Reset failed.");
       }
@@ -138,6 +145,18 @@ function ResetForm({ token }) {
       <Triptych activeIdx={2}>
         <div className="rp-success-glyph">◈</div>
         <p className="rp-success-text">Password rewritten. The shelf is yours again.</p>
+        {/* The shelf came back; the journal did not, and saying so here is the
+            whole point of the trade. The reset token proved control of an inbox,
+            not knowledge of the old password — and the old password is what the
+            journal's key was wrapped under. We never had a copy to restore. */}
+        {journal?.locked && (
+          <p className="rp-journal-warning">
+            {journal.message || "Your journal was encrypted with your old password."}
+            {journal.recoverable_with_recovery_code
+              ? " Your recovery code still opens it — nothing else does."
+              : " Without your recovery code it cannot be opened again."}
+          </p>
+        )}
         <Link to="/" className="btn brass rp-submit">
           <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 16 }}>Sign</span>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em" }}>IN</span>
@@ -168,6 +187,16 @@ function ResetForm({ token }) {
           onChange={(e) => setConfirm(e.target.value)}
           required autoComplete="new-password"
         />
+        {/* Said BEFORE the button, not after the fact. This page is
+            unauthenticated, so we can't know whether this account has a journal
+            without leaking that it does — hence the conditional phrasing. The
+            consequence is unconditional and irreversible, so it goes above the
+            action that causes it. */}
+        <p className="rp-journal-warning">
+          If you set up an encrypted journal, this will lock it. Its key was
+          wrapped with your old password and we never held a copy — after this,
+          only your recovery code can open it. There is no third path.
+        </p>
         {error && <div className="rp-error">{error}</div>}
         <button type="submit" disabled={loading} className="btn brass rp-submit">
           <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 16 }}>

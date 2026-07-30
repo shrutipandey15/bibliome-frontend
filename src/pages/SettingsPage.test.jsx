@@ -7,6 +7,12 @@ vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("../contexts/AuthContext", () => ({
   useAuth: () => ({ user: { username: "alice" }, logout: vi.fn(), refreshUser: vi.fn() }),
 }));
+// Settings owns the change-password form, which now has to re-wrap the journal
+// key in the same request. The re-wrap itself is covered in journalCrypto.test.js;
+// here it just needs to exist.
+vi.mock("../contexts/JournalKeyContext", () => ({
+  useJournalKey: () => ({ changePasswordWithRewrap: vi.fn().mockResolvedValue({}) }),
+}));
 
 vi.mock("../services/api", () => ({
   getSettings: vi.fn().mockResolvedValue({ display_name: "Alice", profile_visibility: "private", username: "alice", reads_for: [] }),

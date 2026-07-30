@@ -7,6 +7,7 @@ import {
   register as apiRegister,
   logout as apiLogout,
 } from "../services/api";
+import { clearStagedSecret, stageJournalSecret } from "./JournalKeyContext";
 
 const AuthContext = createContext(null);
 
@@ -49,6 +50,11 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     // login response carries the user, so no extra /me round-trip needed.
     const data = await apiLogin(email, password);
+    // The journal's data key is wrapped under a key derived from this password,
+    // and this is the only moment the app has it. Hand it off in memory (single
+    // use, 30s leash) so JournalKeyProvider can unwrap on mount; the alternative
+    // is asking for the same password again a minute later. Never stored.
+    stageJournalSecret(password);
     if (data.user) setUser(data.user);
     setAuthed(true);
     return data;
@@ -65,6 +71,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    clearStagedSecret();
     await apiLogout();
     setAuthed(false);
     setUser(null);

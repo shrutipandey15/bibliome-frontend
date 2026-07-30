@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getSettings, updateSettings, changePassword, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor } from "../services/api";
+import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor } from "../services/api";
+import { useJournalKey } from "../contexts/JournalKeyContext";
 import ReadForQuestion from "../components/dna/ReadForQuestion";
 import "./SettingsPage.css";
 
@@ -28,6 +29,7 @@ const VISIBILITY_OPTIONS = [
 
 export default function SettingsPage() {
   const { user, logout, refreshUser } = useAuth();
+  const { changePasswordWithRewrap } = useJournalKey();
   const navigate = useNavigate();
 
   const [section, setSection] = useState("profile");
@@ -168,9 +170,24 @@ export default function SettingsPage() {
     if (newPw !== confirmPw) { showToast("Passwords don't match"); return; }
     setChangingPw(true);
     try {
-      await changePassword(currentPw, newPw);
+      // Not the bare changePassword(): the journal's key is wrapped under the
+      // OLD password, and the server cannot re-wrap it (it has neither key). The
+      // client re-wraps locally and both writes land in one transaction, so
+      // there's no window where the stored wrap and the password disagree.
+      // [journalCryptoContract.md §5]
+      const result = await changePasswordWithRewrap(currentPw, newPw);
       setCurrentPw(""); setNewPw(""); setConfirmPw("");
-      showToast("Password changed", "success");
+      if (result?.journal && result.journal.rewrapped === false) {
+        // The journal was locked, so there was no key in memory to re-wrap. The
+        // password changed anyway; the journal now needs the recovery code. Say
+        // so rather than letting them find out at the lock screen.
+        showToast(
+          "Password changed — but your journal was locked, so it stayed on the old password. Unlock it with your recovery code.",
+          "error"
+        );
+      } else {
+        showToast("Password changed", "success");
+      }
     } catch (err) { showToast(err.message); }
     setChangingPw(false);
   };

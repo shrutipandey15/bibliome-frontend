@@ -399,10 +399,21 @@ export async function updateSettings(data) {
   return res.json();
 }
 
-export async function changePassword(currentPassword, newPassword) {
+// `journalKeyBundle` re-wraps the journal's data key under the new password in
+// the SAME transaction as the password change. The server cannot do this re-wrap
+// (it has neither key), so omitting the bundle is not neutral: the password is
+// changed, the password-wrapped key is orphaned, and the response comes back
+// with journal.rewrapped=false and password_wrap_stale set. Only omit it when
+// the journal is locked and we genuinely have no DEK to re-wrap.
+// [journalCryptoContract.md §5]
+export async function changePassword(currentPassword, newPassword, journalKeyBundle = null) {
   const res = await apiFetch("/user/change-password", {
     method: "POST",
-    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+      ...(journalKeyBundle ? { journal_key_bundle: journalKeyBundle } : {}),
+    }),
   });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
@@ -615,6 +626,120 @@ export async function changeHandle(handle) {
     throw new Error(d.detail || "Couldn't change handle");
   }
   return res.json().catch(() => ({}));
+}
+
+// ── Journal — sealed blobs in, sealed blobs out [journalCryptoContract.md] ──
+// Every function below moves ciphertext it cannot read. Nothing here encrypts,
+// decrypts, or derives: that is journalCrypto.js, and the separation is the
+// point — a reviewer can read this section and confirm that no plaintext and no
+// key is ever an argument to a fetch.
+//
+// Note the shape of what's missing: there is no searchJournal(). The server
+// cannot search blobs it cannot read, so `GET /journal/entries` has no `q` and
+// never will. Search is client-side, over what's already decrypted in memory.
+
+// The wrapped key material. 404 = this account has no journal yet, which is a
+// first-run state and not an error. Returns null so callers can branch on it.
+export async function getJournalKeyBundle() {
+  const res = await apiFetch("/journal/key");
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't load journal key");
+  return res.json();
+}
+
+// One-time setup. 409 means a bundle already exists — the server refuses to
+// overwrite because doing so would orphan every entry sealed under the old key.
+export async function createJournalKeyBundle(bundle) {
+  const res = await apiFetch("/journal/key", { method: "POST", body: JSON.stringify(bundle) });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't set up the journal");
+  }
+  return res.json();
+}
+
+// Replace the bundle with a re-wrap of the same key — the path back after a
+// password reset. Gated on the account password server-side so a stolen session
+// alone cannot overwrite the bundle and lock the owner out of their own journal.
+export async function rewrapJournalKeyBundle(bundle, currentPassword) {
+  const res = await apiFetch("/journal/key", {
+    method: "PUT",
+    body: JSON.stringify({ ...bundle, current_password: currentPassword }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't re-wrap the journal key");
+  }
+  return res.json();
+}
+
+// One page of sealed entries, newest day first.
+export async function getJournalEntries({ cursor = null, limit = 50, dateFrom = null, dateTo = null, emotion = null, untagged = null } = {}) {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set("cursor", cursor);
+  if (dateFrom) params.set("date_from", dateFrom);
+  if (dateTo) params.set("date_to", dateTo);
+  if (emotion) params.set("emotion", emotion);
+  if (untagged !== null) params.set("untagged", String(untagged));
+  return apiGet(`/journal/entries?${params.toString()}`);
+}
+
+// Walk the cursor to the end. Client-side search has no other option: filtering
+// happens after decryption, so the client needs the pages it intends to search.
+export async function getAllJournalEntries({ pageSize = 100, maxPages = 200 } = {}) {
+  const all = [];
+  let cursor = null;
+  let total = 0;
+  for (let i = 0; i < maxPages; i++) {
+    const data = await getJournalEntries({ cursor, limit: pageSize });
+    all.push(...(data.entries || []));
+    total = typeof data.total === "number" ? data.total : all.length;
+    if (!data.has_more || !data.next_cursor) break;
+    cursor = data.next_cursor;
+  }
+  return { entries: all, total };
+}
+
+// `data` is { entry_date, ciphertext, nonce, key_version, emotions } — the only
+// readable fields are the date and the tags, and both are readable by design
+// (contract §2).
+export async function createJournalEntry(data) {
+  const res = await apiFetch("/journal/entries", { method: "POST", body: JSON.stringify(data) });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't save this page");
+  }
+  return res.json();
+}
+
+// ciphertext and nonce travel together or not at all — re-encrypting always
+// produces a new nonce, and the schema rejects a half-update that would let a
+// client walk itself into nonce reuse.
+export async function updateJournalEntry(id, data) {
+  const res = await apiFetch(`/journal/entries/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't save this page");
+  }
+  return res.json();
+}
+
+// Name a day without touching its ciphertext — no decrypt/re-encrypt round trip
+// to tag a page, which is what makes batch-tagging-later cheap enough to offer.
+export async function setJournalEntryTags(id, emotions) {
+  const res = await apiFetch(`/journal/entries/${id}/tags`, {
+    method: "PUT",
+    body: JSON.stringify({ emotions }),
+  });
+  if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't save these tags");
+  return res.json();
+}
+
+export async function deleteJournalEntry(id) {
+  const res = await apiFetch(`/journal/entries/${id}`, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) {
+    throw new ApiError(res.status, errorKind(res.status), "Couldn't delete this page");
+  }
 }
 
 // ── Notifications — calm, batched, digest-default [Phase 4 / B4.x] ──
