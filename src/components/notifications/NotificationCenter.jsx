@@ -43,6 +43,12 @@ function itemText(n) {
     const who = count === 1 && actors[0] ? `@${actors[0]}` : `${count} readers`;
     return <>{who} replied to your echo{p.book_title ? <> about <em>{p.book_title}</em></> : ""}.</>;
   }
+  // Resonance notices are deliberately contentless — the payload names no book
+  // and no person, so a notification preview can't become the identity leak the
+  // API is built to prevent. Copy stays just as vague on purpose.
+  if (n.kind === "resonance_reach") return <>Someone who read a book the way you did left you a note.</>;
+  if (n.kind === "resonance_connected") return <>You and another reader both said yes. Your letters are open.</>;
+  if (n.kind === "resonance_message") return <>A letter arrived.</>;
   if (p.message) return p.message; // security + generic
   return n.kind.replace(/_/g, " ");
 }

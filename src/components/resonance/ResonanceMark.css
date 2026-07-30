@@ -1,0 +1,46 @@
+/* The ambient mark. Sized and spaced like the other header glyph buttons so it
+   reads as part of the furniture rather than an alert dropped on top of it. */
+.res-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  /* One fade-in, then still. No pulse: a thing that keeps moving in the corner
+     of the eye is a notification, whatever it's shaped like. */
+  animation: res-mark-in 1.4s ease both;
+  transition: border-color .25s, background .25s;
+}
+.res-mark:hover {
+  border-color: var(--brass);
+  background: color-mix(in srgb, var(--brass) 10%, transparent);
+}
+.res-mark:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+/* Something is waiting: brass, at full weight. */
+.res-mark.is-new { color: #c49a6c; }
+[data-theme="light"] .res-mark.is-new { color: var(--brass); }
+/* Nothing new — just the way back into a conversation already underway. Same
+   mark, dimmed to the weight of the other header glyphs. */
+.res-mark.is-live { color: var(--ink-faint); border-color: transparent; }
+.res-mark.is-live:hover { color: var(--ink-quiet); border-color: var(--rule); background: transparent; }
+
+.res-mark-glyph {
+  font-size: 13px;
+  line-height: 1;
+}
+
+@keyframes res-mark-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .res-mark { animation: none; }
+}

@@ -19,6 +19,7 @@ import MirrorCard from "./components/MirrorCard";
 import ImportModal from "./components/ImportModal";
 import WelcomeModal from "./components/WelcomeModal";
 import NotificationCenter from "./components/notifications/NotificationCenter";
+import ResonanceMark from "./components/resonance/ResonanceMark";
 import DNACard from "./components/DNACard";
 import DNAView from "./components/dna/DNAView";
 import ReadForQuestion from "./components/dna/ReadForQuestion";
@@ -50,6 +51,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const EchoesPage = lazy(() => import("./pages/EchoesPage"));
+const ResonancePage = lazy(() => import("./pages/ResonancePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const JournalPage = lazy(() => import("./pages/JournalPage"));
@@ -152,6 +154,11 @@ function ReadingRoomHeader({ user, tab, onTab, theme, onToggleTheme, onAddBook, 
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" }}>DNA</span>
             </button>
           )}
+          {/* Resonance's whole entry point. Renders NOTHING unless the reader
+              has a match — no tab, no permanent affordance, no count. A reader
+              who has never matched will not know the feature is there, which is
+              the intended amount of pressure. */}
+          <ResonanceMark />
           <NotificationCenter />
           <button className="rr-theme-toggle" onClick={() => navigate("/me")} title="Your study (profile)" aria-label="Your profile">◐</button>
           <button className="rr-theme-toggle" onClick={onToggleTheme} title="Toggle Vellum / Lamplight">
@@ -698,6 +705,7 @@ export default function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="echoes" element={<EchoesPage />} />
+          <Route path="resonance" element={<ResonancePage />} />
           <Route path="journal" element={<JournalPage />} />
           <Route path="me" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />

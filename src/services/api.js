@@ -777,3 +777,93 @@ export async function updateNotificationPrefs(data) {
   }
   return res.json();
 }
+
+// ── Resonance — the quiet one-to-one surface [app/routers/resonance.py] ──
+//
+// Every payload here is anonymised by the server: a match is a book, some shared
+// emotions, and a strength. There is no user_id field, and `handle` stays null
+// until BOTH sides have said yes. Nothing in this section counts anything about
+// anyone else — `reaches_left_today` is the reader's own daily budget and is the
+// single number the whole feature exposes.
+//
+// Do not add a "how many people matched this book" call here. The backend has no
+// such endpoint on purpose (app/models/resonance.py).
+
+// → { matches: [MatchResponse], reaches_left_today }
+// Declined/expired matches are already gone server-side, so an absent card is
+// the only signal a decline ever produces — neither side is told.
+export async function getResonanceMatches() {
+  return apiGet("/resonance/matches");
+}
+
+// Leave the opening note. `suggested` → `pending` (or straight to `connected`
+// if the other reader had already reached out — a mutual reach IS the accept).
+// The note is sealed: they cannot read it until they answer.
+export async function reachOut(matchId, note) {
+  const res = await apiFetch(`/resonance/${matchId}/reach`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't leave your note");
+  }
+  return res.json();
+}
+
+// Answer a note (accept, with an optional note of your own) or let it pass.
+// Declining is silent and final — the server never tells the other side, so the
+// UI must not either.
+export async function respondToMatch(matchId, accept, note = null) {
+  const res = await apiFetch(`/resonance/${matchId}/respond`, {
+    method: "POST",
+    body: JSON.stringify({ accept, note }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that");
+  }
+  return res.json();
+}
+
+// ── Threads — the conversation that exists once both readers said yes ──
+// Plain messaging. No read receipts, no typing state, no presence: the backend
+// serves none of it and this feature is meant to read like letters.
+
+// A page of the transcript, oldest-first. → { messages, next_before }.
+// `before` pages BACKWARD from a timestamp (keyset, not offset).
+export async function getThreadMessages(threadId, { before = null, limit = 50 } = {}) {
+  const params = new URLSearchParams();
+  if (before) params.set("before", before);
+  params.set("limit", String(limit));
+  return apiGet(`/threads/${threadId}/messages?${params.toString()}`);
+}
+
+export async function sendThreadMessage(threadId, body) {
+  const res = await apiFetch(`/threads/${threadId}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ body }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that");
+  }
+  return res.json();
+}
+
+// Block: closes the conversation, declines the match, and hides both readers
+// from each other everywhere else too. Silent — 204, no body.
+export async function blockThread(threadId) {
+  const res = await apiFetch(`/threads/${threadId}/block`, { method: "POST" });
+  if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't block");
+}
+
+// Report the whole thread (no message id needed), blocking by default.
+export async function reportThread(threadId, category, block = true) {
+  const res = await apiFetch(`/threads/${threadId}/report`, {
+    method: "POST",
+    body: JSON.stringify({ category, block }),
+  });
+  if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't file that report");
+  return res.json().catch(() => ({ status: "received" }));
+}
