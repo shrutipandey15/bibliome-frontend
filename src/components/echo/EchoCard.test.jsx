@@ -86,6 +86,85 @@ describe("EchoCard — private tally, never a public count [F6.1 / F6.5]", () =>
   });
 });
 
+describe("EchoCard — your own echo (mockup pass)", () => {
+  // There is no `is_mine` field on EchoResponse; the backend populates
+  // reaction_counts for the author ONLY, so its presence is the ownership signal.
+  const mine = { ...baseEcho, reaction_counts: { felt_this: 4, adding_to_list: 1 } };
+
+  it("marks your own echo as yours", () => {
+    render(<EchoCard echo={mine} />);
+    expect(screen.getByText("yours")).toBeInTheDocument();
+  });
+
+  it("does not mark someone else's echo", () => {
+    render(<EchoCard echo={baseEcho} />);
+    expect(screen.queryByText("yours")).toBeNull();
+  });
+
+  it("drops self-reactions on your own echo but KEEPS reply", () => {
+    render(<EchoCard echo={mine} />);
+    // You cannot underline or shelve yourself…
+    expect(screen.queryByRole("button", { name: /underlined/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /to my shelf/i })).toBeNull();
+    // …but answering your own thread is the point of having one.
+    expect(screen.getByRole("button", { name: /reply/i })).toBeInTheDocument();
+    // The tally is what your own card says instead of reaction buttons.
+    expect(screen.getByText(/4 underlined/i)).toBeInTheDocument();
+  });
+
+  it("shows replies on your own echo", async () => {
+    render(<EchoCard echo={{
+      ...mine,
+      replies_preview: [{ id: "r1", handle: "marginalia", body: "this got me" }],
+      has_more_replies: true,
+    }} />);
+    expect(screen.getByText("this got me")).toBeInTheDocument();
+    expect(screen.getByText("@marginalia")).toBeInTheDocument();
+    // "read the rest" carries no number, on your own echo as on anyone's.
+    const rest = screen.getByRole("button", { name: /read the rest/i });
+    expect(rest.textContent).not.toMatch(/\d/);
+  });
+
+  it("counts replies in the private tally when the backend sends reply_count", () => {
+    render(<EchoCard echo={{ ...mine, reply_count: 2 }} />);
+    expect(screen.getByText(/2 replies/i)).toBeInTheDocument();
+    render(<EchoCard echo={{ ...mine, reply_count: 1 }} />);
+    expect(screen.getByText(/1 reply\b/i)).toBeInTheDocument();
+  });
+
+  it("says something kind, not a zero, when no one has responded", () => {
+    // The backend sends an explicit 0 rather than omitting the key.
+    render(<EchoCard echo={{ ...baseEcho, is_mine: true, reaction_counts: {}, reply_count: 0 }} />);
+    expect(screen.getByText(/no one has responded yet/i)).toBeInTheDocument();
+    expect(document.querySelector(".eco-tally").textContent).not.toMatch(/\b0\b/);
+  });
+
+  it("takes ownership from is_mine, not from the shape of reaction_counts", () => {
+    // Author with no reactions yet: counts are empty but the echo is still theirs.
+    render(<EchoCard echo={{ ...baseEcho, is_mine: true, reaction_counts: {}, reply_count: 0 }} />);
+    expect(screen.getByText("yours")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /underlined/i })).toBeNull();
+  });
+
+  it("never treats a peer's card as yours", () => {
+    render(<EchoCard echo={{ ...baseEcho, is_mine: false, reaction_counts: null, reply_count: null }} />);
+    expect(screen.queryByText("yours")).toBeNull();
+    expect(document.querySelector(".eco-tally")).toBeNull();
+    expect(screen.getByRole("button", { name: /underlined/i })).toBeInTheDocument();
+  });
+
+  it("keeps the action row on everyone else's echo", () => {
+    render(<EchoCard echo={baseEcho} />);
+    expect(document.querySelector(".eco-actions")).not.toBeNull();
+    expect(screen.getByRole("button", { name: /reply/i })).toBeInTheDocument();
+  });
+
+  it("still offers safety actions on your own echo", () => {
+    render(<EchoCard echo={mine} />);
+    expect(screen.getByRole("button", { name: /safety actions/i })).toBeInTheDocument();
+  });
+});
+
 describe("EchoCard — to my shelf [F6.1]", () => {
   it("shows a confirmation toast when shelving a book", async () => {
     reactToEcho.mockResolvedValue();

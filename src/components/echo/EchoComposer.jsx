@@ -13,6 +13,8 @@ import "./EchoComposer.css";
  * self-harm classifier, we swap to the supportive crisis path instead of closing.
  */
 const MAX_BODY = 500;
+// How many emotion chips show before the list is expanded.
+const EMO_PREVIEW = 4;
 
 export default function EchoComposer({ onPosted, onClose }) {
   const [body, setBody] = useState("");
@@ -21,6 +23,7 @@ export default function EchoComposer({ onPosted, onClose }) {
   const [primary, setPrimary] = useState(null);
   const [secondary, setSecondary] = useState(null);
   const [visibility, setVisibility] = useState("community");
+  const [showAllEmotions, setShowAllEmotions] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [crisis, setCrisis] = useState(null);
@@ -75,10 +78,15 @@ export default function EchoComposer({ onPosted, onClose }) {
     );
   }
 
+  // Chips past the preview that aren't currently chosen, i.e. what "more" reveals.
+  const hiddenEmotions = showAllEmotions
+    ? 0
+    : EMO_LIST.filter(([id], i) => i >= EMO_PREVIEW && primary !== id && secondary !== id).length;
+
   return (
     <div className="ec">
       <div className="ec-head">
-        <div className="label">an echo</div>
+        <div className="label">write an echo</div>
         <p className="ec-friction">Say the true thing, not the clever thing.</p>
       </div>
 
@@ -91,7 +99,7 @@ export default function EchoComposer({ onPosted, onClose }) {
         rows={4}
         aria-label="Your reflection"
       />
-      <div className="ec-count">{body.length}/{MAX_BODY}</div>
+      <div className="ec-count">{body.length} / {MAX_BODY}</div>
 
       <div className="ec-field">
         <div className="label-sm ec-label">anchor to a book <span className="ec-opt">optional</span></div>
@@ -101,9 +109,14 @@ export default function EchoComposer({ onPosted, onClose }) {
 
       <div className="ec-field">
         <div className="label-sm ec-label">the feeling <span className="ec-opt">up to two</span></div>
+        {/* Eighteen chips is a wall inside a modal, so the list starts short. A
+            chosen emotion is ALWAYS rendered even when collapsed — the control can
+            never hide the state it owns — and expanding is one click, never a
+            scroll-and-hunt. */}
         <div className="ec-emo" role="group" aria-label="Anchor emotions">
-          {EMO_LIST.map(([id, e]) => {
+          {EMO_LIST.map(([id, e], i) => {
             const on = primary === id || secondary === id;
+            if (!showAllEmotions && i >= EMO_PREVIEW && !on) return null;
             return (
               <button
                 key={id}
@@ -118,6 +131,16 @@ export default function EchoComposer({ onPosted, onClose }) {
               </button>
             );
           })}
+          {hiddenEmotions > 0 && (
+            <button
+              type="button"
+              className="ec-emo-chip ec-emo-more"
+              aria-expanded={showAllEmotions}
+              onClick={() => setShowAllEmotions(true)}
+            >
+              + {hiddenEmotions} more…
+            </button>
+          )}
         </div>
       </div>
 

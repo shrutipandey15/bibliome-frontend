@@ -1,18 +1,31 @@
 /* Echo card [F3.3] — no counts, handle not linked */
 .eco-card {
   background: var(--bg-card);
-  border: 1px solid var(--rule, rgba(0,0,0,0.1));
+  border: 1px solid var(--rule);
   border-left: 3px solid var(--ink);
   border-radius: 2px;
-  padding: 16px 18px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 .eco-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.eco-anchor { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
-.eco-emo { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; }
-.eco-emo-sec { opacity: 0.75; }
+.eco-anchor { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.eco-emo {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+/* The qualifier: same scale, no colour — it should not compete with the primary. */
+.eco-emo-sec { color: var(--ink-ghost); }
+/* "yours" — a quiet outline mark, not a status badge. */
+.eco-mine {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-quiet);
+  border: 1px solid var(--ink-quiet);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
 
 .eco-menu-wrap { position: relative; }
 .eco-menu-btn {
@@ -20,7 +33,7 @@
   font-size: 18px; line-height: 1; color: var(--ink-quiet);
   padding: 2px 6px; border-radius: 2px;
 }
-.eco-menu-btn:hover { color: var(--ink); background: var(--bg-vellum); }
+.eco-menu-btn:hover { color: var(--ink); background: var(--bg-field); }
 .eco-menu-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
 .eco-menu {
   position: absolute; right: 0; top: 100%; z-index: 20;
@@ -38,50 +51,70 @@
   border: none; background: none; cursor: pointer;
   font-family: var(--font-display); font-size: 14px; color: var(--ink);
 }
-.eco-menu button:hover { background: var(--bg-vellum); }
+.eco-menu button:hover { background: var(--bg-field); }
 .eco-menu-danger { color: var(--oxblood); }
 
+/* The body is the star of the card. */
 .eco-body {
   font-family: var(--font-display);
-  font-size: 18px;
-  line-height: 1.55;
+  font-size: 19px;
+  line-height: 1.5;
   color: var(--ink);
   margin: 0;
 }
 
-.eco-foot { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.eco-book { font-family: var(--font-display); font-style: italic; font-size: 13px; color: var(--ink-quiet); }
-.eco-handle { font-family: var(--font-mono); font-size: 11px; color: var(--ink-quiet); margin-left: auto; }
-.eco-date { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint, var(--ink-quiet)); }
+/* Caption line, ruled off from the body. Title and handle sit together on the
+   left; the date is pushed to the right margin. */
+.eco-foot {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-soft);
+}
+.eco-book { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-soft); }
+.eco-handle {
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.eco-date {
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--ink-ghost); margin-left: auto;
+}
 
 /* Author-only private tally — quiet, never a badge. [F6.1] */
 .eco-tally {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  color: var(--ink-quiet);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.eco-tally--quiet {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--ink-ghost);
 }
 
 /* ── Action row — always visible. [F6.1] ── */
 .eco-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
-  border-top: 1px solid var(--rule, rgba(0,0,0,0.08));
-  padding-top: 12px;
 }
+/* Squared marginalia chips, not pills — these are annotations on a page. */
 .eco-act {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--rule, rgba(0,0,0,0.15));
-  border-radius: 999px;
-  background: var(--bg-vellum);
+  padding: 6px 11px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: transparent;
   font-family: var(--font-display);
-  font-size: 13px;
-  color: var(--ink-quiet);
+  font-size: 12px;
+  color: var(--ink-soft);
   cursor: pointer;
 }
 .eco-act-mark { font-family: var(--font-mono); font-size: 13px; line-height: 1; }
@@ -89,16 +122,18 @@
 .eco-act:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 /* Pressed state — NOT conveyed by colour alone: filled background, heavier weight,
-   and an underline join on the label, plus aria-pressed. [F6.4] */
+   and an underline join on the label, plus aria-pressed. Tinted with the echo's own
+   emotion colour (--eco-c, set on the card), which is decoration on top of those
+   redundant cues, never the cue itself. [F6.4] */
 .eco-react.on {
-  color: var(--ink);
+  color: var(--eco-c, var(--brass));
   font-weight: 600;
-  border-color: var(--brass);
-  background: color-mix(in srgb, var(--brass) 14%, var(--bg-vellum));
+  border-color: var(--eco-c, var(--brass));
+  background: color-mix(in srgb, var(--eco-c, var(--brass)) 12%, var(--bg-vellum));
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.eco-reply-btn { margin-left: auto; }
+.eco-reply-btn { margin-left: 0; }
 
 /* Inline composer. [F6.2] */
 .eco-composer { display: flex; flex-direction: column; gap: 8px; }
@@ -106,7 +141,7 @@
   padding: 10px 12px;
   border: 1px solid var(--rule, rgba(0,0,0,0.15));
   border-radius: 2px;
-  background: var(--bg-vellum);
+  background: var(--bg-field);
   font-family: var(--font-display); font-size: 15px; color: var(--ink);
   resize: vertical;
 }
@@ -120,16 +155,25 @@
 .eco-composer-cancel:hover { color: var(--ink); }
 
 /* Inline replies — shown, never counted. [F6.2] */
-.eco-replies { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.eco-reply { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+/* Replies hang off a marginal rule, like annotations beside the entry. */
+.eco-replies {
+  list-style: none; margin: 0; padding: 0 0 0 14px;
+  border-left: 1px solid var(--rule-soft);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.eco-reply { font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
 .eco-reply.pending { opacity: 0.6; }
-.eco-reply-handle { font-family: var(--font-mono); font-size: 11px; color: var(--ink-quiet); flex-shrink: 0; }
-.eco-reply-body { font-family: var(--font-display); font-size: 14px; line-height: 1.45; color: var(--ink); }
+.eco-reply-handle {
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); margin-right: 8px;
+}
+.eco-reply-body { font-family: var(--font-display); }
 
 .eco-readrest {
   align-self: flex-start;
   border: none; background: none; cursor: pointer; padding: 0;
-  font-family: var(--font-display); font-style: italic; font-size: 13px; color: var(--brass);
+  font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--oxblood);
 }
 .eco-readrest:hover { text-decoration: underline; }
 .eco-readrest:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 2px; }

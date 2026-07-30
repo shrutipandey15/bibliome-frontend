@@ -1,22 +1,32 @@
 /* Phase 7 — DNA / Insight presentation. Facts with confidence, no mysticism. */
 
 .dna-view {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
   padding: 8px 0 64px;
   display: flex;
   flex-direction: column;
-  gap: 44px;
+  gap: 30px;
 }
 
-.dna-view-head { display: flex; flex-direction: column; gap: 6px; }
-.dna-view-h1 {
-  font-family: var(--font-display);
-  font-size: 46px;
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  color: var(--ink);
+/* Running head — a page header, not a stat card: two mono lines against a rule. */
+.dna-runhead {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+}
+
+/* The rule between movements. */
+.dna-divider {
+  text-align: center;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5em;
+  font-size: 11px;
 }
 .dna-readfor-line {
   font-family: var(--font-mono);
@@ -32,16 +42,19 @@
 }
 .dna-readfor-edit:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
-/* Section labels — the quiet all-caps rubric above each block. */
+/* Section labels — the quiet all-caps rubric above each block, in brass, with the
+   movement's numeral set ahead of it. */
 .dna-section-label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--ink-quiet);
+  color: var(--brass);
   margin: 0 0 14px;
 }
+.dna-numeral { margin-right: 6px; }
+.dna-numeral::after { content: " ·"; }
 
 /* ── Insights ── */
 .insight { display: flex; flex-direction: column; gap: 8px; }
@@ -59,16 +72,35 @@
   margin: 0;
 }
 .insight--headline .insight-text {
-  font-size: 27px;
-  line-height: 1.32;
+  font-size: 26px;
+  line-height: 1.45;
   letter-spacing: -0.01em;
 }
+/* Drop cap on the headline only. `initial-letter` where supported, with a float
+   fallback; both are decorative, so the sentence still reads if neither lands. */
+.insight--headline .insight-text::first-letter {
+  float: left;
+  font-size: 62px;
+  line-height: 0.82;
+  padding: 6px 12px 0 0;
+  color: var(--oxblood);
+}
+@supports (initial-letter: 3) or (-webkit-initial-letter: 3) {
+  .insight--headline .insight-text::first-letter {
+    float: none;
+    padding: 0 10px 0 0;
+    font-size: inherit;
+    -webkit-initial-letter: 3;
+    initial-letter: 3;
+  }
+}
+.insight--headline .insight-foot { clear: both; }
 .insight-foot {
   display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--ink-faint, var(--ink-quiet));
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-quiet);
 }
 .insight-rarity { color: var(--brass); }
 
@@ -99,37 +131,112 @@
   border-top: 1px solid var(--rule, rgba(0,0,0,0.1));
   padding-top: 20px;
 }
-.evo-gap-col { display: flex; flex-direction: column; gap: 8px; }
-.evo-gap-name { font-family: var(--font-display); font-size: 18px; color: var(--ink); }
-.evo-comp { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--bg-vellum); }
-.evo-comp-seg { height: 100%; }
+.evo-gap-col { display: flex; flex-direction: column; gap: 6px; }
+.evo-gap-when {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 13px; color: var(--ink-faint);
+}
+.evo-gap-name { font-family: var(--font-display); font-size: 20px; color: var(--ink); }
+/* Ranked as type, not drawn as a bar — the share is read, not estimated. */
+.evo-comp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.evo-comp-row { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 6px; }
+.evo-comp-name { font-family: var(--font-display); font-size: 13px; }
+.evo-comp-leader {
+  border-bottom: 1px dotted var(--rule, var(--ink-quiet));
+  opacity: 0.45;
+  transform: translateY(-3px);
+}
+.evo-comp-pct { font-family: var(--font-mono); font-size: 11px; color: var(--ink-quiet); }
+.evo-comp-empty { font-family: var(--font-mono); font-size: 11px; color: var(--ink-quiet); margin: 0; }
 
 .evo-events { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .evo-event { display: flex; align-items: baseline; gap: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-quiet); }
 .evo-event-mark { color: var(--brass); }
 .evo-event-text em { font-style: normal; color: var(--ink); font-weight: 600; }
 
-/* ── Portrait (the fingerprint) ── */
-.dna-portrait-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.dna-portrait-row { display: grid; grid-template-columns: 120px 1fr auto; align-items: center; gap: 12px; }
-.dna-portrait-name { font-family: var(--font-display); font-size: 15px; color: var(--ink); }
-.dna-portrait-track { height: 8px; background: var(--bg-vellum); border-radius: 999px; overflow: hidden; }
-.dna-portrait-fill { display: block; height: 100%; border-radius: 999px; }
-.dna-portrait-count { font-family: var(--font-mono); font-size: 11px; color: var(--ink-quiet); white-space: nowrap; }
+/* ── Portrait (the fingerprint) ──
+   An index page: name, leader dots, figure. Every canonical emotion gets a row;
+   the ones never reached for keep their dots and print an em-dash, so the gap in
+   the column is as legible as the entries. */
+.dna-portrait-note {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 14px; color: var(--ink-quiet);
+  margin: 16px 0 0;
+}
+.dna-portrait-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.dna-portrait-row {
+  display: grid; grid-template-columns: auto auto 1fr auto;
+  align-items: baseline; gap: 8px;
+  font-size: 16px;
+}
+.dna-portrait-mark { font-size: 9px; color: var(--ink-ghost); }
+.dna-portrait-name { font-family: var(--font-display); color: var(--ink); white-space: nowrap; }
+.dna-portrait-leader {
+  border-bottom: 1px dotted var(--rule);
+  transform: translateY(-4px);
+}
+.dna-portrait-count {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--brass); white-space: nowrap;
+}
+/* Rows past the leader are quieter than the leader itself. */
+.dna-portrait-row + .dna-portrait-row .dna-portrait-count { color: var(--ink-faint); }
+/* Never reached for: recessive and italic, but never hidden — and the dots stay,
+   so the blank reads as an empty slot rather than an absent row. */
+.dna-portrait-row--blank { color: var(--ink-ghost); }
+.dna-portrait-row--blank .dna-portrait-name { color: inherit; font-style: italic; }
+.dna-portrait-row--blank .dna-portrait-count { color: inherit; }
+.dna-portrait-row--blank .dna-portrait-leader { border-bottom-color: var(--rule-soft); }
+/* A blank the archetype specifically calls out. */
+.dna-portrait-row--flagged { color: var(--oxblood); }
+.dna-portrait-row--flagged .dna-portrait-count { color: var(--oxblood); }
 
-/* ── Archetype (demoted) ── */
-.dna-archetype { display: flex; flex-direction: column; gap: 16px; }
-.dna-arch-strip { display: flex; align-items: flex-start; gap: 14px; }
-.dna-arch-glyph { font-size: 30px; line-height: 1; }
-.dna-arch-name { font-family: var(--font-display); font-size: 22px; color: var(--ink); }
-.dna-arch-desc { font-family: var(--font-display); font-size: 15px; line-height: 1.5; color: var(--ink-quiet); margin: 4px 0 0; max-width: 54ch; }
+/* ── Archetype (demoted) ──
+   A pulled quote against a rule in the archetype's own colour, not a badge. */
+.dna-archetype { display: flex; flex-direction: column; gap: 14px; }
+.dna-arch-strip {
+  border-left: 2px solid var(--oxblood);
+  padding-left: 18px;
+}
+.dna-arch-name { font-family: var(--font-display); font-size: 24px; color: var(--ink); }
+.dna-arch-name em { font-style: italic; }
+.dna-arch-desc { font-family: var(--font-display); font-size: 15px; line-height: 1.55; color: var(--ink-quiet); margin: 6px 0 0; max-width: 54ch; }
+
+.dna-arch-actions { display: flex; gap: 8px; padding-left: 20px; flex-wrap: wrap; }
+.dna-arch-btn {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-quiet);
+  padding: 8px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.dna-arch-btn:hover { border-color: var(--brass); color: var(--ink); }
+.dna-arch-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.dna-arch-btn--primary { border-color: var(--walnut-light); color: var(--oxblood); }
+
+/* The shareable card stays mounted so it can be rasterised on demand; kept out of
+   the layout and out of the a11y tree until asked for. */
+.dna-arch-card--offscreen {
+  position: absolute;
+  left: -10000px; top: 0;
+  pointer-events: none;
+}
 .dna-arch-card { display: flex; justify-content: center; padding-top: 8px; }
 
-/* ── Not yet (locked) ── */
-.dna-locked-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.dna-locked-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.dna-locked-name { font-family: var(--font-display); font-size: 16px; color: var(--ink-quiet); }
-.dna-locked-reason { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint, var(--ink-quiet)); }
+/* ── Not yet (locked) ──
+   A footnote below a rule: quiet italic lines, generously leaded. */
+.dna-locked { border-top: 1px solid var(--rule); padding-top: 14px; }
+.dna-locked .dna-section-label { color: var(--ink-ghost); }
+.dna-locked-list { list-style: none; margin: 0; padding: 0; }
+.dna-locked-row {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 14px; line-height: 1.9;
+  color: var(--ink-faint);
+}
+.dna-locked-name { font-style: normal; color: var(--ink-quiet); }
 
 /* ── Honest empty state (the gate) ── */
 .dna-gate {
@@ -178,7 +285,7 @@
 @media (max-width: 640px) {
   .dna-view-h1 { font-size: 34px; }
   .evo-gap { grid-template-columns: 1fr; }
-  .dna-portrait-row { grid-template-columns: 92px 1fr auto; }
+  .dna-portrait-name { font-size: 14px; }
   .insight--headline .insight-text { font-size: 22px; }
   .evo-drift-arrow { font-size: 24px; }
 }

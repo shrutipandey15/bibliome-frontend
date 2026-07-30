@@ -107,14 +107,11 @@ function buildDashboardStats(entries) {
     freq[id] = (freq[id] || 0) + 1;
   }));
   const topEmotion = Object.entries(freq).sort((a, b) => b[1] - a[1])[0] || [null, 0];
-  // books per month based on created_at range, if available
-  const dates = entries.map((e) => e.created_at).filter(Boolean).map((d) => new Date(d).getTime());
-  let perMonth = total;
-  if (dates.length > 1) {
-    const span = (Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24 * 30);
-    perMonth = span > 0 ? +(total / span).toFixed(1) : total;
-  }
-  return { total, avg, topEmotion, perMonth };
+  // No books/month here. It divided by the shelf's date span in months, which is
+  // near-zero for a shelf built in one sitting — it rendered as 57387453.9. The
+  // rate is not worth showing on the shelf; the backend's own guarded figure
+  // (dna_engine.books_per_month, floored at a 30-day window) is the only one.
+  return { total, avg, topEmotion };
 }
 
 function ReadingRoomHeader({ user, tab, onTab, theme, onToggleTheme, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
@@ -173,6 +170,7 @@ function ReadingRoomHeader({ user, tab, onTab, theme, onToggleTheme, onAddBook, 
 function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGenerate, generating }) {
   const featured = entries.slice(0, 5);
   const top = EMOTIONS[stats.topEmotion?.[0]];
+  const topCount = stats.topEmotion?.[1] ?? 0;
   const total = stats.total;
   const number = total > 0 ? total : 0;
   return (
@@ -183,10 +181,14 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
           {number > 0 ? `${number} volume${number === 1 ? "" : "s"},` : "An empty room,"}<br />
           <em>{number > 0 ? "one quiet" : "one waiting"}</em> year.
         </h1>
+        {/* Countable, or nothing. The old dek asserted a mood ("keeping the lights
+            on for a friend who isn't home yet") and a "spike of catharsis" that
+            were hardcoded, not derived — equally true of any reader. [F-DNA-1] */}
         <p className="rr-hero-dek">
           {top ? (
-            <>You read like someone keeping the lights on for a friend who isn't home yet. Your shelf leans toward{" "}
-              <span style={{ color: top.color, fontWeight: 600 }}>{top.label.toLowerCase()}</span>, with the occasional bright spike of catharsis.
+            <>Most tagged:{" "}
+              <span style={{ color: top.color, fontWeight: 600 }}>{top.name}</span>
+              {" "}— {topCount} of {total} {total === 1 ? "book" : "books"}.
             </>
           ) : (
             <>Begin with one book. The shelf grows with you. Each entry is a small confession in the margin of your year.</>
@@ -232,7 +234,6 @@ function ReadingRoomStatStrip({ stats }) {
     { l: "volumes",        v: String(stats.total).padStart(2, "0") },
     { l: "avg intensity",  v: stats.avg, suf: "/10" },
     { l: "top emotion",    v: top.name, color: top.color },
-    { l: "books / month",  v: typeof stats.perMonth === "number" ? stats.perMonth.toFixed(1) : stats.perMonth },
   ];
   return (
     <div className="rr-statstrip">
@@ -531,6 +532,7 @@ function Dashboard() {
                 onEditReadFor={() => setShowReadFor(true)}
                 cardRef={dnaCardRef}
                 bookCount={entries.length}
+                stats={analytics.stats}
               />
             </ErrorBoundary>
 

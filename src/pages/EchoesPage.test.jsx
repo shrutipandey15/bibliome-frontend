@@ -23,6 +23,59 @@ const feed = {
   caught_up: true,
 };
 
+describe("EchoesPage — your echoes [B: ?mine=true]", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("requests only your own echoes when the view is switched", async () => {
+    getEchoFeed.mockResolvedValue(feed);
+    render(<EchoesPage />);
+    await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
+    expect(getEchoFeed).toHaveBeenLastCalledWith(expect.objectContaining({ mine: false }));
+
+    await userEvent.click(screen.getByRole("button", { name: /your echoes/i }));
+    await waitFor(() =>
+      expect(getEchoFeed).toHaveBeenLastCalledWith(expect.objectContaining({ mine: true }))
+    );
+  });
+
+  it("composes 'yours' WITH a feeling anchor rather than replacing it", async () => {
+    getEchoFeed.mockResolvedValue(feed);
+    render(<EchoesPage />);
+    await waitFor(() => screen.getByText("first echo"));
+
+    await userEvent.click(screen.getByRole("button", { name: /your echoes/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^grief$/i }));
+    await waitFor(() =>
+      expect(getEchoFeed).toHaveBeenLastCalledWith(
+        expect.objectContaining({ mine: true, emotion: "grief" })
+      )
+    );
+  });
+
+  it("does not tell the author to 'be the first' among their own echoes", async () => {
+    getEchoFeed.mockResolvedValue({ echoes: [], next_cursor: null, caught_up: true });
+    render(<EchoesPage />);
+    await waitFor(() => expect(screen.getByText(/no echoes yet/i)).toBeInTheDocument());
+    expect(screen.getByText(/be the first/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /your echoes/i }));
+    await waitFor(() =>
+      expect(screen.getByText(/you haven't written an echo yet/i)).toBeInTheDocument()
+    );
+    expect(screen.queryByText(/be the first/i)).toBeNull();
+  });
+
+  it("states the privacy promise where the private counts appear", async () => {
+    getEchoFeed.mockResolvedValue(feed);
+    render(<EchoesPage />);
+    await waitFor(() => screen.getByText("first echo"));
+    expect(screen.queryByText(/these counts are yours alone/i)).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: /your echoes/i }));
+    expect(await screen.findByText(/these counts are yours alone/i)).toBeInTheDocument();
+  });
+});
+
 describe("EchoesPage feed [F3.3]", () => {
   beforeEach(() => vi.clearAllMocks());
 

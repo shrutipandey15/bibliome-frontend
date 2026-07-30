@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
-import { fetchBlob } from "../services/api";
 import "./ShareModal.css";
 
-export default function ShareModal({ isOpen, onClose, endpoint, filename, shareToken }) {
-  const [imageUrl, setImageUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+/**
+ * The share-link modal.
+ *
+ * Server-side card rendering is retired (backend `app/routers/public.py`), so
+ * there is no image to fetch here — this modal hands over the revocable share
+ * link and nothing else. Saving the card as an image is a separate, local
+ * concern: the "Save card" action rasterises the mounted DNACard with
+ * html2canvas, which is why it lives next to the card rather than in here.
+ */
+export default function ShareModal({ isOpen, onClose, shareToken }) {
   const [copied, setCopied] = useState(false);
 
   const shareLink = shareToken
@@ -13,33 +18,8 @@ export default function ShareModal({ isOpen, onClose, endpoint, filename, shareT
     : null;
 
   useEffect(() => {
-    if (isOpen && endpoint) {
-      setLoading(true);
-      setError(false);
-      setImageUrl(null);
-      setCopied(false);
-
-      fetchBlob(endpoint)
-        .then((blob) => {
-          setImageUrl(URL.createObjectURL(blob));
-          setLoading(false);
-        })
-        .catch(() => {
-          setError(true);
-          setLoading(false);
-        });
-    }
-  }, [isOpen, endpoint]);
-
-  const handleDownload = () => {
-    if (!imageUrl) return;
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = filename || "bookdna-share.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    if (isOpen) setCopied(false);
+  }, [isOpen]);
 
   const handleCopyLink = async () => {
     if (!shareLink) return;
@@ -63,12 +43,11 @@ export default function ShareModal({ isOpen, onClose, endpoint, filename, shareT
   const handleNativeShare = async () => {
     if (!navigator.share) return;
     try {
-      const shareData = {
+      await navigator.share({
         title: "My Book DNA",
         text: "Check out my reading personality!",
         url: shareLink,
-      };
-      await navigator.share(shareData);
+      });
     } catch {
       // User cancelled or share failed — not an error
     }
@@ -82,15 +61,11 @@ export default function ShareModal({ isOpen, onClose, endpoint, filename, shareT
         <button className="modal-close" onClick={onClose}>×</button>
 
         <h2 className="modal-title">Share Your DNA</h2>
-        <p className="modal-subtitle">Show the world what kind of reader you are.</p>
+        <p className="modal-subtitle">
+          Anyone with this link can read your card. Revoke it any time from settings.
+        </p>
 
-        <div className="share-preview-area">
-          {loading && <div className="share-loader">Generating your vibe...</div>}
-          {error && <div className="share-error">Could not generate image. Try again.</div>}
-          {imageUrl && <img src={imageUrl} alt="Share Preview" className="share-image" />}
-        </div>
-
-        {shareLink && (
+        {shareLink ? (
           <div className="share-link-row">
             <input
               type="text"
@@ -103,22 +78,17 @@ export default function ShareModal({ isOpen, onClose, endpoint, filename, shareT
               {copied ? "Copied!" : "Copy"}
             </button>
           </div>
+        ) : (
+          <div className="share-error">No share link yet — generate your DNA first.</div>
         )}
 
-        <div className="modal-actions">
-          <button
-            className="action-btn primary"
-            onClick={handleDownload}
-            disabled={!imageUrl || loading}
-          >
-            Download Image
-          </button>
-          {shareLink && navigator.share && (
-            <button className="action-btn secondary" onClick={handleNativeShare}>
+        {shareLink && navigator.share && (
+          <div className="modal-actions">
+            <button className="action-btn primary" onClick={handleNativeShare}>
               Share Link
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

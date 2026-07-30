@@ -16,13 +16,19 @@ export default function LockedInsights({ locked = [] }) {
   return (
     <section className="dna-locked" aria-labelledby="dna-locked-title">
       <h2 id="dna-locked-title" className="dna-section-label">Not yet</h2>
+      {/* Set as a run of quiet italic lines rather than a list of chips — this is
+          a footnote about what the page cannot say, not a menu of things to earn.
+          The requirement text is the backend's own `reason`; we add no countdown
+          and no "you are N short", because the payload carries no such figure. */}
       <ul className="dna-locked-list">
         {locked.map((l) => (
           <li key={l.category} className="dna-locked-row">
             <span className="dna-locked-name">{nameFor(l)}</span>
-            <span className="dna-locked-reason">
-              — {l.reason || (l.unlocks_at ? `needs ${l.unlocks_at}` : "not yet")}
-            </span>
+            {" waits on "}
+            {l.reason
+              ? l.reason.replace(/^needs\s+/i, "")
+              : (l.unlocks_at || "more reading")}
+            .
           </li>
         ))}
       </ul>

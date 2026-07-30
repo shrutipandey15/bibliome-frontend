@@ -25,9 +25,9 @@ import "./EchoCard.css";
 
 // Reactions are marginalia, not likes — what a reader does with a book. [F6.1]
 const REACTIONS = [
-  { kind: "felt_this",       label: "underlined",         tally: "underlined",   mark: "⌇" },
-  { kind: "adding_to_list",  label: "to my shelf",        tally: "added it",     mark: "+", requiresBook: true, shelves: true },
-  { kind: "changed_my_mind", label: "made me reconsider", tally: "reconsidered", mark: "↻" },
+  { kind: "felt_this",       label: "underlined",         tally: "underlined",                  mark: "⌇" },
+  { kind: "adding_to_list",  label: "to my shelf",        tally: "added it to their shelf",     mark: "+", requiresBook: true, shelves: true },
+  { kind: "changed_my_mind", label: "made me reconsider", tally: "reconsidered",                mark: "↻" },
 ];
 
 const MAX_REPLY = 500;
@@ -79,15 +79,25 @@ export default function EchoCard({ echo, onReadMore, onReport, onMute, onBlock, 
 
   const act = (fn) => () => { setMenuOpen(false); fn?.(echo); };
 
-  // Author-only private tally. Rendered only when reaction_counts is present.
+  // Stated outright by the backend rather than inferred from `reaction_counts`
+  // being non-null. Falls back to that inference only for a payload predating the
+  // field. Drives the "yours" mark and the suppression of self-reactions.
+  const isMine = echo.is_mine ?? (echo.reaction_counts != null);
+
+  // Author-only private tally. `reply_count` is counted server-side and
+  // block-filtered to match the preview, so it never exceeds what the author can
+  // actually open; a zero arrives as an explicit 0 and simply contributes no part,
+  // leaving the quiet line below to speak for the silence.
   const tally = useMemo(() => {
     const counts = echo.reaction_counts;
     if (!counts) return null;
     const parts = REACTIONS
       .map((r) => (counts[r.kind] > 0 ? `${counts[r.kind]} ${r.tally}` : null))
       .filter(Boolean);
+    const n = echo.reply_count;
+    if (n > 0) parts.push(`${n} ${n === 1 ? "reply" : "replies"}`);
     return parts.length ? parts.join(" · ") : null;
-  }, [echo.reaction_counts]);
+  }, [echo.reaction_counts, echo.reply_count]);
 
   const toggleReaction = async (r) => {
     const on = !reactions[r.kind];
@@ -139,15 +149,17 @@ export default function EchoCard({ echo, onReadMore, onReport, onMute, onBlock, 
   const visibleReplies = replies.filter((r) => !hidden.has(r.handle));
 
   return (
-    <article className="eco-card" style={{ borderLeft: `3px solid ${color}` }}>
+    <article className="eco-card" style={{ borderLeftColor: color, "--eco-c": color }}>
       <div className="eco-top">
         <div className="eco-anchor">
           {emo && <span className="eco-emo" style={{ color }}>◉ {emo.label.toLowerCase()}</span>}
+          {/* Secondary emotion recedes — it is a qualifier, not a second headline. */}
           {echo.secondary_emotion && EMOTIONS[echo.secondary_emotion] && (
-            <span className="eco-emo eco-emo-sec" style={{ color: EMOTIONS[echo.secondary_emotion].color }}>
-              · {EMOTIONS[echo.secondary_emotion].label.toLowerCase()}
+            <span className="eco-emo eco-emo-sec">
+              {EMOTIONS[echo.secondary_emotion].label.toLowerCase()}
             </span>
           )}
+          {isMine && <span className="eco-mine">yours</span>}
         </div>
         <div className="eco-menu-wrap" ref={menuRef}>
           <button
@@ -174,22 +186,29 @@ export default function EchoCard({ echo, onReadMore, onReport, onMute, onBlock, 
       <p className="eco-body">{echo.body}</p>
 
       <div className="eco-foot">
-        {echo.book_title && (
-          <span className="eco-book">
-            {echo.book_title}{echo.book_author ? ` · ${echo.book_author}` : ""}
-          </span>
-        )}
+        {/* Title only — the author is on the shelf entry, and the footer is a
+            caption line, not a citation. */}
+        {echo.book_title && <span className="eco-book">{echo.book_title}</span>}
         {/* Handle: plain text, NOT a link — no people-browsing. [F3.7] */}
         <span className="eco-handle">@{echo.handle}</span>
         <span className="eco-date">{fmtDate(echo.created_at)}</span>
       </div>
 
-      {/* Author-only private tally — the witness payoff. Quiet, never a badge. [F6.1] */}
-      {tally && <div className="eco-tally">{tally}</div>}
+      {/* Author-only private tally — the witness payoff. Quiet, never a badge. [F6.1]
+          Silence gets its own line rather than an absence, so an unanswered echo
+          reads as fine rather than as a number you failed to reach. */}
+      {isMine && (
+        tally
+          ? <div className="eco-tally">{tally}</div>
+          : <div className="eco-tally eco-tally--quiet">No one has responded yet — and that's alright.</div>
+      )}
 
-      {/* ACTION ROW — always visible. Reactions + reply. [F6.1] */}
+      {/* ACTION ROW. On your own echo the REACTIONS drop away — you cannot underline
+          or shelve yourself, and the tally above is what your card has to say — but
+          REPLY stays: an author answering their own thread is the whole point of
+          having one. [F6.1] */}
       <div className="eco-actions" role="group" aria-label="Echo actions">
-        {REACTIONS.map((r) => {
+        {!isMine && REACTIONS.map((r) => {
           if (r.requiresBook && !hasBook) return null; // hide "to my shelf" with no anchor
           const on = !!reactions[r.kind];
           return (

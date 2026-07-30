@@ -188,13 +188,6 @@ export function Patterns({ stats, heatmap, embedded = false }) {
     .slice(0, 10);
   const totalBooks = stats.total_books;
 
-  const cards = [
-    { l: "Books logged", v: String(totalBooks), sub: "· this volume" },
-    { l: "Avg intensity", v: stats.avg_intensity, suf: "/10", sub: "· hits hard" },
-    { l: "Books / month", v: String(stats.books_per_month ?? "—"), sub: "· steady" },
-    { l: "Emotion diversity", v: String(stats.emotion_diversity ?? 0), suf: "%", sub: "· growing" },
-  ];
-
   return (
     <div className="st-page">
       <div className="st-masthead">
@@ -208,19 +201,9 @@ export function Patterns({ stats, heatmap, embedded = false }) {
       </div>
       <div className="rule-dbl" style={{ marginBottom: 32 }} />
 
-      <div className="st-big-grid">
-        {cards.map((x, i) => (
-          <div className="st-big-cell" key={i}>
-            <div className="label" style={{ marginBottom: 16 }}>{x.l}</div>
-            <div className="big-num">
-              {x.v}{x.suf && <span className="frac">{x.suf}</span>}
-            </div>
-            <div className="st-big-sub">{x.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* The heatmap sits between the figures and the ledger. */}
+      {/* No dashboard stat cards here [F-DNA-9]. The counts they showed (books
+          logged, avg intensity, books/month, diversity) are figures, not
+          insight — the page leads with the heatmap and the ledger instead. */}
       {heatmap && (
         <div style={{ margin: "32px 0" }}>
           <Heatmap data={heatmap} />

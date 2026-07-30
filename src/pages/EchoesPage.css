@@ -52,20 +52,31 @@
   max-width: 680px;
   margin: 0 auto;
 }
+/* Whose-feed row sits above the feeling anchors; no swatch, so the two rows are
+   visibly different kinds of filter rather than one long undifferentiated list. */
+.ep-filters-whose { margin-bottom: 10px; }
+.ep-mine-note {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 15px; color: var(--ink-quiet);
+  margin: 0 0 22px; max-width: 56ch;
+}
+
+/* The terminus is a bounded plate, not a trailing line — the feed visibly stops. */
 .ep-caughtup {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 40px 0 16px;
+  gap: 8px;
+  padding: 36px 20px;
+  border: 1px dashed var(--rule);
+  border-radius: 2px;
   font-family: var(--font-display);
-  font-style: italic;
-  font-size: 16px;
   color: var(--ink-quiet);
 }
-.ep-caughtup-glyph { color: var(--brass); font-style: normal; font-size: 18px; }
-.ep-caughtup-line { }
+.ep-caughtup-glyph { color: var(--brass); font-size: 15px; }
+.ep-caughtup-line { font-size: 20px; color: var(--ink); }
+.ep-caughtup-sub { font-size: 13px; }
 .ep-caughtup-cta {
   border: none; background: none; cursor: pointer;
   font-family: var(--font-mono); font-style: normal; font-size: 11px;

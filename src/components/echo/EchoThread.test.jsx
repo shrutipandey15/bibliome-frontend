@@ -21,17 +21,46 @@ const thread = {
 describe("EchoThread [F3.4 / B3.4]", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("shows replies BEFORE the reaction affordances (conversation first)", async () => {
+  it("attaches the reactions to the echo, ABOVE the conversation", async () => {
     getEchoThread.mockResolvedValue(thread);
     render(<EchoThread echoId="e1" />);
     await waitFor(() => expect(screen.getByText("me too")).toBeInTheDocument());
 
-    // In DOM order, the replies section must come before the reactions group.
-    const repliesLabel = screen.getByText("replies");
+    // Reactions act on the echo, so they sit with it; the replies follow, and the
+    // reply box closes the thread. (Previously the reactions were stranded below
+    // the reply box, after the conversation they belong to.)
     const reactions = screen.getByRole("group", { name: /private reactions/i });
+    const repliesLabel = screen.getByText("Replies");
+    const replyBox = screen.getByLabelText(/your reply/i);
     // eslint-disable-next-line no-bitwise
-    const order = repliesLabel.compareDocumentPosition(reactions);
-    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const F = Node.DOCUMENT_POSITION_FOLLOWING;
+    // eslint-disable-next-line no-bitwise
+    expect(reactions.compareDocumentPosition(repliesLabel) & F).toBeTruthy();
+    // eslint-disable-next-line no-bitwise
+    expect(repliesLabel.compareDocumentPosition(replyBox) & F).toBeTruthy();
+  });
+
+  it("seeds the reaction toggles from the viewer's own my_reactions", async () => {
+    getEchoThread.mockResolvedValue({
+      ...thread,
+      echo: { ...thread.echo, my_reactions: ["felt_this"] },
+    });
+    render(<EchoThread echoId="e1" />);
+    await waitFor(() => screen.getByText("me too"));
+    // Opening a thread must not present an already-set reaction as unset.
+    expect(screen.getByRole("button", { name: /underlined/i })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /reconsider/i })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("offers no self-reactions on your own echo, but still lets you reply", async () => {
+    getEchoThread.mockResolvedValue({
+      ...thread,
+      echo: { ...thread.echo, reaction_counts: { felt_this: 2 } },
+    });
+    render(<EchoThread echoId="e1" />);
+    await waitFor(() => screen.getByText("me too"));
+    expect(screen.queryByRole("group", { name: /private reactions/i })).toBeNull();
+    expect(screen.getByLabelText(/your reply/i)).toBeInTheDocument();
   });
 
   it("posts a reply and appends it to the thread", async () => {

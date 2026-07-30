@@ -331,6 +331,17 @@ export async function generateDNA() {
   return res.json();
 }
 
+// One point per DNA snapshot, oldest first (B7.4) — the full evolution timeline.
+// NOT needed for the "what's changed" section any more: /dna/profile now carries
+// `snapshot_count`/`has_two_snapshots` directly, so distinguishing "no history"
+// from "steady" costs no extra request. Kept for a timeline view of the snapshots
+// themselves. Returns [] on failure — a missing history is quiet, never an error.
+export async function getDNAEvolution() {
+  const res = await apiFetch("/dna/evolution");
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export async function getHeatmap() {
   const res = await apiFetch("/dna/heatmap");
   if (!res.ok) return null;
@@ -500,12 +511,17 @@ export async function searchBooks(query) {
 
 // Chronological feed that ends. Optional anchors: a book (title[+author]) or an
 // emotion. Returns { echoes, next_cursor, caught_up }. [F3.3 / B3.3]
-export async function getEchoFeed({ cursor = null, limit = 20, bookTitle = null, bookAuthor = null, emotion = null } = {}) {
+// `mine` backs the "your echoes" view. [needs BE] GET /echoes/feed does not accept
+// it yet (app/routers/echo.py takes cursor/limit/book_title/book_author/emotion/
+// prompt_id) — a server that ignores the param returns the everyone-feed, so the
+// caller must not present the view as filtered until the backend lands.
+export async function getEchoFeed({ cursor = null, limit = 20, bookTitle = null, bookAuthor = null, emotion = null, mine = false } = {}) {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set("cursor", cursor);
   if (bookTitle) params.set("book_title", bookTitle);
   if (bookAuthor) params.set("book_author", bookAuthor);
   if (emotion) params.set("emotion", emotion);
+  if (mine) params.set("mine", "true");
   return apiGet(`/echoes/feed?${params.toString()}`);
 }
 
@@ -635,12 +651,4 @@ export async function updateNotificationPrefs(data) {
     throw new Error(d.detail || "Couldn't update preferences");
   }
   return res.json();
-}
-
-// ── NEW: Blob Fetcher (For Images) ──
-export async function fetchBlob(endpoint) {
-  // Use apiFetch to handle auth headers automatically
-  const res = await apiFetch(endpoint);
-  if (!res.ok) throw new Error("Failed to fetch image");
-  return res.blob();
 }

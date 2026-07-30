@@ -37,7 +37,7 @@ const DNACard = forwardRef(function DNACard({ profile, username, allowShare = fa
 
         <div className="dna-header">
           <div>
-            <div className="dna-label">BOOK DNA · CARD 04 / 12</div>
+            <div className="dna-label">BOOK DNA · ONE OF EIGHT</div>
             <div className="dna-vol">{profile.book_count || 0} VOLUMES · MMXXVI</div>
           </div>
           <div className="dna-glyph">{p.glyph || "◈"}</div>
@@ -93,8 +93,6 @@ const DNACard = forwardRef(function DNACard({ profile, username, allowShare = fa
       <ShareModal
         isOpen={showShare}
         onClose={() => setShowShare(false)}
-        endpoint={shareToken ? `/public/shared/${shareToken}/og` : null}
-        filename={`dna-${username}.png`}
         shareToken={shareToken}
       />
     </div>
@@ -102,68 +100,3 @@ const DNACard = forwardRef(function DNACard({ profile, username, allowShare = fa
 });
 
 export default DNACard;
-
-export function DnaReveal({ profile, username, onSave, archetypes = [] }) {
-  if (!profile?.personality) return null;
-  const p = profile.personality;
-  const [first, ...rest] = (p.name || "").split(" ");
-  const second = rest.join(" ");
-  return (
-    <div className="dna-reveal" style={{ "--dc": p.color || "var(--oxblood)" }}>
-      <div className="dna-reveal-grid">
-        <div>
-          <div className="label dna-reveal-eyebrow">· your reading personality has been revealed ·</div>
-          <h1 className="dna-reveal-h1">
-            You are<br />
-            <em>{first} {second}.</em>
-          </h1>
-          <p className="dna-reveal-dek">
-            One of twelve archetypes — drawn from the geometry of your shelf.
-            This is not a quiz result. It's a small portrait of the way you read.
-          </p>
-          {p.pull_quote && (
-            <div className="dna-reveal-pull">
-              “{p.pull_quote}”
-            </div>
-          )}
-          <div className="dna-reveal-cta">
-            <button className="btn brass" onClick={onSave}>
-              <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 16 }}>Save</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em" }}>AS IMAGE</span>
-            </button>
-            <span className="dna-reveal-note">regenerates as your shelf grows</span>
-          </div>
-        </div>
-
-        <div className="dna-reveal-cardwrap">
-          <div className="dna-reveal-halo" />
-          <div className="dna-reveal-deck" />
-          <div className="dna-reveal-cardtilt">
-            <DNACard profile={profile} username={username} />
-          </div>
-        </div>
-      </div>
-
-      {archetypes.length > 0 && (
-        <div className="dna-reveal-rail">
-          <div className="label" style={{ marginBottom: 22 }}>· catalog of archetypes ·</div>
-          <div className="dna-reveal-rail-grid">
-            {archetypes.map((x, i) => {
-              const current = x.name === p.name;
-              return (
-                <div key={x.id || i} className={`dna-arch-tile ${current ? "current" : ""}`} style={{ "--ac": x.color }}>
-                  <div className="dna-arch-tile-top">
-                    <div className="label-sm">{String(i + 1).padStart(2, "0")}</div>
-                    <div className="dna-arch-tile-glyph">{x.glyph}</div>
-                  </div>
-                  <div className="dna-arch-tile-name">{x.name}</div>
-                  {x.tagline && <div className="dna-arch-tile-tag">“{x.tagline}”</div>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}

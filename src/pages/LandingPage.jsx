@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Shelf, { ShelfDecoration } from "../components/Shelf";
+import { ARCHETYPE_COUNT } from "../components/dna/constants";
 import "./LandingPage.css";
 
 const ARCHETYPES_PREVIEW = [
@@ -36,7 +37,7 @@ const STEPS = [
   { n: "02", t: "Five books is enough",
     d: "Our engine begins reading you back. Patterns emerge from the small data: what you gravitate toward, what you avoid, what co-occurs without you noticing." },
   { n: "03", t: "Receive your DNA",
-    d: "A typeset archetype card — one of twelve — based on the geometry of your shelf. Yours to keep, share, or print and tape inside your favorite book." },
+    d: "A typeset archetype card — one of eight — based on the geometry of your shelf. Yours to keep, share, or print and tape inside your favorite book." },
   { n: "04", t: "Watch yourself change",
     d: "The heatmap, the monthly recap, the slow tilt of your reading personality. The book that finally fills your blind spot. The data is yours." },
 ];
@@ -146,7 +147,7 @@ export default function LandingPage({ onGetStarted }) {
         <div className="lrr-arch-head">
           <h2 className="lrr-h2">Which kind of <em>reader</em> are you?</h2>
           <p className="lrr-arch-dek">
-            One of twelve archetypes — derived from the geometry of your shelf, not a quiz.
+            One of eight archetypes — derived from the geometry of your shelf, not a quiz.
           </p>
         </div>
         <div className="lrr-arch-grid">
@@ -168,7 +169,9 @@ export default function LandingPage({ onGetStarted }) {
             </article>
           ))}
         </div>
-        <div className="lrr-arch-foot">nine others wait inside the catalog.</div>
+        <div className="lrr-arch-foot">
+          {ARCHETYPE_COUNT - ARCHETYPES_PREVIEW.length} others wait inside the catalog.
+        </div>
       </section>
 
       {/* ============== MANIFESTO ============== */}

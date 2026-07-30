@@ -10,3 +10,9 @@ export const MIN_BOOKS = 5;
 // reveals ("you said comfort; your shelf says devastation"). The options are
 // therefore the shared emotion vocabulary itself, not a bespoke list.
 export const MAX_READ_FOR = 2;
+
+// How many archetypes the engine can actually return. Mirrors PERSONALITY_TYPES
+// in the backend's app/services/dna_engine.py — the two must agree. Referenced
+// rather than retyped into copy: this number was wrong ("twelve") in three
+// separate places at once before it was pinned here.
+export const ARCHETYPE_COUNT = 8;

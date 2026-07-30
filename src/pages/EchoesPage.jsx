@@ -28,6 +28,9 @@ export default function EchoesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [emotion, setEmotion] = useState(null); // "a feeling" anchor view
+  // "your echoes" — composes WITH the emotion anchor rather than replacing it, so
+  // "my echoes tagged grief" is one query on the server. [B: ?mine=true]
+  const [mine, setMine] = useState(false);
 
   const [composing, setComposing] = useState(false);
   const [threadEcho, setThreadEcho] = useState(null);
@@ -42,11 +45,11 @@ export default function EchoesPage() {
   };
 
   // Load the first page for the current anchor. Resets the list.
-  const loadFirst = useCallback(async (emo) => {
+  const loadFirst = useCallback(async (emo, onlyMine) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getEchoFeed({ emotion: emo || null });
+      const data = await getEchoFeed({ emotion: emo || null, mine: onlyMine });
       setEchoes(data.echoes || []);
       setCursor(data.next_cursor || null);
       setCaughtUp(!!data.caught_up);
@@ -56,13 +59,13 @@ export default function EchoesPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadFirst(emotion); }, [emotion, loadFirst]);
+  useEffect(() => { loadFirst(emotion, mine); }, [emotion, mine, loadFirst]);
 
   const loadMore = async () => {
     if (loadingMore || caughtUp || !cursor) return;
     setLoadingMore(true);
     try {
-      const data = await getEchoFeed({ cursor, emotion: emotion || null });
+      const data = await getEchoFeed({ cursor, emotion: emotion || null, mine });
       setEchoes((prev) => [...prev, ...(data.echoes || [])]);
       setCursor(data.next_cursor || null);
       setCaughtUp(!!data.caught_up);
@@ -106,20 +109,58 @@ export default function EchoesPage() {
       </div>
       <div className="rule-dbl" style={{ marginBottom: 24 }} />
 
+      {/* WHOSE — everyone vs your own. Kept on its own row above the feeling
+          anchors because the two compose: "your echoes" + "grief" is one query. */}
+      <div className="ep-filters ep-filters-whose">
+        <button
+          className={`chip ${!mine ? "active" : ""}`}
+          style={{ "--chip-c": "var(--ink)" }}
+          aria-pressed={!mine}
+          onClick={() => setMine(false)}
+        >
+          everyone
+        </button>
+        <button
+          className={`chip ${mine ? "active" : ""}`}
+          style={{ "--chip-c": "var(--ink)" }}
+          aria-pressed={mine}
+          onClick={() => setMine(true)}
+        >
+          your echoes
+        </button>
+      </div>
+
+      {/* The private-counts promise, stated where the counts appear. */}
+      {mine && (
+        <p className="ep-mine-note">
+          What you've said, and who was listening. These counts are yours alone — no
+          one else sees them.
+        </p>
+      )}
+
       {/* "A Feeling" anchor views — filter, not ranking. */}
       <div className="ep-filters">
         <div className="label" style={{ marginRight: 4 }}>a feeling</div>
-        <button className={`chip ${!emotion ? "active" : ""}`} style={{ "--chip-c": "var(--ink)" }} onClick={() => setEmotion(null)}>
-          <span className="swatch" /> everything
+        <button
+          className={`chip ${!emotion ? "active" : ""}`}
+          style={{ "--chip-c": "var(--ink)" }}
+          aria-pressed={!emotion}
+          onClick={() => setEmotion(null)}
+        >
+          <span className="swatch" /> any
         </button>
+        {/* The single word, not the tagging phrase — a filter row is an index of
+            the vocabulary, and "grief" sits in a chip where "it grieved me" does
+            not. The swatch keeps the colour cue redundant with the label. */}
         {EMO_LIST.map(([id, e]) => (
           <button
             key={id}
             className={`chip ${emotion === id ? "active" : ""}`}
             style={{ "--chip-c": e.color }}
+            aria-pressed={emotion === id}
             onClick={() => setEmotion(emotion === id ? null : id)}
           >
-            <span className="swatch" />{e.label.toLowerCase()}
+            <span className="swatch" />{(e.name || id).toLowerCase()}
           </button>
         ))}
       </div>
@@ -134,13 +175,23 @@ export default function EchoesPage() {
           <div className="empty-glyph">⚠</div>
           <div className="empty-title">Couldn't reach the echoes</div>
           <div className="empty-sub">Something went wrong on our end. Try again in a moment.</div>
-          <button className="btn" style={{ marginTop: 18 }} onClick={() => loadFirst(emotion)}>try again</button>
+          <button className="btn" style={{ marginTop: 18 }} onClick={() => loadFirst(emotion, mine)}>try again</button>
         </div>
       ) : echoes.length === 0 ? (
         <div className="empty-state">
           <div className="empty-glyph">✦</div>
-          <div className="empty-title">{emotion ? "No echoes for this feeling yet" : "No echoes yet"}</div>
-          <div className="empty-sub">The silence is loud. Be the first to say something true.</div>
+          <div className="empty-title">
+            {mine
+              ? (emotion ? "You haven't echoed this feeling yet" : "You haven't written an echo yet")
+              : (emotion ? "No echoes for this feeling yet" : "No echoes yet")}
+          </div>
+          {/* Your own empty shelf is not a silent room — don't tell the author to
+              "be the first" among their own echoes. */}
+          <div className="empty-sub">
+            {mine
+              ? "Whatever a book did to you, this is where you'd put it."
+              : "The silence is loud. Be the first to say something true."}
+          </div>
           <button className="btn brass" style={{ marginTop: 18 }} onClick={() => setComposing(true)}>write an echo</button>
         </div>
       ) : (
@@ -161,8 +212,10 @@ export default function EchoesPage() {
           {/* Feeds end. Explicit, calm terminus — no infinite scroll. */}
           {caughtUp ? (
             <div className="ep-caughtup">
-              <span className="ep-caughtup-glyph">◆</span>
+              <span className="ep-caughtup-glyph" aria-hidden="true">◆</span>
               <span className="ep-caughtup-line">You're caught up.</span>
+              {/* Naming the design as deliberate: the feed stopping is the feature. */}
+              <span className="ep-caughtup-sub">Nothing more waiting. That's on purpose.</span>
               <button className="ep-caughtup-cta" onClick={() => setComposing(true)}>
                 Add your own →
               </button>

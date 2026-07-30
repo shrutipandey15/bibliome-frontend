@@ -8,7 +8,7 @@
   padding: 14px 16px;
   border: 1px solid var(--rule, rgba(0,0,0,0.15));
   border-radius: 3px;
-  background: var(--bg-vellum);
+  background: var(--bg-field);
   font-family: var(--font-display);
   font-size: 17px;
   line-height: 1.5;
@@ -25,7 +25,7 @@
   padding: 9px 12px;
   border: 1px solid var(--rule, rgba(0,0,0,0.15));
   border-radius: 2px;
-  background: var(--bg-vellum);
+  background: var(--bg-field);
   font-family: var(--font-display);
   font-size: 15px;
   color: var(--ink);
@@ -38,7 +38,7 @@
   padding: 6px 11px;
   border: 1px solid var(--rule, rgba(0,0,0,0.15));
   border-radius: 999px;
-  background: var(--bg-vellum);
+  background: var(--bg-field);
   font-family: var(--font-display);
   font-size: 13px;
   color: var(--ink);
@@ -49,6 +49,14 @@
 .ec-emo-chip.active { border-color: var(--emo-c); background: color-mix(in srgb, var(--emo-c) 14%, transparent); }
 .ec-emo-chip.primary { box-shadow: inset 0 0 0 1px var(--emo-c); }
 .ec-emo-chip:focus-visible { outline: 2px solid var(--emo-c); outline-offset: 2px; }
+/* The reveal, set as a quiet sibling of the chips it opens. */
+.ec-emo-more {
+  color: var(--ink-faint);
+  border-style: dashed;
+  background: transparent;
+}
+.ec-emo-more:hover { color: var(--ink); border-color: var(--ink-quiet); }
+.ec-emo-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 .ec-visrow { flex-direction: row; align-items: center; justify-content: space-between; }
 .ec-vis { display: inline-flex; border: 1px solid var(--rule, rgba(0,0,0,0.15)); border-radius: 2px; overflow: hidden; }
@@ -56,7 +64,7 @@
   padding: 7px 14px;
   border: none;
   border-right: 1px solid var(--rule, rgba(0,0,0,0.15));
-  background: var(--bg-vellum);
+  background: var(--bg-field);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -65,7 +73,8 @@
   cursor: pointer;
 }
 .ec-vis-opt:last-child { border-right: none; }
-.ec-vis-opt.active { background: var(--brass); color: #fff; }
+/* Selected reads as ink-on-paper inverted, matching the feed's active filter. */
+.ec-vis-opt.active { background: var(--ink); color: var(--bg-page); }
 .ec-vis-opt:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
 
 .ec-error { color: var(--oxblood); font-size: 13px; }

@@ -15,7 +15,7 @@ This repo is one of a three-document set that governs the work:
 
 ## The product, in one paragraph
 
-BookDNA is a private journal for readers. You log a book, tag what it did to you from a shared vocabulary of **13 emotions**, and — over time — the app reflects a **reading DNA** back at you: one of **12 archetypes** drawn from the geometry of your shelf, plus resurfaced memories ("three months ago, *this* wrecked you"). The single public surface, **Echo**, is built to be structurally incapable of becoming social media: chronological, it **ends**, and it renders **no counts of any kind** — no followers, no likes, no karma, ever.
+BookDNA is a private journal for readers. You log a book, tag what it did to you from a shared vocabulary of **18 emotions**, and — after **5 books** — the app reflects a **reading DNA** back at you: one of **8 archetypes** drawn from the geometry of your shelf, plus resurfaced memories ("three months ago, *this* wrecked you"). The single public surface, **Echo**, is built to be structurally incapable of becoming social media: chronological, it **ends**, and it renders **no counts of any kind** — no followers, no likes, no karma, ever.
 
 ---
 
@@ -113,7 +113,7 @@ src/
 │   ├── api.js                    apiFetch (cookie auth + single-flight refresh),
 │   │                             ApiError, entries/DNA/echo/social/notifications
 │   ├── offline.js                Per-account localStorage entry cache
-│   └── emotions.js               13-emotion vocab (seeded, hydrated from /emotions)
+│   └── emotions.js               18-emotion vocab (seeded, hydrated from /emotions)
 ├── components/
 │   ├── Modal.jsx                 Accessible modal baseline (focus trap, Esc, restore)
 │   ├── EntryModal.jsx            Log/edit a book — full fields + search autocomplete
