@@ -5,165 +5,193 @@
   padding: 12px;
 }
 
+/* ============================================================
+   THE PLATE
+
+   A dark, foil-edged card on the archetype's own colour. It is
+   deliberately self-contained rather than themed: this object gets
+   saved as an image and shared out of the app entirely, so it has
+   to look like itself on a white page, a dark page, or a screenshot
+   in someone else's feed.
+   ============================================================ */
 .dna-card {
   position: relative;
-  width: 440px;
-  height: 640px;
-  padding: 32px;
-  background:
-    linear-gradient(155deg,
-      color-mix(in srgb, var(--dc, var(--oxblood)) 18%, var(--bg-vellum)) 0%,
-      var(--bg-card) 70%);
-  background-image: var(--paper-grain);
-  background-blend-mode: multiply;
-  border: 1px solid color-mix(in srgb, var(--dc, var(--oxblood)) 35%, var(--rule));
-  border-radius: 4px;
-  box-shadow: var(--shadow-lg), inset 0 0 60px color-mix(in srgb, var(--dc, var(--oxblood)) 10%, transparent);
+  width: var(--card-w, 372px);
+  aspect-ratio: 2 / 2.92;
+  padding: 30px 30px 26px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(168deg,
+    color-mix(in srgb, var(--dc, var(--oxblood)) 62%, #14100a),
+    color-mix(in srgb, var(--dc, var(--oxblood)) 20%, #0a0704));
+  border-radius: 2px;
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
-  color: var(--ink);
+  color: #f5ecd2;
 }
-.dna-card--small { width: 320px; height: 470px; padding: 22px; }
+.dna-card--large { --card-w: 440px; }
+.dna-card--small { --card-w: 372px; }
 
-/* corner glyphs */
-.dna-corner {
+/* Two inset rules, the way a bookplate is ruled — not four corner glyphs. */
+.dna-card::before,
+.dna-card::after {
+  content: "";
   position: absolute;
-  font-family: var(--font-display);
-  color: var(--dc, var(--oxblood));
-  font-size: 18px;
-  opacity: 0.85;
-  line-height: 1;
+  pointer-events: none;
 }
-.dna-corner-tl { top: 14px; left: 14px; }
-.dna-corner-tr { top: 14px; right: 14px; }
-.dna-corner-bl { bottom: 14px; left: 14px; transform: rotate(180deg); }
-.dna-corner-br { bottom: 14px; right: 14px; transform: rotate(180deg); }
+.dna-card::before { inset: 11px; border: 1px solid rgba(224, 196, 122, 0.34); }
+.dna-card::after  { inset: 15px; border: 1px solid rgba(224, 196, 122, 0.13); }
 
+/* Grain overlay for the plate. */
 .dna-frame {
   position: absolute;
-  inset: 18px;
-  border: 1px solid color-mix(in srgb, var(--dc, var(--oxblood)) 28%, transparent);
-  border-radius: 2px;
+  inset: 0;
+  background-image: var(--paper-grain);
+  opacity: 0.16;
+  mix-blend-mode: overlay;
   pointer-events: none;
 }
 
 .dna-header {
+  position: relative;
   display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 28px;
+  gap: 16px;
 }
 .dna-label {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  color: var(--dc, var(--oxblood));
-  margin-bottom: 4px;
+  font-size: 8px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(224, 196, 122, 0.9);
 }
 .dna-vol {
   font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--ink-faint);
+  font-size: 8px;
   letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 236, 210, 0.45);
+  margin-top: 5px;
 }
 .dna-glyph {
   font-family: var(--font-display);
-  font-size: 44px;
-  color: var(--dc, var(--oxblood));
+  font-size: 19px;
+  color: rgba(224, 196, 122, 0.92);
   line-height: 1;
-  text-shadow: 0 0 30px color-mix(in srgb, var(--dc, var(--oxblood)) 40%, transparent);
 }
 
 .dna-name {
+  position: relative;
   font-family: var(--font-display);
-  font-size: 44px;
-  font-weight: 400;
+  font-size: 37px;
+  font-weight: 300;
   letter-spacing: -0.02em;
-  line-height: 0.98;
-  margin-bottom: 8px;
-  color: var(--ink);
+  line-height: 1.02;
+  margin: 26px 0 0;
+  color: #f5ecd2;
 }
-.dna-name em { color: var(--dc, var(--oxblood)); font-style: italic; }
+.dna-name em { color: var(--dc, var(--oxblood)); font-style: italic; filter: brightness(1.6); }
 .dna-tagline {
+  position: relative;
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 16px;
-  color: var(--ink-quiet);
-  margin-bottom: 18px;
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: rgba(245, 236, 210, 0.62);
+  margin-top: 12px;
+  text-wrap: pretty;
 }
 .dna-blurb {
+  position: relative;
   font-family: var(--font-display);
-  font-size: 14.5px;
-  line-height: 1.52;
-  color: var(--ink-soft);
-  margin-bottom: 22px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(245, 236, 210, 0.72);
+  margin: 12px 0 0;
 }
 
-.dna-divider {
+.dna-card-rule {
+  position: relative;
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--dc, var(--oxblood)), transparent);
-  margin-bottom: 16px;
-  opacity: 0.7;
+  background: rgba(224, 196, 122, 0.22);
+  margin: 22px 0 16px;
 }
-.dna-fp-label { margin-bottom: 12px; color: var(--dc, var(--oxblood)) !important; }
+.dna-fp-label {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(245, 236, 210, 0.42) !important;
+  margin-bottom: 12px;
+}
 
-.dna-bar-row {
-  display: grid;
-  grid-template-columns: 14px 80px 1fr 22px;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 7px;
+/* Leader dots and the figure — the same index-page treatment as the portrait on
+   the DNA page. A bar track added a length to estimate next to a number that
+   already said it. */
+.dna-fp-row {
+  position: relative;
+  display: flex; align-items: baseline; gap: 9px;
+  margin-bottom: 9px;
 }
 .dna-dot {
-  width: 10px; height: 10px;
+  width: 6px; height: 6px;
   border-radius: 50%;
+  flex: none;
+  transform: translateY(-2px);
   display: inline-block;
 }
-.dna-bar-label {
+.dna-fp-name {
   font-family: var(--font-display);
-  font-style: italic;
-  font-size: 13px;
-  color: var(--ink);
+  font-size: 15px;
+  color: rgba(245, 236, 210, 0.9);
 }
-.dna-bar-track {
-  height: 4px;
-  background: var(--rule-soft);
-  border-radius: 2px;
-  overflow: hidden;
-  display: block;
+.dna-fp-leader {
+  flex: 1;
+  border-bottom: 1px dotted rgba(224, 196, 122, 0.26);
+  transform: translateY(-3px);
 }
-.dna-bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: 2px;
-  animation: bd-fadeIn .8s ease both;
-}
-.dna-bar-count {
+.dna-fp-count {
   font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--ink-faint);
-  text-align: right;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(224, 196, 122, 0.85);
 }
 
 .dna-blinds {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rule-soft);
+  position: relative;
+  margin-top: auto;
+  padding-top: 20px;
+}
+.dna-blinds .label-sm {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(245, 236, 210, 0.36);
 }
 .dna-blind {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 13px;
-  color: var(--ink-quiet);
-  margin-top: 6px;
+  font-size: 14.5px;
+  color: rgba(245, 236, 210, 0.58);
+  margin-top: 5px;
 }
 
 .dna-footer {
-  position: absolute;
-  bottom: 26px; left: 32px; right: 32px;
-  display: flex; justify-content: space-between;
+  position: relative;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(224, 196, 122, 0.18);
+  display: flex; justify-content: space-between; gap: 14px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 8px;
   letter-spacing: 0.2em;
-  color: var(--ink-faint);
+  text-transform: uppercase;
+  color: rgba(245, 236, 210, 0.4);
 }
+/* When blind spots are present they own the bottom gap, so the footer sits
+   directly under them rather than pushing away a second time. */
+.dna-blinds + .dna-footer { margin-top: 16px; }
 
 .dna-actions {
   display: flex; gap: 12px;
@@ -286,7 +314,7 @@
 
 /* responsive */
 @media (max-width: 980px) {
-  .dna-card { width: 100%; max-width: 420px; height: 620px; }
+  .dna-card { --card-w: 100%; max-width: 420px; }
   .dna-reveal { padding: 0 28px; }
   .dna-reveal-grid { grid-template-columns: 1fr; gap: 40px; }
   .dna-reveal-h1 { font-size: 56px; }
@@ -294,7 +322,9 @@
   .dna-reveal-rail-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
-  .dna-card { width: 100%; max-width: 360px; height: 540px; padding: 22px; }
-  .dna-name { font-size: 32px; }
+  .dna-card { --card-w: 100%; max-width: 340px; padding: 22px; }
+  .dna-name { font-size: 30px; }
   .dna-blurb { font-size: 13px; }
+  .dna-tagline { font-size: 14px; }
+  .dna-fp-name { font-size: 14px; }
 }

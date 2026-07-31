@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
-// Isolate DNAView from the shareable card's network/ShareModal deps.
-vi.mock("../DNACard", () => ({ default: () => <div data-testid="dna-card" /> }));
+// Isolate DNAView from the shareable card's network/ShareModal deps. The stub
+// still renders the `footer` slot — DNAView puts the archetype's description
+// there, and swallowing it would hide real layout rather than a network call.
+vi.mock("../DNACard", () => ({
+  default: ({ footer }) => <div data-testid="dna-card">{footer}</div>,
+}));
 
 // DNAView no longer calls the API — snapshot history arrives on the profile
 // payload as `snapshot_count`. The mock stays only to catch a regression that
@@ -76,10 +80,15 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
   it("leads with the strongest insight and DEMOTES the archetype below it [F7.2]", async () => {
     await renderView({ profile: fullProfile, username: "alice" });
     const headline = screen.getByText(/2\.3 points higher/);
-    const archetype = document.querySelector(".dna-arch-name");
-    expect(archetype).toHaveTextContent("The Grief Romantic");
+    // The archetype is no longer duplicated in DNAView's own markup — the
+    // shorthand plate in the right-hand rail carries it, with the description
+    // beneath. Demotion is now a property of that rail's position: it follows
+    // the whole argument column in document order.
+    const rail = document.querySelector(".dna-aside");
+    expect(rail).toContainElement(screen.getByTestId("dna-card"));
+    expect(rail).toHaveTextContent("You read toward the ache.");
     // eslint-disable-next-line no-bitwise
-    const order = headline.compareDocumentPosition(archetype);
+    const order = headline.compareDocumentPosition(rail);
     expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 

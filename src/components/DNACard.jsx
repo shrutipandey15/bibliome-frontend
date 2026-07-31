@@ -4,7 +4,20 @@ import { generateShareToken } from "../services/api";
 import ShareModal from "./ShareModal";
 import "./DNACard.css";
 
-const DNACard = forwardRef(function DNACard({ profile, username, allowShare = false, onSave, size = "large" }, ref) {
+/**
+ * The shorthand card — the one shareable artifact. Rendered on the DNA page's
+ * shelf-side rail, on your profile, and on a shared link, so it is deliberately
+ * self-contained: a dark plate that carries its own surface rather than
+ * inheriting Vellum or Lamplight from whatever page it lands on.
+ *
+ * `footer` slots content between the plate and its actions (the DNA page puts
+ * the archetype's description there). `showDescription` keeps the blurb ON the
+ * plate for the standalone uses, where there is no page around it to hold it.
+ */
+const DNACard = forwardRef(function DNACard(
+  { profile, username, allowShare = false, onSave, size = "large", showDescription = true, footer = null },
+  ref
+) {
   const [showShare, setShowShare] = useState(false);
   const [shareToken, setShareToken] = useState(null);
 
@@ -22,17 +35,15 @@ const DNACard = forwardRef(function DNACard({ profile, username, allowShare = fa
 
   const p = profile.personality;
   const top = (profile.top_emotions || []).slice(0, 5);
-  const maxC = top[0]?.count || 1;
   const [first, ...rest] = (p.name || "").split(" ");
   const second = rest.join(" ");
 
   return (
     <div className="dna-wrapper">
       <div className={`dna-card anim-flip dna-card--${size}`} ref={ref} style={{ "--dc": p.color || "var(--oxblood)" }}>
-        <span className="dna-corner dna-corner-tl">◈</span>
-        <span className="dna-corner dna-corner-tr">◈</span>
-        <span className="dna-corner dna-corner-bl">◈</span>
-        <span className="dna-corner dna-corner-br">◈</span>
+        {/* The plate's grain. The four corner glyphs are gone — the double
+            ruled inset (see `.dna-card::before/::after`) does that job without
+            four more marks competing with the archetype's own. */}
         <span className="dna-frame" aria-hidden="true" />
 
         <div className="dna-header">
@@ -47,22 +58,23 @@ const DNACard = forwardRef(function DNACard({ profile, username, allowShare = fa
           {first}{second && <><br /><em>{second}</em></>}
         </h2>
         {p.tagline && <div className="dna-tagline">“{p.tagline}”</div>}
-        <p className="dna-blurb">{p.description}</p>
+        {showDescription && p.description && <p className="dna-blurb">{p.description}</p>}
 
-        <div className="dna-divider" />
+        {/* Renamed from `.dna-divider`, which collided with the DNA page's
+            ◆ ◆ ◆ section break of the same name — two stylesheets, one class,
+            and whichever loaded last won. */}
+        <div className="dna-card-rule" />
 
         <div className="label dna-fp-label">emotional fingerprint</div>
         {top.map((t) => {
           const em = EMOTIONS[t.emotion_id];
           if (!em) return null;
           return (
-            <div key={t.emotion_id} className="dna-bar-row">
-              <span className="dna-dot" style={{ background: em.color, boxShadow: `0 0 6px ${em.color}` }} />
-              <span className="dna-bar-label">{(em.name || em.label).toLowerCase()}</span>
-              <span className="dna-bar-track">
-                <span className="dna-bar-fill" style={{ width: `${(t.count / maxC) * 100}%`, background: em.color }} />
-              </span>
-              <span className="dna-bar-count">{String(t.count).padStart(2, "0")}</span>
+            <div key={t.emotion_id} className="dna-fp-row">
+              <span className="dna-dot" style={{ background: em.color }} />
+              <span className="dna-fp-name">{(em.name || em.label).toLowerCase()}</span>
+              <span className="dna-fp-leader" aria-hidden="true" />
+              <span className="dna-fp-count">{String(t.count).padStart(2, "0")}</span>
             </div>
           );
         })}
@@ -79,6 +91,8 @@ const DNACard = forwardRef(function DNACard({ profile, username, allowShare = fa
           <span>@{(username || "you").toUpperCase()}</span>
         </div>
       </div>
+
+      {footer}
 
       {allowShare && (
         <div className="dna-actions">

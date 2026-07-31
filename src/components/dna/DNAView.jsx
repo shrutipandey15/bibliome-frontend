@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { EMOTIONS, EMO_LIST } from "../../services/emotions";
 import DNACard from "../DNACard";
 import DNAGate from "./DNAGate";
@@ -126,7 +125,6 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
   // field existed — left as null in that case so the section says nothing rather
   // than wrongly claiming "no history". [F-DNA-4]
   const snapshotCount = profile?.snapshot_count ?? null;
-  const [showCard, setShowCard] = useState(false);
 
   // Below the gate — the honest empty state. NEVER a fabricated insight. [F7.1]
   if (!enough) {
@@ -172,85 +170,83 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
         </p>
       )}
 
-      {/* I — THE HEADLINE INSIGHT. Lead with the strongest, most specific thing.
-          aria-live announces it without stealing focus. [F7.2 / F7.8] */}
-      {headline && (
-        <section className="dna-headline" aria-labelledby="dna-reading-title" aria-live="polite">
-          <h2 id="dna-reading-title" className="dna-section-label">
-            <span className="dna-numeral">I</span> What your reading says
-          </h2>
-          <Insight insight={headline} headline statedFor={readFor.map(emoLabel)} />
-        </section>
-      )}
+      {/* The page is two columns: the argument, and the thing it argues toward.
+          Sections I–IV are read top to bottom; the shorthand is a plate that
+          stays beside them, because it is the summary of everything in the left
+          column and reading the evidence with the conclusion in view is the
+          whole point of the layout. */}
+      <div className="dna-body">
+        <div className="dna-col">
 
-      <Divider />
+          {/* I — THE HEADLINE INSIGHT. Lead with the strongest, most specific thing.
+              aria-live announces it without stealing focus. [F7.2 / F7.8] */}
+          {headline && (
+            <section className="dna-headline" aria-labelledby="dna-reading-title" aria-live="polite">
+              <h2 id="dna-reading-title" className="dna-section-label">
+                <span className="dna-numeral">I</span> What your reading says
+              </h2>
+              <Insight insight={headline} headline statedFor={readFor.map(emoLabel)} />
+            </section>
+          )}
 
-      {/* II — WHAT'S CHANGED. The return mechanic. [F7.3] */}
-      <EvolutionView profiles={profile.profiles} drift={profile.drift} snapshotCount={snapshotCount} />
+          <Divider />
 
-      <Divider />
+          {/* II — WHAT'S CHANGED. The return mechanic. [F7.3] */}
+          <EvolutionView profiles={profile.profiles} drift={profile.drift} snapshotCount={snapshotCount} />
 
-      {/* III — THE SHAPE OF YOU. The fingerprint, not the label. */}
-      <Portrait
-        counts={stats?.emotion_counts}
-        current={profile.profiles?.current}
-        blindSpots={arch?.blind_spots}
-      />
+          <Divider />
 
-      <Divider />
+          {/* III — THE SHAPE OF YOU. The fingerprint, not the label. */}
+          <Portrait
+            counts={stats?.emotion_counts}
+            current={profile.profiles?.current}
+            blindSpots={arch?.blind_spots}
+          />
 
-      {/* IV — OTHER FINDINGS, ranked by surprise. Basis on every one. [F7.2] */}
-      {rest.length > 0 && (
-        <section className="dna-more" aria-labelledby="dna-more-title">
-          <h2 id="dna-more-title" className="dna-section-label">
-            <span className="dna-numeral">IV</span> Other findings
-          </h2>
-          <ul className="dna-more-list">
-            {rest.map((i) => (
-              <li key={`${i.category}-${i.variant}`}><Insight insight={i} /></li>
-            ))}
-          </ul>
-        </section>
-      )}
+          <Divider />
 
-      <Divider />
+          {/* IV — OTHER FINDINGS, ranked by surprise. Basis on every one. [F7.2] */}
+          {rest.length > 0 && (
+            <section className="dna-more" aria-labelledby="dna-more-title">
+              <h2 id="dna-more-title" className="dna-section-label">
+                <span className="dna-numeral">IV</span> Other findings
+              </h2>
+              <ul className="dna-more-list">
+                {rest.map((i) => (
+                  <li key={`${i.category}-${i.variant}`}><Insight insight={i} /></li>
+                ))}
+              </ul>
+            </section>
+          )}
 
-      {/* V — THE SHORTHAND. Demoted: a hook, not the destination. [F7.2]
-          Set as a pulled quote against a rule in the archetype's own colour. The
-          shareable card is kept mounted but visually hidden — `onSave` rasterises
-          it via cardRef, so it has to be in the DOM to be saved. */}
-      {arch && (
-        <section className="dna-archetype" aria-labelledby="dna-arch-title">
-          <h2 id="dna-arch-title" className="dna-section-label">
-            <span className="dna-numeral">V</span> The shorthand
-          </h2>
-          <div className="dna-arch-strip" style={{ borderLeftColor: arch.color }}>
-            <div className="dna-arch-name">
-              The <em style={{ color: arch.color }}>{arch.name.replace(/^The\s+/i, "")}</em>
-            </div>
-            {arch.description && <p className="dna-arch-desc">{arch.description}</p>}
-          </div>
-          <div className="dna-arch-actions">
-            <button type="button" className="dna-arch-btn dna-arch-btn--primary" onClick={onSave}>
-              Save card
-            </button>
-            <button
-              type="button"
-              className="dna-arch-btn"
-              onClick={() => setShowCard((s) => !s)}
-              aria-expanded={showCard}
-            >
-              {showCard ? "Hide card" : "Share"}
-            </button>
-          </div>
-          <div className={`dna-arch-card ${showCard ? "" : "dna-arch-card--offscreen"}`} aria-hidden={!showCard}>
-            <DNACard ref={cardRef} profile={cardProfile} username={username} allowShare onSave={onSave} size="small" />
-          </div>
-        </section>
-      )}
+          {/* NOT YET — locked, WITH the real reason. [F7.4] */}
+          <LockedInsights locked={profile.locked} />
+        </div>
 
-      {/* NOT YET — locked, WITH the real reason. [F7.4] */}
-      <LockedInsights locked={profile.locked} />
+        {/* V — THE SHORTHAND. Still demoted in the argument (it is the label,
+            not the finding) but no longer hidden behind a toggle: it is the one
+            thing here anybody wants to keep, and it was being rendered
+            off-screen purely so `onSave` could rasterise it. */}
+        {arch && (
+          <aside className="dna-aside" aria-labelledby="dna-arch-title">
+            <h2 id="dna-arch-title" className="dna-section-label">
+              <span className="dna-numeral">V</span> The shorthand
+            </h2>
+            <DNACard
+              ref={cardRef}
+              profile={cardProfile}
+              username={username}
+              size="small"
+              allowShare
+              onSave={onSave}
+              /* The plate is already dense; on this page the description has a
+                 column to live in underneath it. */
+              showDescription={false}
+              footer={arch.description && <p className="dna-arch-desc">{arch.description}</p>}
+            />
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
