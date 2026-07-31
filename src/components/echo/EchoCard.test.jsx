@@ -132,10 +132,11 @@ describe("EchoCard — your own echo (mockup pass)", () => {
     expect(screen.getByText(/1 reply\b/i)).toBeInTheDocument();
   });
 
-  it("says something kind, not a zero, when no one has responded", () => {
-    // The backend sends an explicit 0 rather than omitting the key.
+  it("says something, not a zero, when no one has responded", () => {
+    // The backend sends an explicit 0 rather than omitting the key. Silence gets
+    // a line of its own so it reads as a state rather than as a failed metric.
     render(<EchoCard echo={{ ...baseEcho, is_mine: true, reaction_counts: {}, reply_count: 0 }} />);
-    expect(screen.getByText(/no one has responded yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no replies/i)).toBeInTheDocument();
     expect(document.querySelector(".eco-tally").textContent).not.toMatch(/\b0\b/);
   });
 

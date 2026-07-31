@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { EMO_LIST } from "../services/emotions";
+import { EMOTIONS, getEmotionFamilies } from "../services/emotions";
 import {
   getEchoFeed, blockHandle, muteHandle, reportEcho, reportReply,
 } from "../services/api";
@@ -18,6 +18,12 @@ import "./EchoesPage.css";
  *   - chronological, keyset-paginated, ENDS with an explicit "you're caught up"
  *   - renders NO counts of any kind (no trending, no "echo of the day", no totals)
  *   - no path from the feed to a person's other content or a profile [F3.7]
+ *
+ * The layout is two columns because the page has two jobs and they don't belong
+ * to each other: a column you READ, and a rail you ACT from. The eighteen
+ * emotions used to sit as a chip wall above the feed, where they read as
+ * eighteen equal buttons; in the rail they read as an index, grouped by the
+ * families the vocabulary already has.
  */
 export default function EchoesPage() {
   const navigate = useNavigate();
@@ -91,145 +97,124 @@ export default function EchoesPage() {
     else await reportEcho(reportTarget.echo.id, category);
   };
 
+  const activeEmo = emotion ? EMOTIONS[emotion] : null;
+
   return (
     <div className="echoes-page">
-      <div className="ep-masthead">
-        <div>
-          <div className="label" style={{ marginBottom: 14 }}>· the one public room ·</div>
-          <h1 className="ep-h1">The <em>Echoes</em>.</h1>
-          <p className="ep-dek">
-            The raw thing a book did to you — and others doing the same. No followers, no
-            counts, no feed that never ends. Say the true thing.
-          </p>
-        </div>
-        <div className="ep-head-actions">
-          <button className="btn ghost" onClick={() => navigate("/")} style={{ fontSize: 12 }}>← back to shelf</button>
-          <button className="btn brass" onClick={() => setComposing(true)}>write an echo</button>
-        </div>
-      </div>
-      <div className="rule-dbl" style={{ marginBottom: 24 }} />
-
-      {/* WHOSE — everyone vs your own. Kept on its own row above the feeling
-          anchors because the two compose: "your echoes" + "grief" is one query. */}
-      <div className="ep-filters ep-filters-whose">
-        <button
-          className={`chip ${!mine ? "active" : ""}`}
-          style={{ "--chip-c": "var(--ink)" }}
-          aria-pressed={!mine}
-          onClick={() => setMine(false)}
-        >
-          everyone
-        </button>
-        <button
-          className={`chip ${mine ? "active" : ""}`}
-          style={{ "--chip-c": "var(--ink)" }}
-          aria-pressed={mine}
-          onClick={() => setMine(true)}
-        >
-          your echoes
-        </button>
-      </div>
-
-      {/* The private-counts promise, stated where the counts appear. */}
-      {mine && (
-        <p className="ep-mine-note">
-          What you've said, and who was listening. These counts are yours alone — no
-          one else sees them.
-        </p>
-      )}
-
-      {/* "A Feeling" anchor views — filter, not ranking. */}
-      <div className="ep-filters">
-        <div className="label" style={{ marginRight: 4 }}>a feeling</div>
-        <button
-          className={`chip ${!emotion ? "active" : ""}`}
-          style={{ "--chip-c": "var(--ink)" }}
-          aria-pressed={!emotion}
-          onClick={() => setEmotion(null)}
-        >
-          <span className="swatch" /> any
-        </button>
-        {/* The single word, not the tagging phrase — a filter row is an index of
-            the vocabulary, and "grief" sits in a chip where "it grieved me" does
-            not. The swatch keeps the colour cue redundant with the label. */}
-        {EMO_LIST.map(([id, e]) => (
-          <button
-            key={id}
-            className={`chip ${emotion === id ? "active" : ""}`}
-            style={{ "--chip-c": e.color }}
-            aria-pressed={emotion === id}
-            onClick={() => setEmotion(emotion === id ? null : id)}
-          >
-            <span className="swatch" />{(e.name || id).toLowerCase()}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="loading-screen" style={{ minHeight: 260 }}>
-          <div className="loading-glyph">◈</div>
-          <div className="loading-text">listening for echoes…</div>
-        </div>
-      ) : error ? (
-        <div className="empty-state" role="alert">
-          <div className="empty-glyph">⚠</div>
-          <div className="empty-title">Couldn't reach the echoes</div>
-          <div className="empty-sub">Something went wrong on our end. Try again in a moment.</div>
-          <button className="btn" style={{ marginTop: 18 }} onClick={() => loadFirst(emotion, mine)}>try again</button>
-        </div>
-      ) : echoes.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-glyph">✦</div>
-          <div className="empty-title">
-            {mine
-              ? (emotion ? "You haven't echoed this feeling yet" : "You haven't written an echo yet")
-              : (emotion ? "No echoes for this feeling yet" : "No echoes yet")}
+      <div className="ep-main">
+        <header className="ep-masthead">
+          <div>
+            <div className="label">· the one public room ·</div>
+            <h1 className="ep-h1">The <em>Echoes</em>.</h1>
+            <p className="ep-dek">
+              The raw thing a book did to you, and other people doing the same. No
+              followers. No counts. No feed that never ends.
+            </p>
           </div>
-          {/* Your own empty shelf is not a silent room — don't tell the author to
-              "be the first" among their own echoes. */}
-          <div className="empty-sub">
-            {mine
-              ? "Whatever a book did to you, this is where you'd put it."
-              : "The silence is loud. Be the first to say something true."}
+          <div className="ep-head-actions">
+            <button className="btn ghost" onClick={() => navigate("/")} style={{ fontSize: 12 }}>← back to shelf</button>
           </div>
-          <button className="btn brass" style={{ marginTop: 18 }} onClick={() => setComposing(true)}>write an echo</button>
-        </div>
-      ) : (
-        <div className="ep-feed">
-          {echoes.map((echo) => (
-            <EchoCard
-              key={echo.id}
-              echo={echo}
-              onReadMore={setThreadEcho}
-              onReport={(e) => setReportTarget({ echo: e })}
-              onMute={doMute}
-              onBlock={doBlock}
-              onToast={showToast}
-              hiddenHandles={hiddenHandles}
-            />
-          ))}
+        </header>
 
-          {/* Feeds end. Explicit, calm terminus — no infinite scroll. */}
-          {caughtUp ? (
-            <div className="ep-caughtup">
-              <span className="ep-caughtup-glyph" aria-hidden="true">◆</span>
-              <span className="ep-caughtup-line">You're caught up.</span>
-              {/* Naming the design as deliberate: the feed stopping is the feature. */}
-              <span className="ep-caughtup-sub">Nothing more waiting. That's on purpose.</span>
-              <button className="ep-caughtup-cta" onClick={() => setComposing(true)}>
-                Add your own →
-              </button>
-            </div>
-          ) : (
-            <button className="ep-more" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? "loading…" : "load older echoes"}
+        {/* WHOSE — everyone vs your own. It composes with the feeling anchor in
+            the rail: "your echoes" + "grief" is one query. */}
+        <div className="ep-scope">
+          <div className="ep-seg" role="group" aria-label="Whose echoes">
+            <button aria-pressed={!mine} onClick={() => setMine(false)}>everyone</button>
+            <button aria-pressed={mine} onClick={() => setMine(true)}>your echoes</button>
+          </div>
+          {activeEmo && (
+            <button
+              className="ep-active-filter"
+              onClick={() => setEmotion(null)}
+              aria-label={`Clear the ${(activeEmo.name || emotion)} filter`}
+            >
+              <span className="swatch" style={{ background: activeEmo.color }} />
+              {(activeEmo.name || emotion).toLowerCase()} ✕
             </button>
           )}
+          <div className="ep-order">chronological</div>
         </div>
-      )}
+
+        {/* The private-counts promise, stated where the counts appear. */}
+        {mine && (
+          <p className="ep-mine-note">
+            Your echoes, and what came back. Nobody else sees these numbers.
+          </p>
+        )}
+
+        {loading ? (
+          <div className="ep-loading">
+            <div className="ep-loading-glyph" aria-hidden="true">◈</div>
+            <div className="ep-loading-text">listening for echoes</div>
+          </div>
+        ) : error ? (
+          <div className="ep-notice error" role="alert">
+            <div className="ep-notice-kicker">couldn't reach the room</div>
+            <h2>That one's on us.</h2>
+            <p>Our end broke, not yours. Nothing you wrote went anywhere.</p>
+            <button className="btn" onClick={() => loadFirst(emotion, mine)}>try again</button>
+          </div>
+        ) : echoes.length === 0 ? (
+          <div className="ep-notice ep-notice--empty">
+            <div className="ep-notice-glyph" aria-hidden="true">✦</div>
+            <h2>
+              {mine
+                ? (emotion ? "You haven't echoed this feeling." : "You haven't said anything yet.")
+                : (emotion ? "Nobody has echoed this feeling." : "Empty.")}
+            </h2>
+            {/* Your own empty shelf is not a silent room — don't tell the author to
+                "go first" among their own echoes. */}
+            <p className="italic">
+              {mine
+                ? "Whatever the last book did to you goes here."
+                : "Someone has to go first and it may as well be you."}
+            </p>
+            <button className="btn brass" onClick={() => setComposing(true)}>write an echo</button>
+          </div>
+        ) : (
+          <div className="ep-feed">
+            {echoes.map((echo) => (
+              <EchoCard
+                key={echo.id}
+                echo={echo}
+                onReadMore={setThreadEcho}
+                onReport={(e) => setReportTarget({ echo: e })}
+                onMute={doMute}
+                onBlock={doBlock}
+                onToast={showToast}
+                hiddenHandles={hiddenHandles}
+              />
+            ))}
+
+            {/* Feeds end. Explicit, calm terminus — no infinite scroll. */}
+            {caughtUp ? (
+              <div className="ep-caughtup">
+                <div className="ep-caughtup-glyph" aria-hidden="true">◆</div>
+                <div className="ep-caughtup-line">That's all of it.</div>
+                {/* Naming the design as deliberate: the feed stopping is the feature. */}
+                <div className="ep-caughtup-sub">The feed ends. That's the whole point.</div>
+                <button className="ep-caughtup-cta" onClick={() => setComposing(true)}>
+                  Add your own →
+                </button>
+              </div>
+            ) : (
+              <button className="ep-more" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? "loading…" : "load older echoes"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <FeelingRail
+        emotion={emotion}
+        onEmotion={setEmotion}
+        onCompose={() => setComposing(true)}
+      />
 
       {composing && (
-        <Modal onClose={() => setComposing(false)} ariaLabel="Write an echo" className="rr-modal-card" backdropClassName="rr-modal-backdrop">
+        <Modal onClose={() => setComposing(false)} ariaLabel="Write an echo" className="ec-modal-card" backdropClassName="rr-modal-backdrop">
           <EchoComposer
             onPosted={(echo) => { if (!emotion || echo?.primary_emotion === emotion) setEchoes((p) => [echo, ...p]); showToast("Echo posted"); }}
             onClose={() => setComposing(false)}
@@ -238,7 +223,7 @@ export default function EchoesPage() {
       )}
 
       {threadEcho && (
-        <Modal onClose={() => setThreadEcho(null)} ariaLabel="Echo thread" className="rr-modal-card" backdropClassName="rr-modal-backdrop">
+        <Modal onClose={() => setThreadEcho(null)} ariaLabel="Echo thread" className="et-modal-card" backdropClassName="rr-modal-backdrop">
           <EchoThread
             echoId={threadEcho.id}
             onReport={(reply) => setReportTarget({ echo: threadEcho, reply })}
@@ -254,5 +239,62 @@ export default function EchoesPage() {
 
       {toast && <div className={`toast toast-${toast.type}`} onClick={() => setToast(null)}>{toast.message}</div>}
     </div>
+  );
+}
+
+/**
+ * The rail. Two things: the one action this page has, and the feeling index.
+ *
+ * Grouped by family because "grief" and "boredom" are not siblings, and a flat
+ * row of eighteen chips asserted that they were. The families come from the
+ * server's own vocabulary, so this never drifts from the tagging surfaces.
+ */
+function FeelingRail({ emotion, onEmotion, onCompose }) {
+  const families = getEmotionFamilies();
+  return (
+    <aside className="ep-rail" aria-label="Write, and filter by feeling">
+      <div className="ep-rail-inner">
+        <div>
+          <button className="ep-rail-write" onClick={onCompose}>
+            <span>write an echo</span>
+            <span className="ep-rail-write-mark" aria-hidden="true">↵</span>
+          </button>
+          <p className="ep-rail-friction">Say the true thing, not the clever thing.</p>
+        </div>
+
+        <div className="ep-rail-rule" />
+
+        <div className="ep-rail-feelings">
+          <div>
+            <div className="ep-rail-label">a feeling</div>
+            <button
+              className="ep-feel ep-feel-any"
+              aria-pressed={!emotion}
+              onClick={() => onEmotion(null)}
+            >
+              <span className="ep-feel-swatch" />
+              any feeling
+            </button>
+          </div>
+          {families.map(({ family, emotions }) => (
+            <div className="ep-fam" key={family}>
+              <div className="ep-fam-name">{family}</div>
+              {emotions.map(([id, e]) => (
+                <button
+                  key={id}
+                  className="ep-feel"
+                  style={{ "--feel-c": e.color }}
+                  aria-pressed={emotion === id}
+                  onClick={() => onEmotion(emotion === id ? null : id)}
+                >
+                  <span className="ep-feel-swatch" />
+                  {(e.name || id).toLowerCase()}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </aside>
   );
 }

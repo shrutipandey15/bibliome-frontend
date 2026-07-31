@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("../../services/api", () => ({ postEcho: vi.fn() }));
@@ -25,27 +25,28 @@ describe("EchoComposer [F3.2 / B3.2]", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("starts with a short emotion list and reveals the rest on request", async () => {
+  it("shows the whole vocabulary, grouped, with nothing behind a reveal", async () => {
     render(<EchoComposer onPosted={vi.fn()} onClose={vi.fn()} />);
     const group = screen.getByRole("group", { name: /anchor emotions/i });
-    const chips = () => group.querySelectorAll(".ec-emo-chip:not(.ec-emo-more)");
-    expect(chips().length).toBe(4);
-
-    const more = screen.getByRole("button", { name: /\+ 14 more/i });
-    await userEvent.click(more);
-    expect(chips().length).toBe(EMO_LIST.length);
+    // Every emotion is one click away. The old "+14 more…" collapse existed
+    // because a flat wall of eighteen chips is unreadable; grouping them by
+    // family fixes that without hiding two thirds of the vocabulary.
+    expect(group.querySelectorAll(".ec-emo-chip").length).toBe(EMO_LIST.length);
     expect(screen.queryByRole("button", { name: /more…/i })).toBeNull();
+    // The families themselves are labelled, not just implied by order.
+    for (const family of new Set(EMO_LIST.map(([, e]) => e.family))) {
+      expect(within(group).getByText(family)).toBeInTheDocument();
+    }
   });
 
-  it("never hides a chosen emotion behind the collapse", async () => {
+  it("marks a chosen emotion pressed wherever it sits in the list", async () => {
     render(<EchoComposer onPosted={vi.fn()} onClose={vi.fn()} />);
-    await userEvent.click(screen.getByRole("button", { name: /\+ 14 more/i }));
-    // Pick something well past the preview window, then collapse is gone — but the
-    // guard matters: a selected chip must render regardless of its index.
+    // Something at the very end of the vocabulary, which the old collapse would
+    // have hidden.
     const late = EMO_LIST[EMO_LIST.length - 1];
-    await userEvent.click(screen.getByRole("button", { name: late[1].label.toLowerCase() }));
-    expect(screen.getByRole("button", { name: late[1].label.toLowerCase() }))
-      .toHaveAttribute("aria-pressed", "true");
+    const name = (late[1].name || late[0]).toLowerCase();
+    await userEvent.click(screen.getByRole("button", { name }));
+    expect(screen.getByRole("button", { name })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("shows the supportive crisis path instead of closing when the classifier fires [F3.6]", async () => {
@@ -64,11 +65,13 @@ describe("EchoComposer [F3.2 / B3.2]", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("shows a calm held-for-review state (not a rejection)", async () => {
+  it("shows a held-for-review state, not a rejection", async () => {
     postEcho.mockResolvedValue({ echo: { id: "e3", body: "x" }, held_for_review: true });
     render(<EchoComposer onPosted={vi.fn()} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/your reflection/i), "x");
     await userEvent.click(screen.getByRole("button", { name: /post echo/i }));
-    await waitFor(() => expect(screen.getByText(/Held for a quick look/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/held for review/i)).toBeInTheDocument());
+    // Held, not refused: it still tells you the echo is coming back.
+    expect(screen.getByText(/lands in your feed once it clears/i)).toBeInTheDocument();
   });
 });

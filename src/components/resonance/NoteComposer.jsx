@@ -14,9 +14,9 @@ export default function NoteComposer({
   onCancel,
   busy,
   error,
-  placeholder = "What did this book do to you?",
+  placeholder = "One thing about this book you can't say to anyone who hasn't read it.",
   submitLabel = "Leave the note",
-  hint = "Only they will read this, and only if they write back. Nobody else ever sees it.",
+  hint = "They see this only if they answer. Nobody else ever does.",
 }) {
   const [note, setNote] = useState("");
   const trimmed = note.trim();
@@ -34,16 +34,19 @@ export default function NoteComposer({
         autoFocus
         aria-label="Your note"
       />
-      <p className="res-composer-hint">{hint}</p>
       {error && <p className="res-composer-error" role="alert">{error}</p>}
+      {/* The hint moved down here, into the foot rule: it is a condition on the
+          send, so it belongs beside the button rather than between the reader
+          and the field they are still typing in. */}
       <div className="res-composer-foot">
-        {/* Only shown as it gets close — a counter ticking from 0 turns a note
-            into a form field. */}
-        <span className={`res-composer-count ${over ? "over" : ""}`}>
-          {note.length > MAX_NOTE - 100 ? `${MAX_NOTE - note.length}` : ""}
-        </span>
+        <span className="res-composer-hint">{hint}</span>
         <div className="res-composer-actions">
-          <button className="btn ghost" onClick={onCancel} disabled={busy}>never mind</button>
+          {/* Only shown as it gets close — a counter ticking from 0 turns a note
+              into a form field. */}
+          <span className={`res-composer-count ${over ? "over" : ""}`}>
+            {note.length > MAX_NOTE - 100 ? `${MAX_NOTE - note.length}` : ""}
+          </span>
+          <button className="rm-quiet" onClick={onCancel} disabled={busy}>never mind</button>
           <button
             className="btn brass"
             onClick={() => onSubmit(trimmed)}

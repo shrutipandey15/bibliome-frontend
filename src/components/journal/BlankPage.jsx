@@ -9,11 +9,17 @@ import { usePrivateJournal, todayISO } from "../../contexts/PrivateJournalContex
  * is a small decision demanded before the first sentence, and the first sentence
  * is the only thing that matters.
  *
- * The one piece of chrome is the save whisper, and it is chrome because it is
- * load-bearing: an app that silently eats writing is worse than one with a save
- * button. See `SaveWhisper` for why it says what it says.
+ * The page is now a bound sheet with a ruled margin, and the things that are
+ * *about* writing rather than part of it — the week, the unnamed days, the
+ * promise about the key — sit on a desk column beside it. They used to be either
+ * floating over the viewport (the save whisper) or stacked above the text as a
+ * bar you read past to get to the cursor (the unnamed-days prompt).
+ *
+ * The one piece of chrome on the sheet itself is the save whisper, and it is
+ * chrome because it is load-bearing: an app that silently eats writing is worse
+ * than one with a save button. See `SaveWhisper` for why it says what it says.
  */
-export default function BlankPage() {
+export default function BlankPage({ prompt = null, onNameDay }) {
   const { byDate, openDraft, writeDraft, flushNow } = usePrivateJournal();
   const date = todayISO();
 
@@ -55,21 +61,85 @@ export default function BlankPage() {
     el.style.height = `${el.scrollHeight}px`;
   }, [text]);
 
+  const words = countWords(text);
+
   return (
-    <div className="jr-page">
-      <div className="jr-page-date">{formatLongDate(date)}</div>
-      <textarea
-        ref={areaRef}
-        className="jr-writing"
-        value={text}
-        spellCheck
-        // Never autofocus-scroll the whole window; the ref handles focus.
-        onChange={(e) => { setText(e.target.value); writeDraft(date, e.target.value, existing?.id || null); }}
-        onBlur={() => flushNow()}
-        placeholder=""
-        aria-label={`Journal entry for ${formatLongDate(date)}`}
-      />
-      <SaveWhisper />
+    <div className="jr-today">
+      <div className="jr-page jr-sheet">
+        <div className="jr-sheet-head">
+          <span className="jr-page-date">{formatLongDate(date)}</span>
+          <SaveWhisper />
+        </div>
+        <textarea
+          ref={areaRef}
+          className="jr-writing"
+          value={text}
+          spellCheck
+          // Never autofocus-scroll the whole window; the ref handles focus.
+          onChange={(e) => { setText(e.target.value); writeDraft(date, e.target.value, existing?.id || null); }}
+          onBlur={() => flushNow()}
+          placeholder="Start anywhere."
+          aria-label={`Journal entry for ${formatLongDate(date)}`}
+        />
+        <div className="jr-sheet-foot">
+          {/* A count, not a target. Nothing here congratulates or scolds. */}
+          <span className="jr-words">{words} {words === 1 ? "word" : "words"}</span>
+          {existing && (
+            <button type="button" className="jr-link" onClick={() => onNameDay?.(existing)}>
+              name this day
+            </button>
+          )}
+        </div>
+      </div>
+
+      <aside className="jr-aside">
+        <div className="jr-aside-label">this week</div>
+        <WeekStrip byDate={byDate} today={date} />
+        {prompt}
+        <p className="jr-aside-note">
+          No one can read this page but you — not us, not the server. Lose the key
+          and it's gone for good.
+        </p>
+      </aside>
+    </div>
+  );
+}
+
+/**
+ * Seven marks, one per day. Deliberately not a streak: there is no number, no
+ * flame, no "you broke a 12-day run". A gap is visible and nothing comments on
+ * it, which is the most a journal should say about the days you didn't write.
+ */
+function WeekStrip({ byDate, today }) {
+  const days = useMemo(() => {
+    const written = new Set(byDate.filter((g) => g.items?.length).map((g) => g.date));
+    const [y, m, d] = today.split("-").map(Number);
+    const end = new Date(y, m - 1, d);
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(end);
+      day.setDate(end.getDate() - (6 - i));
+      const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+      return {
+        iso,
+        label: day.toLocaleDateString(undefined, { weekday: "narrow" }),
+        title: day.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }),
+        written: written.has(iso),
+        isToday: iso === today,
+      };
+    });
+  }, [byDate, today]);
+
+  return (
+    <div className="jr-week">
+      {days.map((d) => (
+        <div className="jr-week-day" key={d.iso}>
+          <div
+            className={`jr-week-mark${d.written ? " written" : ""}${d.isToday ? " today" : ""}`}
+            title={`${d.title} — ${d.written ? "written" : "nothing written"}`}
+          />
+          <div className="jr-week-label">{d.label}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -101,6 +171,11 @@ function SaveWhisper() {
       {saveState === "saving" ? "saving…" : "saved"}
     </div>
   );
+}
+
+export function countWords(text) {
+  const t = (text || "").trim();
+  return t ? t.split(/\s+/).length : 0;
 }
 
 export function formatLongDate(iso) {

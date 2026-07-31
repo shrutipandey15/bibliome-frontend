@@ -1,92 +1,234 @@
-/* Echo composer [F3.2 / B3.2] */
-.ec { display: flex; flex-direction: column; gap: 14px; padding: 28px; max-width: 540px; }
-.ec-head { display: flex; flex-direction: column; gap: 4px; }
-.ec-friction { font-family: var(--font-display); font-style: italic; font-size: 18px; color: var(--ink); margin: 0; }
+/* ============================================================
+   Echo composer [F3.2 / B3.2]
 
+   Two panes, because writing and filing are two different acts and
+   the old single column made you scroll past the anchor fields to
+   reach the button that posts. Left: a sheet, and nothing on it but
+   the sentence. Right: everything that is *about* the sentence —
+   the book, the feeling, who sees it — with the post button at the
+   bottom of that column, where the decisions end.
+   ============================================================ */
+.ec-modal-card {
+  width: 1010px;
+  max-width: 100%;
+  max-height: 92vh;
+  overflow: auto;
+  transform-origin: left center;
+}
+
+.ec {
+  display: grid;
+  grid-template-columns: 1.32fr 1fr;
+  align-items: stretch;
+  min-height: 0;
+}
+
+/* ── the writing pane ── */
+.ec-write {
+  padding: 34px 38px 26px;
+  background: var(--bg-field);
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+}
+.ec-write-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.ec-kicker {
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ec-count {
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.14em;
+  color: var(--ink-faint);
+}
+.ec-count.near { color: var(--oxblood); }
+.ec-friction {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 12px 0 0;
+  max-width: 34ch;
+}
+.ec-write-rule { height: 1px; background: var(--rule-soft); margin-top: 20px; }
+/* No border, no box: the pane IS the field. A framed textarea inside a framed
+   panel is two edges saying the same thing. */
 .ec-body {
+  flex: 1;
+  min-height: 280px;
   width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--rule, rgba(0,0,0,0.15));
-  border-radius: 3px;
-  background: var(--bg-field);
+  margin-top: 20px;
+  border: 0;
+  background: transparent;
+  resize: none;
   font-family: var(--font-display);
-  font-size: 17px;
-  line-height: 1.5;
+  font-size: 20px;
+  line-height: 1.7;
   color: var(--ink);
-  resize: vertical;
 }
-.ec-body:focus { border-color: var(--brass); outline: none; }
-.ec-count { font-family: var(--font-mono); font-size: 11px; color: var(--ink-quiet); text-align: right; margin-top: -8px; }
+.ec-write-foot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-ghost);
+}
 
-.ec-field { display: flex; flex-direction: column; gap: 8px; }
-.ec-label { color: var(--ink-quiet); }
-.ec-opt { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; opacity: 0.6; text-transform: uppercase; margin-left: 6px; }
+/* ── the anchor pane ── */
+.ec-anchor {
+  padding: 34px 34px 26px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+}
+.ec-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ec-opt { color: var(--ink-ghost); letter-spacing: 0.14em; margin-left: 6px; }
 .ec-input {
-  padding: 9px 12px;
-  border: 1px solid var(--rule, rgba(0,0,0,0.15));
-  border-radius: 2px;
+  margin-top: 7px;
+  padding: 11px 13px;
   background: var(--bg-field);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 15.5px;
   color: var(--ink);
 }
+.ec-input:first-of-type { margin-top: 10px; }
 .ec-input:focus { border-color: var(--brass); outline: none; }
 
-.ec-emo { display: flex; flex-wrap: wrap; gap: 7px; }
+.ec-feel-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+.ec-pick-hint {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+.ec-pick-hint.full { color: var(--brass); }
+
+/* All eighteen, but grouped — the "+14 more…" reveal existed because a flat
+   wall of eighteen chips is unreadable, not because the vocabulary is too long.
+   Grouped by family it scans in one pass and nothing is hidden behind a click. */
+.ec-fams { margin-top: 12px; display: flex; flex-direction: column; gap: 11px; }
+.ec-fam-name {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 12.5px; color: var(--ink-faint);
+  margin-bottom: 5px;
+}
+.ec-emo { display: flex; flex-wrap: wrap; gap: 5px; }
 .ec-emo-chip {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 11px;
-  border: 1px solid var(--rule, rgba(0,0,0,0.15));
+  padding: 5px 11px;
+  border: 1px solid var(--rule);
   border-radius: 999px;
-  background: var(--bg-field);
-  font-family: var(--font-display);
-  font-size: 13px;
-  color: var(--ink);
-  cursor: pointer;
-}
-.ec-emo-swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--emo-c, var(--ink-quiet)); }
-.ec-emo-chip:hover { border-color: var(--emo-c); }
-.ec-emo-chip.active { border-color: var(--emo-c); background: color-mix(in srgb, var(--emo-c) 14%, transparent); }
-.ec-emo-chip.primary { box-shadow: inset 0 0 0 1px var(--emo-c); }
-.ec-emo-chip:focus-visible { outline: 2px solid var(--emo-c); outline-offset: 2px; }
-/* The reveal, set as a quiet sibling of the chips it opens. */
-.ec-emo-more {
-  color: var(--ink-faint);
-  border-style: dashed;
   background: transparent;
-}
-.ec-emo-more:hover { color: var(--ink); border-color: var(--ink-quiet); }
-.ec-emo-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
-
-.ec-visrow { flex-direction: row; align-items: center; justify-content: space-between; }
-.ec-vis { display: inline-flex; border: 1px solid var(--rule, rgba(0,0,0,0.15)); border-radius: 2px; overflow: hidden; }
-.ec-vis-opt {
-  padding: 7px 14px;
-  border: none;
-  border-right: 1px solid var(--rule, rgba(0,0,0,0.15));
-  background: var(--bg-field);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--ink-quiet);
   cursor: pointer;
+  transition: all .16s;
 }
-.ec-vis-opt:last-child { border-right: none; }
-/* Selected reads as ink-on-paper inverted, matching the feed's active filter. */
-.ec-vis-opt.active { background: var(--ink); color: var(--bg-page); }
-.ec-vis-opt:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.ec-emo-swatch { width: 7px; height: 7px; border-radius: 50%; background: var(--emo-c, var(--ink-quiet)); }
+.ec-emo-chip:hover { border-color: var(--emo-c); color: var(--ink); }
+.ec-emo-chip.active {
+  border-color: var(--emo-c);
+  background: color-mix(in srgb, var(--emo-c) 16%, transparent);
+  color: var(--ink);
+}
+/* Primary vs secondary is a real distinction — the first feeling is the one the
+   feed files the echo under — so it gets a heavier ring, not just a tint. */
+.ec-emo-chip.primary { box-shadow: inset 0 0 0 1px var(--emo-c); font-weight: 600; }
+.ec-emo-chip:focus-visible { outline: 2px solid var(--emo-c); outline-offset: 2px; }
 
-.ec-error { color: var(--oxblood); font-size: 13px; }
-.ec-footer { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--rule, rgba(0,0,0,0.1)); padding-top: 16px; }
+.ec-vis-block { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rule-soft); }
+.ec-vis { display: flex; gap: 6px; margin-top: 9px; }
+/* Each option says what it means. "COMMUNITY / PUBLIC" as two bare words made
+   the reader guess which one was wider. */
+.ec-vis-opt {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all .16s;
+}
+.ec-vis-opt:hover { border-color: var(--ink-quiet); }
+.ec-vis-name { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.ec-vis-sub { font-size: 10.5px; color: var(--ink-faint); margin-top: 2px; }
+.ec-vis-opt.active { border-color: var(--ink); background: var(--bg-field); }
+.ec-vis-opt.active .ec-vis-name { color: var(--ink); }
+.ec-vis-opt:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
-/* Held-for-review + shared title */
-.ec-title { font-family: var(--font-display); font-size: 24px; font-style: italic; color: var(--ink); margin: 0; }
-.ec-held { align-items: center; text-align: center; gap: 16px; max-width: 440px; }
-.ec-held-glyph { font-size: 34px; color: var(--brass); }
-.ec-held-text { font-family: var(--font-display); font-size: 15px; line-height: 1.5; color: var(--ink-quiet); margin: 0; }
+.ec-error { color: var(--oxblood); font-size: 13px; margin-top: 14px; }
+.ec-footer {
+  margin-top: auto;
+  padding-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+.ec-cancel {
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-quiet);
+}
+.ec-cancel:hover { color: var(--ink); }
+.ec-cancel:disabled { opacity: 0.5; cursor: default; }
 
-@media (max-width: 560px) {
-  .ec { padding: 20px; }
-  .ec-visrow { flex-direction: column; align-items: flex-start; gap: 8px; }
+/* ── Held-for-review: one pane, centred. Not a form any more. ── */
+.ec-held {
+  display: block;
+  padding: 44px 48px 34px;
+  max-width: 560px;
+  text-align: center;
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+}
+.ec-held-glyph { font-family: var(--font-display); font-size: 34px; color: var(--brass); }
+.ec-title {
+  font-family: var(--font-display);
+  font-size: 29px; font-weight: 400; font-style: normal;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 16px 0 12px;
+}
+.ec-held-text {
+  font-family: var(--font-display);
+  font-size: 16.5px; line-height: 1.7;
+  color: var(--ink-quiet);
+  margin: 0;
+  text-wrap: pretty;
+}
+.ec-held .ec-footer { justify-content: center; }
+
+/* ── Responsive: the panes stack, writing first. ── */
+@media (max-width: 900px) {
+  .ec-modal-card { width: 100%; }
+  .ec { grid-template-columns: 1fr; }
+  .ec-write { border-right: 0; border-bottom: 1px solid var(--rule); padding: 26px 24px 20px; }
+  .ec-body { min-height: 180px; font-size: 18px; }
+  .ec-anchor { padding: 24px 24px 22px; }
+  .ec-footer { padding-top: 20px; }
+}
+@media (max-width: 640px) {
+  .ec-modal-card { border-radius: 18px 18px 0 0; transform-origin: bottom center; }
+  .ec-friction { font-size: 17px; }
+  .ec-vis { flex-direction: column; }
+  .ec-held { padding: 30px 24px 24px; }
 }

@@ -44,7 +44,9 @@ describe("ResonancePage — anonymity", () => {
     getResonanceMatches.mockResolvedValue(list([suggested]));
     const { container } = render(<ResonancePage />);
 
-    await waitFor(() => screen.getByText("The Remains of the Day"));
+    // The title appears twice by design: once drawn on the cover plate (which is
+    // aria-hidden, so it is one title to a screen reader) and once as the heading.
+    await waitFor(() => screen.getAllByText("The Remains of the Day"));
     expect(screen.getByText("it wrecked me")).toBeInTheDocument();
 
     // No handle, no avatar, no link out to anyone.

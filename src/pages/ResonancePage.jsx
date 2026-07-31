@@ -20,8 +20,8 @@ import "./ResonancePage.css";
 
 const EMPTY_COPY = {
   glyph: "❋",
-  line: "No one yet.",
-  sub: "Resonance is rare on purpose — it waits for someone who felt a book the way you did, at about the depth you did. That doesn't happen weekly. Keep reading, keep tagging honestly, and one day this page will have someone on it.",
+  line: "Nobody.",
+  sub: "This is rare on purpose. Most books don't land on two people the same way, and the ones that do take a while to find each other.",
 };
 
 export default function ResonancePage() {
@@ -115,23 +115,26 @@ export default function ResonancePage() {
 
   return (
     <div className="resonance-page">
-      <div className="rp-masthead">
+      <header className="rp-masthead">
         <div>
-          <div className="label" style={{ marginBottom: 14 }}>· one reader at a time ·</div>
-          <h1 className="rp-h1"><em>Resonance</em>.</h1>
+          <div className="label">· one reader at a time ·</div>
+          <h1 className="rp-h1">Resonance<span className="rp-stop">.</span></h1>
           <p className="rp-dek">
-            Someone else finished the same book feeling what you felt. You don't get their
-            name, their face, or their shelf — only the book, the feeling, and the choice
-            to say something. Nothing here is public, and nothing here is counted.
+            Someone else finished the same book feeling what you felt. You get the book,
+            the feeling, and the choice to say something — never a name, a face, or a shelf.
           </p>
         </div>
         <div className="rp-head-actions">
           <button className="btn ghost" onClick={() => navigate("/")} style={{ fontSize: 12 }}>
             ← back to shelf
           </button>
+          {/* The rules of the room, stated where every other product puts a
+              follower count. */}
+          <div className="rp-promises">
+            nothing public<br />nothing counted<br />no next page
+          </div>
         </div>
-      </div>
-      <div className="rule-dbl" style={{ marginBottom: 28 }} />
+      </header>
 
       {loading ? (
         <div className="rp-loading">listening…</div>
@@ -151,14 +154,14 @@ export default function ResonancePage() {
         <div className="rp-sections">
           <Section
             title="Open letters"
-            note="You both said yes. This is yours now."
+            note="You both said yes."
             matches={connected}
             busyId={busyId}
             onOpenThread={setOpenThread}
           />
           <Section
             title="Waiting"
-            note="Sent, or arrived. Either way, no hurry."
+            note="Sent, or arrived. Nothing to do either way."
             matches={waiting}
             busyId={busyId}
             onAccept={doAccept}
@@ -176,7 +179,7 @@ export default function ResonancePage() {
             /* The one number the feature exposes, and only once it matters —
                it's the reader's own budget, not a measure of anyone else. */
             <p className="rp-budget">
-              You've reached out as much as you can today. The rest will still be here tomorrow.
+              That's your reaching for today. The rest keep.
             </p>
           )}
         </div>
@@ -192,6 +195,7 @@ function Section({ title, note, matches, busyId, onReach, onAccept, onDecline, o
       <div className="rp-section-head">
         <h2 className="rp-section-title">{title}</h2>
         <span className="rp-section-note">{note}</span>
+        <span className="rp-section-rule" aria-hidden="true" />
       </div>
       <div className="rp-cards">
         {matches.map((m) => (

@@ -94,85 +94,112 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
 
   return (
     <div className="rt">
-      <header className="rt-head">
-        <div>
-          <div className="label rt-kicker">· the letters ·</div>
-          <div className="rt-with">
-            {handle ? <>with <strong>@{handle}</strong></> : "with your reader"}
-            {bookTitle && <span className="rt-book">, about <em>{bookTitle}</em></span>}
-          </div>
-        </div>
-        <div className="rt-head-actions">
-          <button className="rt-quiet" onClick={() => setSafety((s) => !s)}>
-            {safety ? "back" : "…"}
-          </button>
-          <button className="btn ghost" onClick={onClose}>close</button>
-        </div>
-      </header>
+      {/* Who and what this is, held permanently in the left column, so no letter
+          has to carry it and the transcript can be nothing but the letters. */}
+      <aside className="rt-aside">
+        <button className="rt-back" onClick={onClose}>← resonance</button>
 
-      {safety && (
-        <div className="rt-safety">
-          <p className="rt-safety-line">
-            Ending this is silent — they aren't told, the conversation just stops.
-          </p>
-          <div className="rt-safety-actions">
-            <button className="btn ghost" onClick={() => endIt(() => blockThread(threadId))}>
-              stop this conversation
-            </button>
-            {REPORT_CATEGORIES.map((c) => (
-              <button
-                key={c.id}
-                className="rt-report-btn"
-                onClick={() => endIt(() => reportThread(threadId, c.id, true))}
-              >
-                report: {c.label}
-              </button>
-            ))}
+        {bookTitle && (
+          <div className="rt-plate">
+            <div className="rm-plate" aria-hidden="true">
+              <div className="rm-plate-title">{bookTitle}</div>
+            </div>
           </div>
-        </div>
-      )}
-
-      <div className="rt-scroll">
-        {loading ? (
-          <div className="rt-loading">opening…</div>
-        ) : (
-          <>
-            {before && (
-              <button className="rt-earlier" onClick={loadEarlier}>read what came before</button>
-            )}
-            {/* The first two messages are the notes you each wrote before you
-                knew who the other was — the server seeds the thread with them,
-                so the conversation starts where you left off. */}
-            {messages.map((m) => (
-              <article key={m.id} className={`rt-msg ${m.is_mine ? "mine" : "theirs"}`}>
-                <div className="rt-msg-body">{m.body}</div>
-                <div className="rt-msg-meta">
-                  {m.is_mine ? "you" : `@${m.handle}`} · {letterDate(m.created_at)}
-                </div>
-              </article>
-            ))}
-          </>
         )}
-      </div>
 
-      {error && <div className="rt-error" role="alert">{error}</div>}
+        <div>
+          <div className="rt-kicker">letters with</div>
+          <div className="rt-with">{handle ? `@${handle}` : "your reader"}</div>
+        </div>
 
-      <div className="rt-compose">
-        <textarea
-          className="rt-compose-field"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Write back, whenever you like."
-          rows={3}
-          maxLength={MAX_MESSAGE}
-          aria-label="Your message"
-        />
-        <div className="rt-compose-foot">
-          {/* No "they're typing", no "delivered". Just the act of sending. */}
-          <span className="rt-compose-note">No rush — they'll read it when they read it.</span>
-          <button className="btn brass" onClick={send} disabled={!body.trim() || sending}>
-            {sending ? "sending…" : "send"}
-          </button>
+        <div className="rt-facts">
+          {bookTitle ? <>about {bookTitle}<br /></> : null}
+          one letter each turn<br />
+          no receipts, ever
+        </div>
+
+        <button className="rt-quiet" onClick={() => setSafety((s) => !s)}>
+          {safety ? "never mind" : "close the letters"}
+        </button>
+      </aside>
+
+      <div className="rt-main">
+        {/* The pace, stated once at the top, because everything absent from this
+            screen is absent on purpose and silence about it reads as an
+            unfinished feature. */}
+        <p className="rt-pace">
+          Nothing here reports back — no dots, no ticks, no notice of when a letter was
+          opened. It arrives when it arrives.
+        </p>
+
+        {safety && (
+          <div className="rt-safety">
+            <p className="rt-safety-line">
+              Ending this is silent — they aren't told, the conversation just stops.
+            </p>
+            <div className="rt-safety-actions">
+              <button className="btn ghost" onClick={() => endIt(() => blockThread(threadId))}>
+                stop this conversation
+              </button>
+              {REPORT_CATEGORIES.map((c) => (
+                <button
+                  key={c.id}
+                  className="rt-report-btn"
+                  onClick={() => endIt(() => reportThread(threadId, c.id, true))}
+                >
+                  report: {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="rt-scroll">
+          {loading ? (
+            <div className="rt-loading">opening…</div>
+          ) : (
+            <>
+              {before && (
+                <button className="rt-earlier" onClick={loadEarlier}>read what came before</button>
+              )}
+              {/* The first two messages are the notes you each wrote before you
+                  knew who the other was — the server seeds the thread with them,
+                  so the conversation starts where you left off. */}
+              {messages.map((m) => (
+                <article key={m.id} className={`rt-msg ${m.is_mine ? "mine" : "theirs"}`}>
+                  {/* Signature at the top, like a letter. Nothing is right-aligned:
+                      a letter you have to read at the wrong margin is a bubble. */}
+                  <div className="rt-msg-head">
+                    <span className="rt-msg-who">{m.is_mine ? "you wrote" : `@${m.handle} wrote`}</span>
+                    <span className="rt-msg-date">{letterDate(m.created_at)}</span>
+                  </div>
+                  <div className="rt-msg-body">{m.body}</div>
+                </article>
+              ))}
+            </>
+          )}
+        </div>
+
+        {error && <div className="rt-error" role="alert">{error}</div>}
+
+        <div className="rt-compose">
+          <div className="rt-compose-label">write back</div>
+          <textarea
+            className="rt-compose-field"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Take the time you'd take with paper."
+            rows={5}
+            maxLength={MAX_MESSAGE}
+            aria-label="Your message"
+          />
+          <div className="rt-compose-foot">
+            {/* No "they're typing", no "delivered". Just the act of sending. */}
+            <span className="rt-compose-note">sent once · no edits after</span>
+            <button className="btn brass" onClick={send} disabled={!body.trim() || sending}>
+              {sending ? "sending…" : "send the letter"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

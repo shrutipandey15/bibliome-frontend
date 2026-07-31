@@ -15,38 +15,67 @@ import NoteComposer from "./NoteComposer";
  * query for it, on purpose.
  */
 
-function Cover({ url }) {
+/**
+ * The plate. A cover if we have one; otherwise a real drawn object — boards,
+ * a rule inset from the edge, the title set on it — rather than a grey square
+ * with an ornament, which read as a failed image rather than as a book. The
+ * title appearing twice is fine here in a way it wasn't before: on a plate it
+ * reads as the cover of the book named beside it, which is what covers do.
+ */
+function Cover({ url, title, author }) {
   const [failed, setFailed] = useState(false);
   if (url && !failed) {
     return <img className="rm-cover-img" src={url} alt="" onError={() => setFailed(true)} />;
   }
-  // A drawn plate rather than a broken frame. Deliberately an ornament and not
-  // the title: the title is already sitting an inch to the right, and printing
-  // it twice reads as a rendering bug, not as a book.
   return (
-    <div className="rm-cover-blank" aria-hidden="true">
-      <span className="rm-cover-blank-mark">❋</span>
+    <div className="rm-plate" style={{ "--plate-c": plateColor(title) }} aria-hidden="true">
+      <div className="rm-plate-title">{title}</div>
+      {author && <div className="rm-plate-author">{author}</div>}
     </div>
   );
 }
 
+// A stable colour per title, so the same book is the same object every time it
+// surfaces. Drawn from the palette the app already uses for materials.
+const PLATE_COLORS = ["var(--oxblood)", "var(--plum)", "var(--moss)", "var(--ink-blue)", "var(--brass)"];
+function plateColor(title) {
+  let h = 0;
+  for (const ch of title || "") h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return PLATE_COLORS[h % PLATE_COLORS.length];
+}
+
 /**
- * A shared emotion, with both intensities as a pair of marks. `close` means the
- * two readers felt it at a similar pitch — the thing that makes a match "strong"
- * rather than merely overlapping.
+ * A shared emotion, with both intensities as a pair of labelled bars. `close`
+ * means the two readers felt it at a similar pitch — the thing that makes a
+ * match "strong" rather than merely overlapping.
+ *
+ * The bars are labelled "you" and "them" now. Two unlabelled rules were a shape
+ * you had to be told the meaning of. Intensity still never appears as a number:
+ * "7/10" invites comparison, a pair of lines invites recognition.
  */
 function SharedEmotion({ emotion }) {
   const meta = EMOTIONS[emotion.emotion_id];
-  const color = meta?.color || "var(--brass)";
+  const color = meta?.color || "var(--res-accent)";
   return (
     <li className="rm-emo" style={{ "--emo-c": color }}>
-      <span className="rm-emo-swatch" aria-hidden="true" />
-      <span className="rm-emo-label">{emotion.label}</span>
-      <span className="rm-emo-pitch" aria-label={`you ${emotion.your_strength} of 10, them ${emotion.their_strength} of 10`}>
-        <span className="rm-emo-bar" style={{ "--w": `${emotion.your_strength * 10}%` }} />
-        <span className="rm-emo-bar" style={{ "--w": `${emotion.their_strength * 10}%` }} />
-      </span>
-      {emotion.close && <span className="rm-emo-close">at the same pitch</span>}
+      <div className="rm-emo-head">
+        <span className="rm-emo-swatch" aria-hidden="true" />
+        <span className="rm-emo-label">{emotion.label}</span>
+        {emotion.close && <span className="rm-emo-close">at the same pitch</span>}
+      </div>
+      <div
+        className="rm-emo-pitch"
+        aria-label={`you ${emotion.your_strength} of 10, them ${emotion.their_strength} of 10`}
+      >
+        <span className="rm-emo-who" aria-hidden="true">you</span>
+        <span className="rm-emo-track" aria-hidden="true">
+          <span className="rm-emo-bar" style={{ "--w": `${emotion.your_strength * 10}%` }} />
+        </span>
+        <span className="rm-emo-who" aria-hidden="true">them</span>
+        <span className="rm-emo-track" aria-hidden="true">
+          <span className="rm-emo-bar theirs" style={{ "--w": `${emotion.their_strength * 10}%` }} />
+        </span>
+      </div>
     </li>
   );
 }
@@ -60,6 +89,7 @@ export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenT
   const [composing, setComposing] = useState(false);
   const [error, setError] = useState("");
   const { status, direction } = match;
+  const title = match.book_title || "An untitled volume";
 
   const submitNote = async (note) => {
     setError("");
@@ -77,12 +107,12 @@ export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenT
   return (
     <article className={`rm rm-${status}`}>
       <div className="rm-cover">
-        <Cover url={match.cover_url} />
+        <Cover url={match.cover_url} title={title} author={match.book_author} />
       </div>
 
       <div className="rm-body">
-        <div className="label rm-kicker">· someone else read this ·</div>
-        <h3 className="rm-title">{match.book_title || "An untitled volume"}</h3>
+        <div className="rm-kicker">· someone else read this ·</div>
+        <h3 className="rm-title">{title}</h3>
         {match.book_author && <div className="rm-author">{match.book_author}</div>}
 
         <p className="rm-strength">{STRENGTH_LINE[match.strength] || STRENGTH_LINE.light}</p>
@@ -92,6 +122,15 @@ export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenT
             <SharedEmotion key={e.emotion_id} emotion={e} />
           ))}
         </ul>
+
+        {/* Their note, when they wrote first. Set on its own sheet because it is
+            the only thing on this card another person actually wrote. */}
+        {status === "pending" && direction === "they_reached" && match.their_note && (
+          <div className="rm-their-note">
+            <div className="rm-their-note-kicker">they wrote first</div>
+            <p>{match.their_note}</p>
+          </div>
+        )}
 
         {composing ? (
           <NoteComposer
@@ -145,7 +184,7 @@ function MatchAction({ match, busy, onCompose, onDecline, onOpenThread }) {
           <div className="rm-waiting-line">Your note is with them.</div>
           {/* No deadline, no "they've seen it", no nudge button. If nothing comes
               back the card simply stops being here one day. */}
-          <div className="rm-waiting-sub">They'll read it if they answer. There's nothing else to do.</div>
+          <div className="rm-waiting-sub">They'll read it if they answer. Nothing else to do.</div>
         </div>
       </div>
     );
@@ -155,12 +194,10 @@ function MatchAction({ match, busy, onCompose, onDecline, onOpenThread }) {
     return (
       <div className="rm-foot">
         <div className="rm-reached">Someone who felt the same way left you a note.</div>
-        <div className="rm-foot-actions">
-          <button className="btn brass" onClick={onCompose} disabled={busy}>Write back</button>
-          {/* Silent on the server too — they are never told they were passed
-              over, and neither side sees this card again. */}
-          <button className="btn ghost rm-quiet" onClick={onDecline} disabled={busy}>let it pass</button>
-        </div>
+        <button className="btn brass" onClick={onCompose} disabled={busy}>Write back</button>
+        {/* Silent on the server too — they are never told they were passed
+            over, and neither side sees this card again. */}
+        <button className="rm-quiet" onClick={onDecline} disabled={busy}>let it pass</button>
       </div>
     );
   }
@@ -168,10 +205,8 @@ function MatchAction({ match, busy, onCompose, onDecline, onOpenThread }) {
   // suggested
   return (
     <div className="rm-foot">
-      <div className="rm-foot-actions">
-        <button className="btn brass" onClick={onCompose} disabled={busy}>Leave a note</button>
-        <button className="btn ghost rm-quiet" onClick={onDecline} disabled={busy}>not this one</button>
-      </div>
+      <button className="btn brass" onClick={onCompose} disabled={busy}>Leave a note</button>
+      <button className="rm-quiet" onClick={onDecline} disabled={busy}>not this one</button>
     </div>
   );
 }

@@ -28,21 +28,23 @@ export default function JournalPage() {
   const { status, error } = useJournalKey();
 
   if (status === "loading") {
-    return <div className="jr-shell jr-quiet">Checking your journal…</div>;
+    return <div className="jr-shell jr-shell--gate"><div className="jr-quiet">Checking your journal…</div></div>;
   }
   if (status === "error") {
     return (
-      <div className="jr-shell jr-quiet">
-        Couldn't reach your journal ({error?.kind || "server error"}). Nothing is
-        lost — try again in a moment.
+      <div className="jr-shell jr-shell--gate">
+        <div className="jr-quiet">
+          Couldn't reach your journal ({error?.kind || "server error"}). Nothing is
+          lost — try again in a moment.
+        </div>
       </div>
     );
   }
   if (status === "absent") {
-    return <div className="jr-shell"><JournalSetup /></div>;
+    return <div className="jr-shell jr-shell--gate"><JournalSetup /></div>;
   }
   if (status === "locked") {
-    return <div className="jr-shell"><JournalLock /></div>;
+    return <div className="jr-shell jr-shell--gate"><JournalLock /></div>;
   }
   return <UnlockedJournal />;
 }
@@ -60,12 +62,35 @@ function UnlockedJournal() {
   // there on its own; this removes the window where it wouldn't.
   useEffect(() => { if (view !== "today") flushNow(); }, [view, flushNow]);
 
+  const showPrompt = untagged.length > 0 && !promptOff;
+
+  // The housekeeping card lives on the desk beside the page rather than in a bar
+  // above it: an unnamed day is a thing to get to, not an interruption to read
+  // past before you can write the next one.
+  const prompt = showPrompt ? (
+    <div className="jr-prompt">
+      <div className="jr-prompt-line">
+        {untagged.length} {untagged.length === 1 ? "day" : "days"} unnamed.
+      </div>
+      <p className="jr-prompt-sub">A named day is a findable day.</p>
+      <div className="jr-prompt-actions">
+        <button type="button" className="jr-link" onClick={() => setTagging(untagged)}>
+          Name them
+        </button>
+        <button type="button" className="jr-link jr-link-quiet" onClick={() => setPromptOff(true)}>
+          Not now
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="jr-shell">
-      <nav className="jr-nav">
+      <nav className="jr-bar">
         <Link to="/" className="jr-icon-btn" aria-label="Back to the reading room">
           <ArrowLeft size={16} />
         </Link>
+        <div className="jr-wordmark">The <em>Journal</em></div>
         <div className="jr-tabs">
           {[["today", "Today"], ["read", "Read"], ["search", "Search"]].map(([id, label]) => (
             <button
@@ -78,37 +103,35 @@ function UnlockedJournal() {
             </button>
           ))}
         </div>
-        {/* Locking is a real affordance, not a settings-menu curiosity: it's the
-            one action that takes the key out of memory without closing the tab. */}
-        <button type="button" className="jr-icon-btn" onClick={lock} aria-label="Lock the journal">
-          <Lock size={15} />
-        </button>
+        <div className="jr-bar-right">
+          {/* The promise, kept in view — it is why everything else here is shaped
+              the way it is. */}
+          <span className="jr-seal">end-to-end encrypted</span>
+          {/* Locking is a real affordance, not a settings-menu curiosity: it's the
+              one action that takes the key out of memory without closing the tab. */}
+          <button
+            type="button"
+            className="jr-icon-btn jr-icon-btn--ruled"
+            onClick={lock}
+            aria-label="Lock the journal"
+          >
+            <Lock size={15} />
+          </button>
+        </div>
       </nav>
 
       {rewrapWarning && (
-        <div className="jr-prompt">
-          <span>{rewrapWarning}</span>
+        <div className="jr-quiet" role="status">
+          {rewrapWarning}{" "}
           <button type="button" className="jr-link jr-link-quiet" onClick={dismissRewrapWarning}>
             Dismiss
           </button>
         </div>
       )}
 
-      {untagged.length > 0 && !promptOff && view !== "search" && (
-        <div className="jr-prompt">
-          <span>
-            {untagged.length} {untagged.length === 1 ? "day" : "days"} unnamed.
-          </span>
-          <button type="button" className="jr-link" onClick={() => setTagging(untagged)}>
-            Name them
-          </button>
-          <button type="button" className="jr-link jr-link-quiet" onClick={() => setPromptOff(true)}>
-            Not now
-          </button>
-        </div>
+      {view === "today" && (
+        <BlankPage prompt={prompt} onNameDay={(page) => setTagging(page ? [page] : untagged)} />
       )}
-
-      {view === "today" && <BlankPage />}
       {view === "read" && <ContinuousRead onTagDay={(page) => setTagging([page])} />}
       {view === "search" && <JournalSearch onOpenDay={() => setView("read")} />}
 

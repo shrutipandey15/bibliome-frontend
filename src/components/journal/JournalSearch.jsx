@@ -25,23 +25,30 @@ export default function JournalSearch({ onOpenDay }) {
   return (
     <div className="jr-search">
       <label className="jr-search-box">
-        <Search size={16} />
+        <Search size={18} />
         <input
           className="jr-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Find a word you wrote"
+          placeholder="A word you remember writing…"
           autoComplete="off"
           aria-label="Search your journal"
         />
       </label>
 
-      <p className="jr-fineprint">
+      <p className="jr-fineprint jr-search-scope">
         {loading
           ? "Decrypting your pages…"
-          : `Searching ${pages.length} ${pages.length === 1 ? "page" : "pages"} decrypted on this device. ` +
-            "Nothing is sent to the server — it holds only sealed text and couldn't search it if we asked."}
+          : `Searched on this device only · ${pages.length} ${pages.length === 1 ? "page" : "pages"} · nothing leaves the tab`}
       </p>
+      {/* The scope line above scans; this one is the reason, and it stays because
+          a reader who thinks they searched their whole journal and got nothing
+          will conclude they never wrote it. */}
+      {!loading && (
+        <p className="jr-search-why">
+          The server holds only sealed text and couldn't search it if we asked.
+        </p>
+      )}
 
       {deferred.trim() && (
         <div className="jr-search-results">

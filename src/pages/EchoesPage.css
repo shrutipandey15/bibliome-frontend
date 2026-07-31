@@ -1,102 +1,347 @@
 
+/* ============================================================
+   ECHO — the one public room.
+   Two columns: an editorial feed, and a rail that holds the two
+   things you can DO here (write one; anchor to a feeling). The
+   eighteen-chip wall is gone; the vocabulary reads as an index
+   grouped by family, which is how it is actually organised.
+   ============================================================ */
 .echoes-page {
   background: var(--bg-page);
   min-height: 100vh;
-  padding: 40px 56px 60px;
   color: var(--ink);
+  display: flex;
+  align-items: flex-start;
+  /* Centred, not pinned left. The column has a measure it shouldn't exceed, so
+     on a wide monitor the leftover width has to go somewhere — split evenly it
+     reads as a margin; all on one side it reads as a broken layout. */
+  justify-content: center;
+  gap: 0;
 }
 
+.ep-main {
+  flex: 1;
+  min-width: 0;
+  max-width: 1000px;
+  padding: 56px 56px 120px;
+}
+
+/* ── masthead ── */
 .ep-masthead {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 24px;
+  align-items: flex-start;
   gap: 40px;
+  margin-bottom: 34px;
 }
 .ep-h1 {
-  font-size: 60px;
+  font-size: 56px;
   font-weight: 400;
-  letter-spacing: -0.025em;
-  line-height: 0.96;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 14px 0 0;
 }
 .ep-h1 em { color: var(--oxblood); font-style: italic; }
 .ep-dek {
   font-family: var(--font-display);
   font-style: italic;
   font-size: 17px;
+  line-height: 1.5;
   color: var(--ink-quiet);
-  margin-top: 8px;
+  max-width: 52ch;
+  margin-top: 14px;
+  text-wrap: pretty;
 }
-.ep-head-actions { display: flex; align-items: center; gap: 14px; }
+.ep-head-actions { display: flex; align-items: center; gap: 12px; flex: none; }
 
-.ep-filters {
-  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-  margin-bottom: 30px;
-}
-
-/* responsive */
-@media (max-width: 980px) {
-  .echoes-page { padding: 28px 28px 48px; }
-  .ep-h1 { font-size: 40px; }
-}
-@media (max-width: 640px) {
-  .echoes-page { padding: 22px 18px 36px; }
-  .ep-h1 { font-size: 32px; }
-}
-
-/* ── Echo feed [Phase 3 / F3.3] ── */
-.ep-feed {
+/* ── the one filter row that stays in the column: whose feed ── */
+.ep-scope {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-width: 680px;
-  margin: 0 auto;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
 }
-/* Whose-feed row sits above the feeling anchors; no swatch, so the two rows are
-   visibly different kinds of filter rather than one long undifferentiated list. */
-.ep-filters-whose { margin-bottom: 10px; }
+/* A segmented track, not two loose chips — "everyone" and "yours" are one
+   choice with two positions. */
+.ep-seg {
+  display: flex;
+  background: var(--bg-sunken);
+  border-radius: 2px;
+  padding: 2px;
+}
+.ep-seg button {
+  padding: 7px 15px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink-quiet);
+  cursor: pointer;
+  transition: background .18s, color .18s;
+}
+.ep-seg button:hover { color: var(--ink); }
+.ep-seg button[aria-pressed="true"] {
+  background: var(--bg-card);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+.ep-seg button:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+
+/* The active feeling anchor, echoed back into the column so the rail's
+   selection is legible from where you are reading. */
+.ep-active-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: none;
+  padding: 0 0 2px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.ep-active-filter:hover { color: var(--ink); border-bottom-color: var(--ink); }
+.ep-active-filter .swatch { width: 7px; height: 7px; border-radius: 50%; }
+.ep-order {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+
 .ep-mine-note {
   font-family: var(--font-display); font-style: italic;
   font-size: 15px; color: var(--ink-quiet);
-  margin: 0 0 22px; max-width: 56ch;
+  margin: 16px 0 0; max-width: 56ch;
 }
 
-/* The terminus is a bounded plate, not a trailing line — the feed visibly stops. */
-.ep-caughtup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 36px 20px;
-  border: 1px dashed var(--rule);
-  border-radius: 2px;
+/* ── the feed: editorial rows, hairline-separated ── */
+.ep-feed { display: flex; flex-direction: column; }
+
+/* ── states ── */
+.ep-loading { padding: 110px 0; text-align: center; }
+.ep-loading-glyph {
   font-family: var(--font-display);
+  font-size: 34px;
+  color: var(--brass);
+  animation: bd-pulse 2.2s ease-in-out infinite;
+}
+.ep-loading-text {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 18px;
+}
+@keyframes bd-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+.ep-notice {
+  margin-top: 44px;
+  padding: 38px 40px;
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  max-width: 620px;
+}
+.ep-notice.error { border-left: 3px solid var(--oxblood); }
+.ep-notice-kicker {
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--oxblood);
+}
+.ep-notice-glyph { font-family: var(--font-display); font-size: 30px; color: var(--brass); opacity: 0.7; }
+.ep-notice h2 {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 400;
+  margin: 14px 0 10px;
+  color: var(--ink);
+}
+.ep-notice p {
+  font-family: var(--font-display);
+  font-size: 16px; line-height: 1.65;
   color: var(--ink-quiet);
+  max-width: 44ch;
+  text-wrap: pretty;
 }
-.ep-caughtup-glyph { color: var(--brass); font-size: 15px; }
-.ep-caughtup-line { font-size: 20px; color: var(--ink); }
-.ep-caughtup-sub { font-size: 13px; }
+.ep-notice p.italic { font-style: italic; }
+.ep-notice .btn { margin-top: 22px; }
+.ep-notice--empty { text-align: center; max-width: none; padding: 64px 56px; }
+.ep-notice--empty p { margin: 0 auto; }
+
+/* The terminus — a bounded plate. The feed visibly stops. */
+.ep-caughtup {
+  margin-top: 46px;
+  padding: 40px 44px;
+  text-align: center;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+}
+.ep-caughtup-glyph { font-family: var(--font-display); font-size: 20px; color: var(--brass); }
+.ep-caughtup-line {
+  font-family: var(--font-display);
+  font-size: 25px; color: var(--ink); margin-top: 10px;
+}
+.ep-caughtup-sub {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 15.5px; color: var(--ink-quiet); margin-top: 6px;
+}
 .ep-caughtup-cta {
-  border: none; background: none; cursor: pointer;
-  font-family: var(--font-mono); font-style: normal; font-size: 11px;
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass);
+  margin-top: 20px;
+  border: 0; background: none; cursor: pointer;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--brass);
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink);
 }
-.ep-caughtup-cta:hover { text-decoration: underline; }
-.ep-caughtup-cta:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 2px; }
+.ep-caughtup-cta:hover { color: var(--brass); }
+.ep-caughtup-cta:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
 .ep-more {
   align-self: center;
-  margin-top: 8px;
+  margin-top: 34px;
   padding: 10px 22px;
-  border: 1px solid var(--rule, rgba(0,0,0,0.2));
+  border: 1px solid var(--rule);
   border-radius: 999px;
-  background: var(--bg-vellum);
+  background: transparent;
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--ink-quiet);
   cursor: pointer;
 }
 .ep-more:hover:not(:disabled) { border-color: var(--brass); color: var(--ink); }
 .ep-more:disabled { opacity: 0.6; cursor: default; }
+
+/* ============================================================
+   THE RAIL — write, and the feeling index.
+   ============================================================ */
+.ep-rail {
+  width: 340px;
+  flex: none;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 56px 48px 56px 0;
+}
+.ep-rail-write {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--brass) 70%, #000);
+  background: var(--foil);
+  color: #2a1a08;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.18);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--brass) 40%, #000), var(--shadow-sm);
+  cursor: pointer;
+  transition: transform .2s;
+}
+.ep-rail-write:hover { transform: translateY(-1px); }
+.ep-rail-write:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.ep-rail-write-mark { font-family: var(--font-mono); font-size: 11px; opacity: 0.7; }
+.ep-rail-friction {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 13.5px; line-height: 1.5;
+  color: var(--ink-quiet);
+  margin: 12px 2px 0;
+}
+.ep-rail-rule { height: 1px; background: var(--rule); margin: 26px 0 22px; }
+.ep-rail-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 14px;
+}
+.ep-fam { margin-top: 14px; }
+.ep-fam-name {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 13px; color: var(--ink-faint);
+  padding-left: 8px; margin-bottom: 5px;
+}
+/* One row per feeling. A filter list, not a chip wall: the eye runs down a
+   single column and the family headings do the grouping the colours can't. */
+.ep-feel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.ep-feel:hover { background: var(--bg-sunken); color: var(--ink); }
+.ep-feel:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.ep-feel[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--feel-c, var(--ink)) 14%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+}
+.ep-feel-swatch {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  background: var(--feel-c, var(--ink-faint));
+}
+.ep-feel-any { margin-bottom: 6px; font-weight: 500; }
+
+/* ============================================================
+   RESPONSIVE — the rail folds above the feed, its filter list
+   becoming a horizontal scroller rather than a wall of rows.
+   ============================================================ */
+@media (max-width: 1080px) {
+  /* Stacked, so `center` would now centre vertically — reset it. */
+  .echoes-page { flex-direction: column; justify-content: flex-start; }
+  .ep-main { max-width: none; width: 100%; padding: 40px 40px 90px; order: 2; }
+  .ep-rail {
+    order: 1;
+    position: static;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    padding: 40px 40px 0;
+  }
+  .ep-rail-inner { display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap; }
+  .ep-rail-write { width: auto; min-width: 260px; }
+  .ep-rail-rule { display: none; }
+  .ep-rail-feelings {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    gap: 22px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .ep-fam { margin-top: 0; min-width: 148px; }
+}
+@media (max-width: 720px) {
+  .ep-main { padding: 28px 20px 64px; }
+  .ep-rail { padding: 26px 20px 0; }
+  .ep-h1 { font-size: 38px; }
+  .ep-dek { font-size: 15px; }
+  .ep-masthead { flex-direction: column; gap: 18px; }
+  .ep-notice, .ep-caughtup { padding: 28px 24px; }
+}

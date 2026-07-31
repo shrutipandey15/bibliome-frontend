@@ -124,7 +124,7 @@ export default function EchoThread({ echoId, onReport }) {
       <div className="et-replies">
         <div className="et-replies-label">Replies</div>
         {thread.replies.length === 0 ? (
-          <div className="et-empty">No replies yet. Be the first to say something true.</div>
+          <div className="et-empty">Nothing back yet.</div>
         ) : (
           <ul className="et-reply-list">
             {thread.replies.map((r) => (

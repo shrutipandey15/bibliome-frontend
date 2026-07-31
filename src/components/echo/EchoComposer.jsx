@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EMO_LIST } from "../../services/emotions";
+import { getEmotionFamilies } from "../../services/emotions";
 import { postEcho } from "../../services/api";
 import CrisisInterstitial from "./CrisisInterstitial";
 import "./EchoComposer.css";
@@ -7,14 +7,18 @@ import "./EchoComposer.css";
 /**
  * Echo composer. [F3.2 / B3.2]
  *
- * Deliberately minimal: a book/emotion anchor + the reflection, with a friction
- * line ("say the true thing, not the clever thing"). No formatting, no emotion-
- * picker sprawl (one primary feeling, optional second). If the post trips the
- * self-harm classifier, we swap to the supportive crisis path instead of closing.
+ * Two panes. The left is a sheet with nothing on it but the sentence and the
+ * friction line; the right holds everything that is *about* the sentence — the
+ * book, the feeling, who sees it — and ends in the post button. The old single
+ * column made you scroll past the anchor fields to reach the button, which put
+ * the fiddly decisions between the reader and the thing they came to say.
+ *
+ * The emotion picker shows all eighteen, grouped by family. The old "+14 more…"
+ * reveal existed because a flat wall of eighteen chips is unreadable — grouping
+ * fixes the same problem without hiding two thirds of the vocabulary behind a
+ * click. Still one primary and an optional second: no sprawl.
  */
 const MAX_BODY = 500;
-// How many emotion chips show before the list is expanded.
-const EMO_PREVIEW = 4;
 
 export default function EchoComposer({ onPosted, onClose }) {
   const [body, setBody] = useState("");
@@ -23,7 +27,6 @@ export default function EchoComposer({ onPosted, onClose }) {
   const [primary, setPrimary] = useState(null);
   const [secondary, setSecondary] = useState(null);
   const [visibility, setVisibility] = useState("community");
-  const [showAllEmotions, setShowAllEmotions] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [crisis, setCrisis] = useState(null);
@@ -68,110 +71,112 @@ export default function EchoComposer({ onPosted, onClose }) {
     return (
       <div className="ec ec-held" role="status" aria-live="polite">
         <div className="ec-held-glyph" aria-hidden="true">◷</div>
-        <h2 className="ec-title">Held for a quick look.</h2>
+        <h2 className="ec-title">Held for review.</h2>
         <p className="ec-held-text">
-          Your echo is in the queue for a brief review before it goes public. Nothing you
-          did was wrong — this just keeps the space kind. You'll see it in your feed once it clears.
+          Something in this tripped the filter. A human will look at it, and it lands in
+          your feed once it clears.
         </p>
         <div className="ec-footer"><button className="btn brass" onClick={onClose}>okay</button></div>
       </div>
     );
   }
 
-  // Chips past the preview that aren't currently chosen, i.e. what "more" reveals.
-  const hiddenEmotions = showAllEmotions
-    ? 0
-    : EMO_LIST.filter(([id], i) => i >= EMO_PREVIEW && primary !== id && secondary !== id).length;
+  const families = getEmotionFamilies();
+  const picked = [primary, secondary].filter(Boolean).length;
+  const pickHint = picked === 0 ? "up to two" : picked === 1 ? "one more, if you want" : "that's both";
 
   return (
     <div className="ec">
-      <div className="ec-head">
-        <div className="label">write an echo</div>
+      {/* ── the sheet ── */}
+      <div className="ec-write">
+        <div className="ec-write-head">
+          <span className="ec-kicker">write an echo</span>
+          <span className={`ec-count ${body.length > MAX_BODY - 60 ? "near" : ""}`}>
+            {body.length} / {MAX_BODY}
+          </span>
+        </div>
         <p className="ec-friction">Say the true thing, not the clever thing.</p>
+        <div className="ec-write-rule" />
+        <textarea
+          className="ec-body"
+          placeholder="What did this book actually do to you?"
+          value={body}
+          maxLength={MAX_BODY}
+          onChange={(e) => setBody(e.target.value)}
+          aria-label="Your reflection"
+        />
+        {/* The rules of the room, stated where you're breaking or keeping them. */}
+        <div className="ec-write-foot">no formatting · no edits after posting · no counts, ever</div>
       </div>
 
-      <textarea
-        className="ec-body"
-        placeholder="What did this book actually do to you?"
-        value={body}
-        maxLength={MAX_BODY}
-        onChange={(e) => setBody(e.target.value)}
-        rows={4}
-        aria-label="Your reflection"
-      />
-      <div className="ec-count">{body.length} / {MAX_BODY}</div>
-
-      <div className="ec-field">
-        <div className="label-sm ec-label">anchor to a book <span className="ec-opt">optional</span></div>
+      {/* ── what the sheet is about ── */}
+      <div className="ec-anchor">
+        <div className="ec-label">anchor to a book <span className="ec-opt">optional</span></div>
         <input className="ec-input" placeholder="Title" value={bookTitle} onChange={(e) => setBookTitle(e.target.value)} />
         <input className="ec-input" placeholder="Author" value={bookAuthor} onChange={(e) => setBookAuthor(e.target.value)} />
-      </div>
 
-      <div className="ec-field">
-        <div className="label-sm ec-label">the feeling <span className="ec-opt">up to two</span></div>
-        {/* Eighteen chips is a wall inside a modal, so the list starts short. A
-            chosen emotion is ALWAYS rendered even when collapsed — the control can
-            never hide the state it owns — and expanding is one click, never a
-            scroll-and-hunt. */}
-        <div className="ec-emo" role="group" aria-label="Anchor emotions">
-          {EMO_LIST.map(([id, e], i) => {
-            const on = primary === id || secondary === id;
-            if (!showAllEmotions && i >= EMO_PREVIEW && !on) return null;
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={on}
-                className={`ec-emo-chip ${on ? "active" : ""} ${primary === id ? "primary" : ""}`}
-                style={{ "--emo-c": e.color }}
-                onClick={() => toggleEmotion(id)}
-              >
-                <span className="ec-emo-swatch" />
-                {e.label.toLowerCase()}
-              </button>
-            );
-          })}
-          {hiddenEmotions > 0 && (
-            <button
-              type="button"
-              className="ec-emo-chip ec-emo-more"
-              aria-expanded={showAllEmotions}
-              onClick={() => setShowAllEmotions(true)}
-            >
-              + {hiddenEmotions} more…
-            </button>
-          )}
+        <div className="ec-feel-head">
+          <span className="ec-label">the feeling</span>
+          <span className={`ec-pick-hint ${picked === 2 ? "full" : ""}`}>{pickHint}</span>
         </div>
-      </div>
 
-      <div className="ec-field ec-visrow">
-        <div className="label-sm ec-label">who sees this</div>
-        <div className="ec-vis" role="radiogroup" aria-label="Echo visibility">
-          {[
-            { v: "community", l: "community" },
-            { v: "public", l: "public" },
-          ].map((o) => (
-            <button
-              key={o.v}
-              type="button"
-              role="radio"
-              aria-checked={visibility === o.v}
-              className={`ec-vis-opt ${visibility === o.v ? "active" : ""}`}
-              onClick={() => setVisibility(o.v)}
-            >
-              {o.l}
-            </button>
+        <div className="ec-fams" role="group" aria-label="Anchor emotions">
+          {families.map(({ family, emotions }) => (
+            <div key={family}>
+              <div className="ec-fam-name">{family}</div>
+              <div className="ec-emo">
+                {emotions.map(([id, e]) => {
+                  const on = primary === id || secondary === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={on}
+                      title={e.label}
+                      className={`ec-emo-chip ${on ? "active" : ""} ${primary === id ? "primary" : ""}`}
+                      style={{ "--emo-c": e.color }}
+                      onClick={() => toggleEmotion(id)}
+                    >
+                      <span className="ec-emo-swatch" />
+                      {(e.name || id).toLowerCase()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </div>
-      </div>
 
-      {error && <div className="ec-error" role="alert" aria-live="assertive">{error}</div>}
+        <div className="ec-vis-block">
+          <div className="ec-label">who sees this</div>
+          <div className="ec-vis" role="radiogroup" aria-label="Echo visibility">
+            {[
+              { v: "community", l: "community", sub: "readers who are signed in" },
+              { v: "public", l: "public", sub: "anyone with the link" },
+            ].map((o) => (
+              <button
+                key={o.v}
+                type="button"
+                role="radio"
+                aria-checked={visibility === o.v}
+                className={`ec-vis-opt ${visibility === o.v ? "active" : ""}`}
+                onClick={() => setVisibility(o.v)}
+              >
+                <div className="ec-vis-name">{o.l}</div>
+                <div className="ec-vis-sub">{o.sub}</div>
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div className="ec-footer">
-        <button className="btn ghost" onClick={onClose} disabled={busy}>cancel</button>
-        <button className="btn brass" onClick={submit} disabled={!body.trim() || busy}>
-          {busy ? "posting…" : "post echo"}
-        </button>
+        {error && <div className="ec-error" role="alert" aria-live="assertive">{error}</div>}
+
+        <div className="ec-footer">
+          <button className="ec-cancel" onClick={onClose} disabled={busy}>cancel</button>
+          <button className="btn brass" onClick={submit} disabled={!body.trim() || busy}>
+            {busy ? "posting…" : "post echo"}
+          </button>
+        </div>
       </div>
     </div>
   );

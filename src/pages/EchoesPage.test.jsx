@@ -52,27 +52,27 @@ describe("EchoesPage — your echoes [B: ?mine=true]", () => {
     );
   });
 
-  it("does not tell the author to 'be the first' among their own echoes", async () => {
+  it("does not tell the author to go first among their own echoes", async () => {
     getEchoFeed.mockResolvedValue({ echoes: [], next_cursor: null, caught_up: true });
     render(<EchoesPage />);
-    await waitFor(() => expect(screen.getByText(/no echoes yet/i)).toBeInTheDocument());
-    expect(screen.getByText(/be the first/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(/^empty\.$/i)).toBeInTheDocument());
+    expect(screen.getByText(/go first/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /your echoes/i }));
     await waitFor(() =>
-      expect(screen.getByText(/you haven't written an echo yet/i)).toBeInTheDocument()
+      expect(screen.getByText(/you haven't said anything yet/i)).toBeInTheDocument()
     );
-    expect(screen.queryByText(/be the first/i)).toBeNull();
+    expect(screen.queryByText(/go first/i)).toBeNull();
   });
 
   it("states the privacy promise where the private counts appear", async () => {
     getEchoFeed.mockResolvedValue(feed);
     render(<EchoesPage />);
     await waitFor(() => screen.getByText("first echo"));
-    expect(screen.queryByText(/these counts are yours alone/i)).toBeNull();
+    expect(screen.queryByText(/nobody else sees these numbers/i)).toBeNull();
 
     await userEvent.click(screen.getByRole("button", { name: /your echoes/i }));
-    expect(await screen.findByText(/these counts are yours alone/i)).toBeInTheDocument();
+    expect(await screen.findByText(/nobody else sees these numbers/i)).toBeInTheDocument();
   });
 });
 
@@ -83,7 +83,7 @@ describe("EchoesPage feed [F3.3]", () => {
     getEchoFeed.mockResolvedValue(feed);
     render(<EchoesPage />);
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
-    expect(screen.getByText(/you're caught up/i)).toBeInTheDocument();
+    expect(screen.getByText(/that's all of it/i)).toBeInTheDocument();
     // Terminus, not infinite scroll: no "load older" button when caught up.
     expect(screen.queryByRole("button", { name: /load older/i })).toBeNull();
   });
@@ -109,16 +109,19 @@ describe("EchoesPage feed [F3.3]", () => {
     render(<EchoesPage />);
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
     expect(screen.getByRole("button", { name: /load older echoes/i })).toBeInTheDocument();
-    expect(screen.queryByText(/you're caught up/i)).toBeNull();
+    expect(screen.queryByText(/that's all of it/i)).toBeNull();
   });
 
-  it("makes all 18 emotion chips reachable in the filter row [F6.3 / P5-5]", async () => {
+  it("makes all 18 emotions reachable in the feeling rail [F6.3 / P5-5]", async () => {
     getEchoFeed.mockResolvedValue(feed);
     render(<EchoesPage />);
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
-    const filters = screen.getByText("a feeling").closest(".ep-filters");
-    // 18 canonical emotions + the "everything" reset chip = 19 chips.
-    expect(within(filters).getAllByRole("button")).toHaveLength(19);
+    // The rail groups the vocabulary by family rather than laying it out as a
+    // flat chip wall, but every one of them is still one click away — nothing is
+    // behind a "more…" reveal.
+    const rail = screen.getByRole("complementary", { name: /filter by feeling/i });
+    // 18 canonical emotions + "any feeling" + the write button = 20 controls.
+    expect(within(rail).getAllByRole("button")).toHaveLength(20);
   });
 
   it("renders NO public count anywhere across the feed cards [F6.5]", async () => {

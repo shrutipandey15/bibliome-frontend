@@ -1,21 +1,28 @@
-/* ── Resonance ──
-   Sits on the app's existing tokens (Newsreader display / DM Sans body, vellum &
-   lamplight surfaces) so it doesn't read as a bolted-on feature. The one local
-   token is the accent: a warmer, lighter brass than --brass, because this
-   surface is mostly quiet dark space and the standard brass disappears into it.
-   In Vellum it darkens, or it would be invisible on paper. */
+/* ============================================================
+   RESONANCE — one reader at a time.
+
+   Sits on the app's existing tokens (Newsreader display / DM Sans
+   body, vellum & lamplight surfaces) so it doesn't read as a
+   bolted-on feature. The one local token is the accent: a warmer,
+   lighter brass than --brass, because this surface is mostly quiet
+   dark space and the standard brass disappears into it. In Vellum
+   it darkens, or it would be invisible on paper.
+   ============================================================ */
 .resonance-page {
   --res-accent: #8a6a2e;
   --res-accent-soft: color-mix(in srgb, #8a6a2e 18%, transparent);
   background: var(--bg-page);
   min-height: 100vh;
-  padding: 40px 56px 80px;
+  padding: 56px 56px 120px;
+  max-width: 1240px;
+  /* Centred. Pinned left, the leftover width on a wide monitor reads as the
+     page having failed to load the other half. */
+  margin-inline: auto;
   color: var(--ink);
 }
 [data-theme="dark"] .resonance-page {
   --res-accent: #c49a6c;
   --res-accent-soft: color-mix(in srgb, #c49a6c 14%, transparent);
-  background: #0f0d0a;
 }
 
 /* ── Masthead ── */
@@ -24,164 +31,248 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 40px;
-  margin-bottom: 24px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--rule);
 }
 .rp-h1 {
   font-family: var(--font-display);
-  font-size: 60px;
+  font-style: italic;
+  font-size: 56px;
   font-weight: 400;
-  letter-spacing: -0.025em;
-  line-height: 0.96;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 14px 0 0;
+  color: var(--res-accent);
 }
-.rp-h1 em { color: var(--res-accent); font-style: italic; }
+.rp-h1 em { font-style: italic; }
+.rp-h1 .rp-stop { font-style: normal; color: var(--ink); }
 .rp-dek {
   font-family: var(--font-display);
   font-style: italic;
   font-size: 17px;
   line-height: 1.5;
   color: var(--ink-quiet);
-  margin-top: 10px;
-  max-width: 62ch;
+  margin-top: 14px;
+  max-width: 56ch;
+  text-wrap: pretty;
 }
-.rp-head-actions { display: flex; align-items: center; gap: 14px; }
+.rp-head-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; flex: none; }
+/* The three promises, standing where a follower count would be on any other
+   product. Saying them plainly is cheaper than being asked. */
+.rp-promises {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  line-height: 2;
+  text-align: right;
+}
 
 .rp-loading {
   font-family: var(--font-display);
   font-style: italic;
   color: var(--ink-quiet);
-  padding: 60px 0;
+  padding: 90px 0;
   text-align: center;
 }
 
 /* ── Empty state — warm, and honest about the odds ── */
 .rp-empty {
-  max-width: 54ch;
-  margin: 80px auto;
-  text-align: center;
-  padding: 48px 32px;
-  border: 1px dashed var(--rule);
+  margin-top: 64px;
+  max-width: 660px;
+  padding: 64px 60px;
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  border: 1px solid var(--rule);
   border-radius: 2px;
 }
 .rp-empty-glyph {
-  font-size: 26px;
+  font-family: var(--font-display);
+  font-size: 34px;
   color: var(--res-accent);
-  margin-bottom: 18px;
+  opacity: 0.7;
 }
 .rp-empty-line {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 32px;
+  font-weight: 400;
   color: var(--ink);
-  margin-bottom: 14px;
+  margin: 18px 0 12px;
 }
 .rp-empty-sub {
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.75;
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 1.7;
   color: var(--ink-quiet);
+  margin: 0;
+  text-wrap: pretty;
 }
 
 /* ── Sections ── */
-.rp-sections { display: flex; flex-direction: column; gap: 48px; max-width: 780px; margin: 0 auto; }
+.rp-sections { margin-top: 40px; display: flex; flex-direction: column; gap: 52px; }
 .rp-section-head {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 8px;
-  margin-bottom: 22px;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 .rp-section-title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 400;
+  letter-spacing: -0.01em;
   color: var(--ink);
+  margin: 0;
+  white-space: nowrap;
 }
 .rp-section-note {
-  font-family: var(--font-body);
-  font-size: 12px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14.5px;
   color: var(--ink-faint);
 }
-.rp-cards { display: flex; flex-direction: column; gap: 20px; }
+.rp-section-rule { flex: 1; height: 1px; background: var(--rule-soft); }
+.rp-cards { display: flex; flex-direction: column; gap: 16px; }
 .rp-budget {
   font-family: var(--font-display);
   font-style: italic;
   font-size: 15px;
-  color: var(--ink-quiet);
-  text-align: center;
+  color: var(--ink-faint);
+  max-width: 56ch;
+  margin: 0;
 }
 
-/* ── Match card ── */
+/* ============================================================
+   MATCH CARD — a book, a feeling, and one decision.
+   ============================================================ */
 .rm {
   display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 22px;
-  padding: 22px;
+  grid-template-columns: 104px 1fr;
+  gap: 30px;
+  /* No cap of its own: the card is the section, so its edge lands on the same
+     line as the section rule above it. A 860px card under a full-width rule
+     read as two things that had come unaligned. */
+  padding: 26px 30px;
   background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
   border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-left: 3px solid var(--rule);
+  border-radius: 2px;
   box-shadow: var(--shadow-sm);
+  animation: rp-fade .5s ease both;
 }
-[data-theme="dark"] .rm { background: #17130d; }
+@keyframes rp-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 /* A connected match has earned a mark; a suggestion has not. */
-.rm-connected { border-left: 2px solid var(--res-accent); }
+.rm-connected { border-left-color: var(--res-accent); }
+.rm-pending { border-left-color: color-mix(in srgb, var(--res-accent) 45%, transparent); }
 
-.rm-cover { width: 96px; }
+/* The plate. A real object with a board edge and a shadow — a book you'd pick
+   up — rather than a grey placeholder square admitting we have no image. */
+.rm-cover { width: 104px; }
 .rm-cover-img {
   width: 100%;
-  border-radius: 2px;
-  box-shadow: var(--shadow-md);
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 1px 3px 3px 1px;
+  box-shadow: -1px 0 0 rgba(0,0,0,.3), var(--shadow-md);
   display: block;
 }
-.rm-cover-blank {
+.rm-plate {
+  position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 1px 3px 3px 1px;
+  background: linear-gradient(155deg,
+    color-mix(in srgb, var(--plate-c, var(--oxblood)) 88%, #000),
+    color-mix(in srgb, var(--plate-c, var(--oxblood)) 52%, #000));
+  box-shadow: -1px 0 0 rgba(0,0,0,.3), var(--shadow-md);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--bg-sunken);
-  box-shadow: var(--shadow-sm);
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 11px;
+  color: #f5ecd2;
 }
-.rm-cover-blank-mark {
-  font-size: 18px;
-  color: var(--ink-ghost);
+.rm-plate::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(245, 236, 210, 0.16);
+}
+.rm-plate-title {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rm-plate-author {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 236, 210, 0.7);
 }
 
-.rm-kicker { margin-bottom: 8px; }
+.rm-body { min-width: 0; }
+.rm-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
 .rm-title {
   font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 400;
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
   line-height: 1.15;
   color: var(--ink);
+  margin: 7px 0 2px;
 }
 .rm-author {
-  font-family: var(--font-body);
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--ink-quiet);
-  margin-top: 3px;
 }
 .rm-strength {
   font-family: var(--font-display);
   font-style: italic;
   font-size: 16px;
+  line-height: 1.5;
   color: var(--ink-soft);
-  margin: 14px 0 12px;
+  margin: 12px 0 0;
 }
 
-/* Shared emotions — the other half of everything this card may say. */
-.rm-emos { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-.rm-emo {
+/* ── Shared emotions — the other half of everything this card may say.
+   Two labelled bars, you over them. The old pair of unlabelled 2px rules
+   was a shape you had to be told the meaning of; this one says which is
+   which, and intensity still never appears as "7/10". ── */
+.rm-emos {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 560px;
+}
+.rm-emo-head {
+  display: flex;
+  align-items: baseline;
   gap: 9px;
-  flex-wrap: wrap;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--ink-soft);
+  margin-bottom: 6px;
 }
 .rm-emo-swatch {
   width: 8px; height: 8px;
@@ -189,48 +280,118 @@
   background: var(--emo-c);
   flex: none;
 }
-.rm-emo-label { font-family: var(--font-display); font-style: italic; font-size: 15px; }
-/* Two stacked rules: yours over theirs. Intensity is a shape, not a number —
-   "7/10" invites comparison, a pair of lines invites recognition. */
-.rm-emo-pitch { display: flex; flex-direction: column; gap: 2px; width: 54px; flex: none; }
-.rm-emo-bar {
+.rm-emo-label {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15.5px;
+  color: var(--ink);
+}
+.rm-emo-close {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--res-accent);
+  white-space: nowrap;
+}
+.rm-emo-pitch {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.rm-emo-who {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+.rm-emo-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-sunken);
   display: block;
-  height: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.rm-emo-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
   width: var(--w);
   min-width: 3px;
   background: var(--emo-c);
-  opacity: 0.75;
-  border-radius: 1px;
+  border-radius: 2px;
 }
-.rm-emo-close {
+.rm-emo-bar.theirs { opacity: 0.62; }
+
+/* Their note, when they wrote first — set on a fresh sheet, because it is the
+   only thing on this card another person actually wrote. */
+.rm-their-note {
+  margin-top: 18px;
+  max-width: 640px;
+  padding: 18px 20px 16px;
+  background: var(--bg-field);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--res-accent);
+  border-radius: 2px;
+}
+.rm-their-note-kicker {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--res-accent);
+  color: var(--ink-faint);
+}
+.rm-their-note p {
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  line-height: 1.68;
+  color: var(--ink);
+  margin: 9px 0 0;
+  text-wrap: pretty;
 }
 
-.rm-foot { display: flex; flex-direction: column; gap: 12px; }
-.rm-foot-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+/* Capped with the rest of the card's inner blocks, so the handle pushed to the
+   right by `margin-left: auto` lands a readable distance from the button rather
+   than at the far edge of a full-width card. */
+.rm-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  max-width: 640px;
+}
 .rm-reached {
   font-family: var(--font-display);
   font-style: italic;
   font-size: 16px;
   color: var(--ink);
+  flex-basis: 100%;
 }
 /* The decline is present but never competes — it's a way out, not a choice
    being offered. */
 .rm-quiet {
-  border-color: transparent;
-  color: var(--ink-faint);
-  font-size: 12px;
-  padding: 8px 12px;
-}
-.rm-quiet:hover { border-color: var(--rule); color: var(--ink-quiet); }
-.rm-handle {
+  border: 0;
+  background: none;
+  padding: 0 0 2px;
+  border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.rm-quiet:hover { color: var(--ink-quiet); border-bottom-color: var(--ink-quiet); }
+.rm-quiet:disabled { opacity: 0.4; cursor: default; }
+.rm-handle {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
   color: var(--ink-faint);
 }
 
@@ -238,90 +399,159 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  margin-top: 18px;
+  max-width: 640px;
   padding: 14px 16px;
-  border: 1px dashed var(--rule);
   border-radius: 2px;
-  background: var(--res-accent-soft);
+  background: var(--bg-sunken);
 }
-.rm-waiting-glyph { color: var(--res-accent); font-size: 15px; line-height: 1.4; }
-.rm-waiting-line { font-family: var(--font-display); font-size: 17px; color: var(--ink); }
+.rm-waiting-glyph { color: var(--res-accent); font-size: 14px; line-height: 1.3; }
+.rm-waiting-line { font-family: var(--font-display); font-size: 16.5px; color: var(--ink); }
 .rm-waiting-sub {
-  font-family: var(--font-body);
-  font-size: 12.5px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
   color: var(--ink-quiet);
   margin-top: 3px;
 }
 
 /* ── Note composer ── */
-.res-composer { display: flex; flex-direction: column; gap: 8px; }
-.res-composer-field {
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--bg-field, var(--bg-vellum));
+.res-composer {
+  margin-top: 20px;
+  max-width: 640px;
+  background: var(--bg-field);
   border: 1px solid var(--rule);
   border-radius: 2px;
+  padding: 16px 18px;
+}
+.res-composer-field {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  resize: none;
   color: var(--ink);
   font-family: var(--font-display);
   font-size: 16px;
-  line-height: 1.6;
-  resize: vertical;
+  line-height: 1.65;
 }
-[data-theme="dark"] .res-composer-field { background: #0f0d0a; }
-.res-composer-field:focus {
-  outline: none;
-  border-color: var(--res-accent);
+.res-composer-field:focus { outline: none; }
+.res-composer-error { font-family: var(--font-body); font-size: 12.5px; color: var(--oxblood); margin-top: 6px; }
+.res-composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-soft);
 }
+/* Readable, not a stamp: one of these hints is a full sentence explaining that
+   writing back opens the letters, and mono-caps at 9px would bury it. */
 .res-composer-hint {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 11.5px;
+  line-height: 1.55;
   color: var(--ink-faint);
-  line-height: 1.5;
+  max-width: 40ch;
 }
-.res-composer-error { font-family: var(--font-body); font-size: 12.5px; color: var(--oxblood); }
-.res-composer-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .res-composer-count { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); }
 .res-composer-count.over { color: var(--oxblood); }
-.res-composer-actions { display: flex; gap: 10px; margin-left: auto; }
+.res-composer-actions { display: flex; gap: 12px; align-items: center; margin-left: auto; }
 
-/* ── The letters ── */
+/* ============================================================
+   THE LETTERS — a desk, not a chat window.
+   ============================================================ */
 .rt {
-  max-width: 680px;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+  animation: rp-fade .45s ease both;
+}
+
+/* The left column holds who and what this is, permanently, so the letters
+   themselves never have to repeat it. */
+.rt-aside {
+  position: sticky;
+  top: 56px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
-.rt-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 20px;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 14px;
-}
-.rt-kicker { margin-bottom: 6px; }
-.rt-with { font-family: var(--font-display); font-size: 22px; color: var(--ink); }
-.rt-with strong { font-weight: 400; color: var(--res-accent); }
-.rt-book { color: var(--ink-quiet); font-size: 17px; }
-.rt-head-actions { display: flex; align-items: center; gap: 10px; }
-.rt-quiet {
+.rt-back {
+  align-self: flex-start;
+  border: 0;
   background: none;
-  border: none;
-  color: var(--ink-faint);
-  font-size: 18px;
-  line-height: 1;
-  padding: 4px 10px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
   cursor: pointer;
 }
-.rt-quiet:hover { color: var(--ink); }
+.rt-back:hover { color: var(--ink); }
+.rt-plate { width: 96px; }
+.rt-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.rt-with {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--ink);
+  margin-top: 6px;
+}
+.rt-facts {
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  line-height: 2.1;
+}
+.rt-quiet {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0 0 2px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.rt-quiet:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+.rt-main { min-width: 0; max-width: 700px; }
+.rt-pace {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink-quiet);
+  margin: 0 0 34px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--rule);
+  text-wrap: pretty;
+}
 
 .rt-safety {
-  padding: 16px;
+  margin-bottom: 26px;
+  padding: 18px 20px;
   border: 1px solid var(--rule);
+  border-left: 2px solid var(--oxblood);
   border-radius: 2px;
   background: var(--bg-sunken);
 }
-.rt-safety-line { font-family: var(--font-body); font-size: 13px; color: var(--ink-quiet); margin-bottom: 12px; }
+.rt-safety-line { font-family: var(--font-display); font-size: 15px; color: var(--ink-quiet); margin-bottom: 14px; }
 .rt-safety-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .rt-report-btn {
   background: none;
@@ -335,7 +565,7 @@
 }
 .rt-report-btn:hover { border-color: var(--oxblood); color: var(--oxblood); }
 
-.rt-scroll { display: flex; flex-direction: column; gap: 22px; padding: 8px 0; }
+.rt-scroll { display: flex; flex-direction: column; gap: 30px; }
 .rt-loading { font-family: var(--font-display); font-style: italic; color: var(--ink-quiet); text-align: center; padding: 30px; }
 .rt-earlier {
   align-self: center;
@@ -343,80 +573,140 @@
   border: none;
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-faint);
   cursor: pointer;
 }
 .rt-earlier:hover { color: var(--res-accent); }
 
-/* Letters, not chat bubbles: full-width blocks with a signature line. The only
-   difference between yours and theirs is which side the rule is on. */
+/* Letters, not chat bubbles: full-width sheets with a signature line. Yours sits
+   flat on the desk; theirs arrived, so it has paper and a shadow. Neither is
+   right-aligned — a letter you have to read at the wrong margin is a bubble. */
 .rt-msg {
-  padding: 14px 18px;
-  border-left: 2px solid var(--rule);
-  background: var(--bg-card);
-  border-radius: 0 2px 2px 0;
-}
-[data-theme="dark"] .rt-msg { background: #17130d; }
-.rt-msg.mine {
-  border-left: none;
-  border-right: 2px solid var(--res-accent);
-  border-radius: 2px 0 0 2px;
+  padding: 22px 26px 20px;
   background: transparent;
-  text-align: right;
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--rule);
+  border-radius: 2px;
+}
+.rt-msg.theirs {
+  background-color: var(--bg-card);
+  border-left-color: var(--res-accent);
+  box-shadow: var(--shadow-sm);
+}
+.rt-msg-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.rt-msg-who {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.rt-msg.theirs .rt-msg-who { color: var(--res-accent); }
+.rt-msg-date {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
 }
 .rt-msg-body {
   font-family: var(--font-display);
-  font-size: 17px;
-  line-height: 1.65;
+  font-size: 18px;
+  line-height: 1.75;
   color: var(--ink);
+  margin-top: 14px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-.rt-msg-meta {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--ink-faint);
-  margin-top: 8px;
+  text-wrap: pretty;
 }
 
-.rt-error { font-family: var(--font-body); font-size: 13px; color: var(--oxblood); }
-.rt-compose { border-top: 1px solid var(--rule); padding-top: 16px; }
-.rt-compose-field {
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--bg-field, var(--bg-vellum));
+.rt-error { font-family: var(--font-body); font-size: 13px; color: var(--oxblood); margin-top: 18px; }
+.rt-compose {
+  margin-top: 34px;
+  background: var(--bg-field);
   border: 1px solid var(--rule);
   border-radius: 2px;
+  padding: 22px 24px 18px;
+}
+.rt-compose-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.rt-compose-field {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  background: transparent;
+  resize: none;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 16px;
-  line-height: 1.6;
-  resize: vertical;
+  font-size: 18px;
+  line-height: 1.75;
 }
-[data-theme="dark"] .rt-compose-field { background: #0f0d0a; }
-.rt-compose-field:focus { outline: none; border-color: var(--res-accent); }
+.rt-compose-field:focus { outline: none; }
 .rt-compose-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 16px;
   margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-soft);
 }
-.rt-compose-note { font-family: var(--font-body); font-size: 12px; color: var(--ink-faint); }
+.rt-compose-note {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
 
 /* ── responsive ── */
+@media (max-width: 1080px) {
+  .rt { grid-template-columns: 1fr; gap: 28px; }
+  .rt-aside {
+    position: static;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px 28px;
+  }
+  .rt-facts { border-top: 0; padding-top: 0; }
+}
 @media (max-width: 980px) {
-  .resonance-page { padding: 28px 28px 56px; }
-  .rp-h1 { font-size: 42px; }
+  .resonance-page { padding: 40px 32px 80px; }
+  .rp-h1 { font-size: 44px; }
+  .rp-masthead { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .rp-head-actions { align-items: flex-start; }
+  .rp-promises { text-align: left; }
 }
 @media (max-width: 640px) {
-  .resonance-page { padding: 22px 18px 40px; }
-  .rp-h1 { font-size: 32px; }
-  .rp-masthead { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .rm { grid-template-columns: 68px 1fr; gap: 16px; padding: 16px; }
-  .rm-cover { width: 68px; }
-  .rm-title { font-size: 20px; }
+  .resonance-page { padding: 26px 18px 56px; }
+  .rp-h1 { font-size: 34px; }
+  .rp-dek { font-size: 15px; }
+  .rp-empty { padding: 32px 24px; margin-top: 36px; }
+  .rp-empty-line { font-size: 25px; }
+  .rm { grid-template-columns: 72px 1fr; gap: 18px; padding: 18px 18px; }
+  .rm-cover, .rm-plate { width: 72px; }
+  .rm-title { font-size: 21px; }
+  .rp-section-head { flex-wrap: wrap; gap: 6px 12px; }
+  .rp-section-rule { display: none; }
+  .rt-msg { padding: 18px 18px 16px; }
+  .rt-msg-body { font-size: 16.5px; }
+  .rt-compose { padding: 18px 18px 16px; }
+  .rt-compose-field { font-size: 16.5px; }
 }

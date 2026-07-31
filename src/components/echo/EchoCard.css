@@ -1,97 +1,115 @@
-/* Echo card [F3.3] — no counts, handle not linked */
-.eco-card {
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--ink);
-  border-radius: 2px;
-  padding: 22px 24px;
+/* ============================================================
+   Echo card [F3.3 / F6.1 / F6.2] — no counts, handle not linked.
+
+   Not a card any more. A card is a container that says "this is one
+   post among many, all the same size"; an echo is a paragraph
+   someone wrote. So: an editorial row — a marginal column carrying
+   the date and the feeling, the prose set large beside it, and a
+   hairline where it ends. The colour lives in the margin, not in a
+   3px stripe holding a box together.
+   ============================================================ */
+.eco-row {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 26px;
+  padding: 32px 0 30px;
+  border-bottom: 1px solid var(--rule-soft);
+  animation: eco-fade .5s ease both;
+}
+@keyframes eco-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── the margin ── */
+.eco-margin {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-.eco-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.eco-anchor { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.eco-emo {
-  font-family: var(--font-mono); font-size: 10px;
-  letter-spacing: 0.16em; text-transform: uppercase;
-}
-/* The qualifier: same scale, no colour — it should not compete with the primary. */
-.eco-emo-sec { color: var(--ink-ghost); }
-/* "yours" — a quiet outline mark, not a status badge. */
-.eco-mine {
-  font-family: var(--font-mono); font-size: 9px;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-quiet);
-  border: 1px solid var(--ink-quiet);
-  border-radius: 999px;
-  padding: 2px 8px;
-}
-
-.eco-menu-wrap { position: relative; }
-.eco-menu-btn {
-  border: none; background: none; cursor: pointer;
-  font-size: 18px; line-height: 1; color: var(--ink-quiet);
-  padding: 2px 6px; border-radius: 2px;
-}
-.eco-menu-btn:hover { color: var(--ink); background: var(--bg-field); }
-.eco-menu-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
-.eco-menu {
-  position: absolute; right: 0; top: 100%; z-index: 20;
-  min-width: 150px;
-  background: var(--bg-card);
-  border: 1px solid var(--rule, rgba(0,0,0,0.15));
-  border-radius: 3px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.eco-menu button {
-  text-align: left;
-  padding: 9px 14px;
-  border: none; background: none; cursor: pointer;
-  font-family: var(--font-display); font-size: 14px; color: var(--ink);
-}
-.eco-menu button:hover { background: var(--bg-field); }
-.eco-menu-danger { color: var(--oxblood); }
-
-/* The body is the star of the card. */
-.eco-body {
-  font-family: var(--font-display);
-  font-size: 19px;
-  line-height: 1.5;
-  color: var(--ink);
-  margin: 0;
-}
-
-/* Caption line, ruled off from the body. Title and handle sit together on the
-   left; the date is pushed to the right margin. */
-.eco-foot {
-  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
-  padding-top: 12px;
-  border-top: 1px solid var(--rule-soft);
-}
-.eco-book { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-soft); }
-.eco-handle {
-  font-family: var(--font-mono); font-size: 9.5px;
-  letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--ink-faint);
+  gap: 11px;
+  padding-top: 5px;
+  min-width: 0;
 }
 .eco-date {
-  font-family: var(--font-mono); font-size: 9.5px;
-  color: var(--ink-ghost); margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.eco-emo {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase;
+  line-height: 1.3;
+}
+.eco-emo-swatch {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  margin-top: 2px;
+  background: var(--eco-c, var(--ink-faint));
+}
+/* The qualifier recedes: it is indented under the primary and loses the swatch,
+   so it reads as a second clause rather than a second headline. */
+.eco-emo-sec {
+  padding-left: 15px;
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+/* "yours" — a ruled mark in the margin, not a status badge. */
+.eco-mine {
+  margin-top: 2px;
+  width: 44px;
+  padding-top: 5px;
+  border-top: 1px solid var(--brass);
+  font-family: var(--font-mono);
+  font-size: 8.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--brass);
+}
+
+/* ── the column ── */
+.eco-col { min-width: 0; }
+
+/* The body is the star. */
+.eco-body {
+  font-family: var(--font-display);
+  font-size: 20.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0;
+  max-width: 60ch;
+  text-wrap: pretty;
+}
+
+/* Caption line — a byline, not a citation. */
+.eco-foot {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.eco-book { font-family: var(--font-display); font-style: italic; font-size: 14.5px; color: var(--ink-soft); }
+/* Handle: plain text, NOT a link — no people-browsing. [F3.7] */
+.eco-handle {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.12em;
+  color: var(--ink-faint);
 }
 
 /* Author-only private tally — quiet, never a badge. [F6.1] */
 .eco-tally {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 9px 13px;
+  background: var(--bg-sunken);
+  border-radius: 2px;
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--ink-faint);
+  font-size: 10px; letter-spacing: 0.1em;
+  color: var(--ink-quiet);
 }
 .eco-tally--quiet {
+  background: none;
+  padding: 12px 0 0;
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0;
   color: var(--ink-ghost);
 }
@@ -100,80 +118,132 @@
 .eco-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  margin-top: 16px;
 }
-/* Squared marginalia chips, not pills — these are annotations on a page. */
 .eco-act {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 11px;
+  gap: 7px;
+  padding: 6px 12px;
   border: 1px solid var(--rule);
-  border-radius: 2px;
+  border-radius: 999px;
   background: transparent;
-  font-family: var(--font-display);
   font-size: 12px;
-  color: var(--ink-soft);
+  font-weight: 500;
+  color: var(--ink-quiet);
   cursor: pointer;
+  transition: all .18s;
 }
-.eco-act-mark { font-family: var(--font-mono); font-size: 13px; line-height: 1; }
+.eco-act-mark { font-family: var(--font-mono); font-size: 11px; opacity: 0.85; }
 .eco-act:hover { color: var(--ink); border-color: var(--ink-quiet); }
 .eco-act:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 /* Pressed state — NOT conveyed by colour alone: filled background, heavier weight,
    and an underline join on the label, plus aria-pressed. Tinted with the echo's own
-   emotion colour (--eco-c, set on the card), which is decoration on top of those
-   redundant cues, never the cue itself. [F6.4] */
+   emotion colour (--eco-c, set on the row). [F6.4] */
 .eco-react.on {
   color: var(--eco-c, var(--brass));
   font-weight: 600;
   border-color: var(--eco-c, var(--brass));
-  background: color-mix(in srgb, var(--eco-c, var(--brass)) 12%, var(--bg-vellum));
+  background: color-mix(in srgb, var(--eco-c, var(--brass)) 12%, transparent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.eco-reply-btn { margin-left: 0; }
 
-/* Inline composer. [F6.2] */
-.eco-composer { display: flex; flex-direction: column; gap: 8px; }
-.eco-reply-input {
-  padding: 10px 12px;
-  border: 1px solid var(--rule, rgba(0,0,0,0.15));
-  border-radius: 2px;
-  background: var(--bg-field);
-  font-family: var(--font-display); font-size: 15px; color: var(--ink);
-  resize: vertical;
+.eco-menu-wrap { display: inline-flex; align-items: center; margin-left: 4px; }
+.eco-menu-btn {
+  width: 28px; height: 28px;
+  border: 0; border-radius: 50%;
+  background: none; cursor: pointer;
+  font-size: 15px; line-height: 1;
+  color: var(--ink-ghost);
 }
-.eco-reply-input:focus { border-color: var(--brass); outline: none; }
-.eco-reply-error { color: var(--oxblood); font-size: 13px; }
-.eco-composer-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.eco-menu-btn:hover { color: var(--ink); background: var(--bg-sunken); }
+.eco-menu-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+/* Safety actions inline on the row rather than a floating card — three words,
+   no surface needed to hold them. */
+.eco-menu {
+  display: inline-flex;
+  gap: 14px;
+  margin-left: 6px;
+  align-items: center;
+}
+.eco-menu button {
+  border: 0; background: none; cursor: pointer; padding: 0 0 1px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-quiet);
+}
+.eco-menu button:hover { color: var(--ink); border-bottom-color: var(--ink); }
+.eco-menu-danger { color: var(--oxblood) !important; border-bottom-color: var(--oxblood) !important; }
+
+/* ── Inline composer. [F6.2] Reply is written on a fresh sheet. ── */
+.eco-composer {
+  margin-top: 16px;
+  max-width: 60ch;
+  background: var(--bg-field);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.eco-reply-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  resize: none;
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.eco-reply-error { color: var(--oxblood); font-size: 13px; margin-top: 6px; }
+.eco-composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-soft);
+}
 .eco-composer-cancel {
-  border: none; background: none; cursor: pointer;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-quiet);
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-quiet);
 }
 .eco-composer-cancel:hover { color: var(--ink); }
 
-/* Inline replies — shown, never counted. [F6.2] */
-/* Replies hang off a marginal rule, like annotations beside the entry. */
+/* ── Inline replies — shown, never counted. [F6.2] ── */
 .eco-replies {
-  list-style: none; margin: 0; padding: 0 0 0 14px;
-  border-left: 1px solid var(--rule-soft);
-  display: flex; flex-direction: column; gap: 10px;
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0 0 0 16px;
+  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  max-width: 58ch;
 }
-.eco-reply { font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+.eco-reply { line-height: 1.55; }
 .eco-reply.pending { opacity: 0.6; }
 .eco-reply-handle {
-  font-family: var(--font-mono); font-size: 9.5px;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-faint); margin-right: 8px;
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.12em;
+  color: var(--ink-faint);
+  margin-right: 9px;
 }
-.eco-reply-body { font-family: var(--font-display); }
+.eco-reply-body { font-family: var(--font-display); font-size: 15.5px; color: var(--ink-soft); }
 
 .eco-readrest {
-  align-self: flex-start;
-  border: none; background: none; cursor: pointer; padding: 0;
-  font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--oxblood);
+  margin-top: 14px;
+  border: 0; background: none; cursor: pointer; padding: 0;
+  font-family: var(--font-display); font-style: italic; font-size: 14px;
+  color: var(--oxblood);
 }
 .eco-readrest:hover { text-decoration: underline; }
 .eco-readrest:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 2px; }
@@ -181,4 +251,20 @@
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* Below the fold-in width the margin stops being a margin: it lays flat above
+   the prose as a single meta line, and the prose keeps its full measure. */
+@media (max-width: 720px) {
+  .eco-row { grid-template-columns: 1fr; gap: 12px; padding: 26px 0 24px; }
+  .eco-margin {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 0;
+  }
+  .eco-emo-sec { padding-left: 0; }
+  .eco-mine { margin-top: 0; padding-top: 0; border-top: 0; width: auto; }
+  .eco-body { font-size: 18px; }
 }

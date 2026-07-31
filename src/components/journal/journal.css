@@ -1,63 +1,146 @@
-/* The journal — paper, and as little else as possible.
-   Tokens from styles/global.css so light (Vellum) and dark (Lamplight) both work
-   without a second palette here. */
+/* ============================================================
+   THE JOURNAL — paper, and as little else as possible.
+
+   Tokens from styles/global.css so Vellum (light) and Lamplight
+   (dark) both work without a second palette here.
+
+   The shell used to be one 42rem column that held the chrome, the
+   writing and the read-back at the same width, so the writing
+   surface was the same object as the navigation. Now the page is
+   the page: a bound sheet with a margin rule, sitting on the desk,
+   with the week and the housekeeping in a column beside it where
+   they can't interrupt a sentence.
+   ============================================================ */
 
 .jr-shell {
-  max-width: 42rem;
-  margin: 0 auto;
-  padding: 1.5rem 1.25rem 6rem;
   min-height: 100vh;
-  background: var(--bg-paper);
-  background-image: var(--paper-grain);
+  background: var(--bg-page);
+  padding: 0 0 5rem;
 }
-
-/* ── Chrome ── */
-.jr-nav {
+/* The pre-unlock states (loading / setup / lock) are their own centred world. */
+.jr-shell--gate {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2.5rem;
+  justify-content: center;
+  padding: 3.75rem;
 }
-.jr-tabs { display: flex; gap: 1.25rem; flex: 1; justify-content: center; }
+
+/* ── Chrome: one sticky bar, the whole width ── */
+.jr-bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0 2.75rem;
+  height: 62px;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--rule-soft);
+}
+.jr-wordmark {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.jr-wordmark em { font-style: italic; color: var(--brass); }
+.jr-tabs { display: flex; gap: 2px; margin-left: 0.5rem; }
 .jr-tab {
-  background: none;
+  padding: 7px 14px;
   border: none;
-  padding: 0.25rem 0;
+  border-radius: 2px;
+  background: none;
   font-family: var(--font-body);
-  font-size: 0.85rem;
-  letter-spacing: 0.04em;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--ink-faint);
   cursor: pointer;
-  border-bottom: 1px solid transparent;
+  transition: background .18s, color .18s;
 }
 .jr-tab:hover { color: var(--ink-quiet); }
-.jr-tab.is-on { color: var(--ink); border-bottom-color: var(--ink); }
+.jr-tab.is-on { background: var(--bg-sunken); color: var(--ink); }
+.jr-tab:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
 
+.jr-bar-right { margin-left: auto; display: flex; align-items: center; gap: 1.125rem; }
+/* The promise, kept in view. It is the reason every other decision here is
+   shaped the way it is. */
+.jr-seal {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
 .jr-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem; height: 2rem;
-  border: none; background: none;
-  color: var(--ink-faint);
+  width: 32px; height: 32px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: var(--ink-quiet);
   cursor: pointer;
-  border-radius: 50%;
 }
 .jr-icon-btn:hover { color: var(--ink); background: var(--bg-sunken); }
+.jr-icon-btn--ruled { border-color: var(--rule); }
 
-/* ── Screen 1: the blank page ── */
-.jr-page { position: relative; }
+/* ============================================================
+   Screen 1 — the blank page
+   ============================================================ */
+.jr-today {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2.25rem;
+  padding: 2.75rem 2.75rem 0;
+}
+
+/* A bound sheet, not a text box: paper grain, a shadow, and the ruled margin
+   every notebook has down its left edge. */
+.jr-sheet {
+  flex: none;
+  width: 760px;
+  max-width: 100%;
+  min-height: 74vh;
+  position: relative;
+  padding: 2.75rem 4.75rem 3.5rem;
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: var(--shadow-md);
+}
+.jr-sheet::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 2.75rem; bottom: 2.75rem;
+  width: 3px;
+  background: var(--oxblood);
+  opacity: 0.5;
+}
+.jr-sheet-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
 .jr-page-date {
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--ink-ghost);
-  margin-bottom: 1.25rem;
+  color: var(--ink-faint);
 }
 .jr-writing {
+  display: block;
   width: 100%;
-  min-height: 60vh;
+  min-height: 52vh;
+  margin-top: 1.625rem;
   border: none;
   outline: none;
   resize: none;
@@ -65,69 +148,245 @@
   background: transparent;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 1.15rem;
-  line-height: 1.85;
+  font-size: 19px;
+  line-height: 1.95;
   padding: 0;
 }
-.jr-writing::placeholder { color: transparent; }
+.jr-writing::placeholder { color: var(--ink-ghost); }
+.jr-sheet-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--rule-soft);
+}
+.jr-words {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
 
-/* The whisper. Fixed, quiet, and never in the way of the cursor. */
+/* The whisper. In the sheet's own header now, not floating at the corner of the
+   viewport where it belonged to the browser rather than to the page. */
 .jr-whisper {
-  position: fixed;
-  bottom: 1.25rem;
-  right: 1.5rem;
-  min-height: 1rem;
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--ink-ghost);
   transition: color 0.4s ease;
+  min-height: 1em;
+  text-align: right;
 }
 .jr-whisper-error {
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
   color: var(--oxblood);
-  max-width: 20rem;
-  text-align: right;
+  max-width: 22rem;
   line-height: 1.5;
 }
 
-/* ── Screen 2: continuous read-back ── */
-.jr-read { max-height: calc(100vh - 12rem); overflow-y: auto; scroll-behavior: smooth; }
-.jr-day { padding: 2rem 0; border-top: 1px solid var(--rule-soft); }
-.jr-day:first-child { border-top: none; }
-.jr-day-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
-.jr-day-head h3 {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
+/* ── The desk beside the page ── */
+.jr-aside {
+  flex: none;
+  width: 250px;
+  padding-top: 0.375rem;
+}
+.jr-aside-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--ink-faint);
+  margin-bottom: 0.875rem;
 }
-/* The ribbon: a silk marker at the day you last read down to. */
-.jr-ribbon {
-  flex: 1;
-  height: 2px;
-  background: linear-gradient(90deg, var(--oxblood), transparent);
+/* Seven bars. Not a streak, not a score — you can see a gap and nothing here
+   comments on it. */
+.jr-week { display: flex; gap: 6px; margin-bottom: 1.625rem; }
+.jr-week-day { flex: 1; text-align: center; }
+.jr-week-mark {
+  height: 34px;
+  border-radius: 2px;
+  border: 1px solid var(--rule-soft);
+  background: transparent;
+}
+.jr-week-mark.written { background: var(--bg-sunken); border-color: var(--rule); }
+.jr-week-mark.today { border-color: var(--brass); }
+.jr-week-label {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-ghost);
+  margin-top: 5px;
+}
+.jr-aside-note {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+  margin: 1.375rem 0.125rem 0;
+}
+
+/* ── The unnamed-days prompt. A card on the desk, never a modal, never a nag. ── */
+.jr-prompt {
+  padding: 1rem 1.125rem;
+  background: var(--bg-sunken);
   border-radius: 2px;
 }
+.jr-prompt-line {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.jr-prompt-sub {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-quiet);
+  margin: 0.4375rem 0 0.75rem;
+}
+.jr-prompt-actions { display: flex; gap: 0.875rem; }
+
+/* ============================================================
+   Screen 2 — the continuous read-back
+   ============================================================ */
+.jr-read {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2.75rem;
+  padding: 2.75rem 2.75rem 0;
+}
+/* An index. The read-back is a book, and a book you have written a hundred
+   days into needs a way to reach the middle of it. */
+.jr-index {
+  flex: none;
+  width: 190px;
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+}
+.jr-index-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s;
+}
+.jr-index-item:hover { background: var(--bg-sunken); }
+.jr-index-item:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.jr-index-mark {
+  width: 3px; height: 20px; flex: none;
+  border-radius: 1px;
+  background: var(--rule);
+}
+.jr-index-item.is-here .jr-index-mark { background: var(--oxblood); }
+.jr-index-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+.jr-index-item.is-here .jr-index-label { color: var(--ink); }
+
+.jr-pages { flex: none; width: 720px; max-width: 100%; }
+.jr-day { margin-bottom: 3.25rem; }
+.jr-day-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.jr-day-head h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.jr-day-rule { flex: 1; height: 1px; background: var(--rule-soft); }
+/* The ribbon: a silk marker at the day you last read down to. */
+.jr-ribbon {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--oxblood);
+  white-space: nowrap;
+}
+.jr-day-body {
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 2.125rem 2.75rem 1.625rem;
+  box-shadow: var(--shadow-sm);
+}
+.jr-day-body + .jr-day-body { margin-top: 0.75rem; }
 .jr-day-body p {
   font-family: var(--font-display);
-  font-size: 1.08rem;
+  font-size: 18px;
   line-height: 1.85;
-  color: var(--ink-soft);
+  color: var(--ink);
   margin: 0 0 1rem;
   white-space: pre-wrap;
+  text-wrap: pretty;
 }
-.jr-day-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.jr-day-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule-soft);
+}
 .jr-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-body);
-  font-size: 0.7rem;
-  letter-spacing: 0.03em;
-  padding: 0.2rem 0.6rem;
+  font-size: 11.5px;
+  padding: 4px 11px;
   border-radius: 999px;
   color: var(--tag, var(--ink-quiet));
-  border: 1px solid color-mix(in srgb, var(--tag, var(--rule)) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag, var(--rule)) 55%, transparent);
+}
+.jr-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tag, var(--ink-faint)); }
+.jr-day-words {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ink-ghost);
+}
+.jr-read-end {
+  text-align: center;
+  padding: 1.625rem 0 3rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-faint);
 }
 .jr-unreadable {
   margin: 2rem 0;
@@ -139,21 +398,85 @@
   color: var(--ink-quiet);
 }
 
-/* ── The unnamed-days prompt. A line, not a modal. ── */
-.jr-prompt {
+/* ============================================================
+   Screen 3 — search
+   ============================================================ */
+.jr-search { max-width: 760px; margin: 0 auto; padding: 3.5rem 2.75rem 0; }
+/* The box is the screen's whole subject, so it gets the size of one. */
+.jr-search-box {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 2rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--rule-soft);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  color: var(--ink-quiet);
+  width: 100%;
+  padding: 18px 22px;
+  background: var(--bg-field);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: var(--shadow-sm);
+  color: var(--ink-faint);
+}
+.jr-search-box:focus-within { border-color: var(--brass); }
+.jr-search-box .jr-input {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+}
+/* The scannable version of the scope line: mono caps, because it is a stamp on
+   the search rather than a sentence to read. The reason underneath it is prose,
+   and `.jr-fineprint` stays prose for the setup and lock screens that use it. */
+.jr-search-scope {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin: 0.875rem 0.125rem 0;
+}
+.jr-search-why {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+  margin: 0.375rem 0.125rem 0;
+  max-width: 52ch;
+}
+.jr-search-results { margin-top: 2.125rem; display: flex; flex-direction: column; }
+.jr-result {
+  display: block;
+  width: 100%;
+  padding: 1.25rem 0;
+  border: none;
+  border-top: 1px solid var(--rule-soft);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.jr-result:hover .jr-result-snippet { color: var(--ink); }
+.jr-result:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.jr-result-date {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.jr-result-snippet {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--ink-soft);
 }
 
-/* ── Screen 3: naming days ── */
-.jr-tagger { max-width: 30rem; }
+/* ============================================================
+   Naming days
+   ============================================================ */
+.jr-tagger { max-width: 30rem; padding: 1.75rem; }
 .jr-tagger-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
 .jr-tagger-excerpt { margin-bottom: 1.5rem; }
 .jr-tagger-excerpt p {
@@ -201,66 +524,57 @@
   color: var(--ink);
 }
 
-/* ── Search ── */
-.jr-search-box {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.5rem;
-  color: var(--ink-faint);
-}
-.jr-search-box .jr-input { border: none; background: none; padding: 0; }
-.jr-search-results { margin-top: 1.5rem; display: flex; flex-direction: column; }
-.jr-result {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.9rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule-soft);
-  background: none;
-  text-align: left;
-  cursor: pointer;
-}
-.jr-result-date {
-  font-family: var(--font-body);
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-ghost);
-}
-.jr-result-snippet {
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: var(--ink-soft);
-}
-
-/* ── Setup + lock ── */
+/* ============================================================
+   Setup + lock — a single sheet, centred, nothing else on screen
+   ============================================================ */
 .jr-setup, .jr-lock {
-  max-width: 30rem;
-  margin: 3rem auto;
+  width: 520px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: 3.25rem 3.375rem;
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: var(--shadow-lg);
+  animation: jr-sheet-in .5s cubic-bezier(.16, 1, .3, 1) both;
+}
+@keyframes jr-sheet-in {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to { opacity: 1; transform: none; }
 }
 .jr-setup h2, .jr-lock h2 {
   font-family: var(--font-display);
-  font-size: 1.45rem;
+  font-size: 31px;
   font-weight: 400;
-  line-height: 1.35;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--ink);
-  margin: 0;
+  margin: 0.375rem 0 0;
 }
 .jr-setup p, .jr-lock p {
-  font-family: var(--font-body);
-  font-size: 0.88rem;
-  line-height: 1.7;
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.65;
   color: var(--ink-quiet);
   margin: 0;
+  max-width: 44ch;
+  text-wrap: pretty;
 }
-.jr-setup-glyph { color: var(--ink-faint); }
+/* A ruled disc, the same mark the bar uses to lock — the icon that closed the
+   journal is the icon on the door. */
+.jr-setup-glyph {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--brass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brass);
+}
 .jr-setup-cost {
   border-left: 2px solid var(--oxblood);
   padding-left: 0.9rem;
@@ -277,7 +591,7 @@
   padding: 1.1rem 0.75rem;
   border: 1px solid var(--rule);
   border-radius: 4px;
-  background: var(--bg-vellum);
+  background: var(--bg-field);
   color: var(--ink);
   user-select: all;
   word-break: break-all;
@@ -285,11 +599,13 @@
 .jr-code-actions { display: flex; gap: 0.6rem; }
 .jr-confirm { display: flex; flex-direction: column; gap: 0.4rem; }
 .jr-confirm span, .jr-field span {
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  color: var(--ink-quiet);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
 }
-.jr-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.jr-field { display: flex; flex-direction: column; gap: 0.5625rem; margin-top: 0.75rem; }
 .jr-ack {
   display: flex;
   gap: 0.6rem;
@@ -305,26 +621,29 @@
 /* ── Shared atoms ── */
 .jr-input {
   width: 100%;
-  padding: 0.6rem 0.7rem;
+  padding: 13px 15px;
   border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--bg-field);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 15px;
 }
-.jr-input:focus { outline: none; border-color: var(--ink-faint); }
+.jr-input:focus { outline: none; border-color: var(--brass); }
 .jr-input-code { font-family: var(--font-mono); letter-spacing: 0.08em; }
+.jr-input[type="password"] { letter-spacing: 0.1em; }
 
 .jr-primary {
-  padding: 0.7rem 1.1rem;
+  width: 100%;
+  padding: 13px;
+  margin-top: 0.375rem;
   border: none;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--ink);
   color: var(--bg-page);
   font-family: var(--font-body);
-  font-size: 0.85rem;
-  letter-spacing: 0.03em;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 }
 .jr-primary:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -336,7 +655,7 @@
   gap: 0.4rem;
   padding: 0.6rem 1rem;
   border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-radius: 2px;
   background: none;
   color: var(--ink-quiet);
   font-family: var(--font-body);
@@ -345,31 +664,51 @@
 }
 .jr-ghost:hover { border-color: var(--ink-faint); color: var(--ink); }
 
+/* Links here are the mono under-ruled kind the rest of the app uses for quiet
+   secondary actions, so "name them" and "not now" read as the same weight. */
 .jr-link {
   background: none;
   border: none;
-  padding: 0;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  color: var(--ink-quiet);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  padding: 0 0 2px;
+  border-bottom: 1px solid var(--brass);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
   cursor: pointer;
 }
-.jr-link:hover { color: var(--ink); }
-.jr-link-quiet { color: var(--ink-ghost); }
+.jr-link:hover { color: var(--brass); }
+.jr-link-quiet { color: var(--ink-ghost); border-bottom-color: transparent; }
+.jr-link-quiet:hover { color: var(--ink-quiet); }
 
+/* The whole-screen "nothing here yet" voice. */
 .jr-quiet {
-  font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
   color: var(--ink-faint);
-  padding: 2rem 0;
+  padding: 4rem 2.75rem;
+  text-align: center;
 }
+/* …which is not the voice of a label inside the tagger's header row. */
+.jr-tagger-head .jr-quiet {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0;
+  text-align: left;
+}
+/* Prose, not a stamp: every use of this is a two-sentence explanation on the
+   setup, lock or tagger screens. */
 .jr-fineprint {
   font-family: var(--font-body);
-  font-size: 0.72rem;
-  line-height: 1.6;
-  color: var(--ink-ghost);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--ink-faint);
   margin: 0;
 }
 .jr-error {
@@ -378,8 +717,41 @@
   color: var(--oxblood);
 }
 
+/* ============================================================
+   RESPONSIVE — the desk column folds under the page; the index
+   becomes a horizontal scroller above the read-back.
+   ============================================================ */
+@media (max-width: 1180px) {
+  .jr-today, .jr-read { flex-direction: column; align-items: center; gap: 1.75rem; }
+  .jr-sheet, .jr-pages { width: 100%; max-width: 760px; }
+  .jr-aside { width: 100%; max-width: 760px; }
+  .jr-week { max-width: 320px; }
+  .jr-index {
+    position: static;
+    width: 100%;
+    max-width: 760px;
+    max-height: none;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .jr-index-item { width: auto; flex: none; }
+}
 @media (max-width: 640px) {
-  .jr-shell { padding: 1rem 1rem 5rem; }
-  .jr-writing { font-size: 1.05rem; }
-  .jr-code { font-size: 0.95rem; }
+  .jr-bar { padding: 0 1.125rem; gap: 0.75rem; height: 56px; }
+  .jr-wordmark { display: none; }
+  .jr-seal { display: none; }
+  .jr-today, .jr-read { padding: 1.5rem 1rem 0; }
+  .jr-search { padding: 2rem 1rem 0; }
+  .jr-sheet { padding: 1.75rem 1.5rem 2rem; min-height: 60vh; }
+  .jr-sheet::before { top: 1.75rem; bottom: 1.75rem; }
+  .jr-writing { font-size: 17px; line-height: 1.8; }
+  .jr-day-body { padding: 1.25rem 1.25rem 1rem; }
+  .jr-day-body p { font-size: 16.5px; }
+  .jr-search-box { padding: 14px 16px; }
+  .jr-search-box .jr-input { font-size: 16px; }
+  .jr-setup, .jr-lock { padding: 2rem 1.5rem; }
+  .jr-setup h2, .jr-lock h2 { font-size: 25px; }
+  .jr-shell--gate { padding: 1.5rem 1rem; }
 }
