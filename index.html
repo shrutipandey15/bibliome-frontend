@@ -56,6 +56,21 @@
         p { line-height: 1.6; color: #8a8690; }
       </style>
     </noscript>
+    <script>
+      /* Vellum / Lamplight, decided before the first paint. React sets this too
+         (see contexts/ThemeContext.jsx), but an effect runs *after* the first
+         frame — so without this a Lamplight reader saw the page flash Vellum on
+         every hard load. Kept deliberately tiny and dependency-free. */
+      (function () {
+        var t = "light";
+        try {
+          var stored = localStorage.getItem("bd-theme");
+          if (stored === "light" || stored === "dark") t = stored;
+          else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+        } catch (e) { /* private mode — fall back to Vellum */ }
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

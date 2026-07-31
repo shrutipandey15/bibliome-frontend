@@ -4,6 +4,8 @@ import { Routes, Route, useParams, Link, useNavigate, Navigate, Outlet, useSearc
 import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
 import { JournalKeyProvider } from "./contexts/JournalKeyContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import ThemeToggle from "./components/ThemeToggle";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
 import { saveCardAsImage } from "./utils/cardUtils";
 import { getSharedDNA, getEmotionVocab, setReadFor } from "./services/api";
@@ -32,20 +34,6 @@ import { ShelfDecoration } from "./components/Shelf";
 import { EMO_LIST, EMOTIONS, getPrimaryEmotion, hydrateEmotions } from "./services/emotions";
 import { clearCache } from "./services/offline";
 import "./App.css";
-
-function useReadingRoomTheme() {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") return "light";
-    const stored = localStorage.getItem("bd-theme");
-    if (stored === "light" || stored === "dark") return stored;
-    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("bd-theme", theme);
-  }, [theme]);
-  return [theme, () => setTheme((t) => (t === "dark" ? "light" : "dark"))];
-}
 
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
@@ -119,7 +107,7 @@ function buildDashboardStats(entries) {
   return { total, avg, topEmotion };
 }
 
-function ReadingRoomHeader({ user, tab, onTab, theme, onToggleTheme, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
+function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
   // Three tabs — Shelf · DNA · Echo. Patterns folded into DNA: both surfaced the
   // same emotion data, so the aggregate now reads as the closing section of the
   // DNA scroll rather than a competing tab.
@@ -161,9 +149,7 @@ function ReadingRoomHeader({ user, tab, onTab, theme, onToggleTheme, onAddBook, 
           <ResonanceMark />
           <NotificationCenter />
           <button className="rr-theme-toggle" onClick={() => navigate("/me")} title="Your study (profile)" aria-label="Your profile">◐</button>
-          <button className="rr-theme-toggle" onClick={onToggleTheme} title="Toggle Vellum / Lamplight">
-            {theme === "dark" ? "☀" : "☾"}
-          </button>
+          <ThemeToggle className="rr-theme-toggle" />
           <button className="rr-avatar" onClick={() => navigate("/settings")} title="Settings">{initial}</button>
         </div>
       </div>
@@ -345,7 +331,7 @@ function Dashboard() {
   } = useJournal();
 
   const navigate = useNavigate();
-  const [theme, toggleTheme] = useReadingRoomTheme();
+
 
   // Tabs are URL-driven so each view is deep-linkable and the browser back
   // button moves between them. `?view=` is the source of truth. [F1.6 / P5-4]
@@ -470,8 +456,6 @@ function Dashboard() {
         user={user}
         tab={tab}
         onTab={setTab}
-        theme={theme}
-        onToggleTheme={toggleTheme}
         onAddBook={() => setModal("new")}
         onRevealDNA={handleGenerateDNA}
         canGenerate={canGenerate}
@@ -688,6 +672,7 @@ export default function App() {
   if (loading) return <RouteLoader />;
 
   return (
+    <ThemeProvider>
     <Suspense fallback={<RouteLoader />}>
       <Routes>
         <Route path="/s/:token" element={<SharedProfile />} />
@@ -713,5 +698,6 @@ export default function App() {
         </Route>
       </Routes>
     </Suspense>
+    </ThemeProvider>
   );
 }

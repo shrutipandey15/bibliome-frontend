@@ -697,3 +697,18 @@ button, a, [role="button"] { touch-action: manipulation; }
 @keyframes barGrow { from { width: 0 !important; } }
 @keyframes pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.8; } }
 @keyframes glowPulse { 0%,100% { box-shadow: 0 0 0 transparent; } 50% { box-shadow: 0 0 20px rgba(196,85,58,0.25); } }
+
+/* ---------- THEME TOGGLE ----------
+   The default look for <ThemeToggle>. Hosts that already have chrome of their
+   own (the shelf header, the journal bar) pass their class instead. */
+.theme-toggle {
+  width: 36px; height: 36px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--bg-card);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 16px; line-height: 1;
+}
+.theme-toggle:hover { border-color: var(--ink-quiet); color: var(--ink); }
+.theme-toggle:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }

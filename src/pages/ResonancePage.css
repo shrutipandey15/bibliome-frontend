@@ -710,3 +710,6 @@
   .rt-compose { padding: 18px 18px 16px; }
   .rt-compose-field { font-size: 16.5px; }
 }
+
+/* Back-to-shelf and the surface toggle travel together in the masthead. */
+.rp-head-row { display: flex; align-items: center; gap: 10px; }

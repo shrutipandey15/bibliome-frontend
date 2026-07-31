@@ -5,6 +5,7 @@ import {
   getEchoFeed, blockHandle, muteHandle, reportEcho, reportReply,
 } from "../services/api";
 import Modal from "../components/Modal";
+import ThemeToggle from "../components/ThemeToggle";
 import EchoCard from "../components/echo/EchoCard";
 import EchoComposer from "../components/echo/EchoComposer";
 import EchoThread from "../components/echo/EchoThread";
@@ -113,6 +114,7 @@ export default function EchoesPage() {
           </div>
           <div className="ep-head-actions">
             <button className="btn ghost" onClick={() => navigate("/")} style={{ fontSize: 12 }}>← back to shelf</button>
+            <ThemeToggle className="rr-theme-toggle" />
           </div>
         </header>
 

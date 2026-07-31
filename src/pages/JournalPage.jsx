@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Lock } from "lucide-react";
 import Modal from "../components/Modal";
+import ThemeToggle from "../components/ThemeToggle";
 import { useJournalKey } from "../contexts/JournalKeyContext";
 import { usePrivateJournal } from "../contexts/PrivateJournalContext";
 import JournalSetup from "../components/journal/JournalSetup";
@@ -107,6 +108,7 @@ function UnlockedJournal() {
           {/* The promise, kept in view — it is why everything else here is shaped
               the way it is. */}
           <span className="jr-seal">end-to-end encrypted</span>
+          <ThemeToggle className="jr-icon-btn jr-icon-btn--ruled" />
           {/* Locking is a real affordance, not a settings-menu curiosity: it's the
               one action that takes the key out of memory without closing the tab. */}
           <button

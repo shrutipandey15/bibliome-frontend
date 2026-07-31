@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Shelf, { ShelfDecoration } from "../components/Shelf";
+import ThemeToggle from "../components/ThemeToggle";
 import { ARCHETYPE_COUNT } from "../components/dna/constants";
 import "./LandingPage.css";
 
@@ -70,6 +71,7 @@ export default function LandingPage({ onGetStarted }) {
             <a href="#manifesto">Manifesto</a>
             <button className="btn ghost" onClick={onGetStarted} style={{ fontSize: 12 }}>Sign in</button>
             <button className="btn" onClick={onGetStarted} style={{ fontSize: 12 }}>Begin →</button>
+            <ThemeToggle className="rr-theme-toggle" />
           </div>
         </nav>
 

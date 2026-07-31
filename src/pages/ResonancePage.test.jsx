@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render as rtlRender, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ThemeProvider } from "../contexts/ThemeContext";
+
+// Every surface mounts under the app's ThemeProvider (App.jsx wraps the router).
+// Rendering a page without it is a test-only condition, so supply it here rather
+// than making `useTheme` tolerate being called outside its provider — a toggle
+// that silently does nothing is the bug this provider exists to prevent.
+const render = (ui, opts) => rtlRender(ui, { wrapper: ThemeProvider, ...opts });
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("../services/api", () => ({

@@ -4,6 +4,7 @@ import { getResonanceMatches, reachOut, respondToMatch } from "../services/api";
 import { markSeen } from "../components/resonance/signal";
 import MatchCard from "../components/resonance/MatchCard";
 import ResonanceThread from "../components/resonance/ResonanceThread";
+import ThemeToggle from "../components/ThemeToggle";
 import "./ResonancePage.css";
 
 /**
@@ -125,9 +126,12 @@ export default function ResonancePage() {
           </p>
         </div>
         <div className="rp-head-actions">
-          <button className="btn ghost" onClick={() => navigate("/")} style={{ fontSize: 12 }}>
-            ← back to shelf
-          </button>
+          <div className="rp-head-row">
+            <button className="btn ghost" onClick={() => navigate("/")} style={{ fontSize: 12 }}>
+              ← back to shelf
+            </button>
+            <ThemeToggle className="rr-theme-toggle" />
+          </div>
           {/* The rules of the room, stated where every other product puts a
               follower count. */}
           <div className="rp-promises">
