@@ -59,6 +59,8 @@ export function clearSession() {
 
 // One-time cutover: older builds stored tokens in localStorage. They're no longer
 // valid; remove them so nothing stale lingers. [authCookieContract.md §Cutover]
+// The key deliberately keeps its pre-rename `bookdna_` name — it is the historical
+// key we are clearing, not a current one. Do not "fix" it to bibliome_.
 try {
   localStorage.removeItem("bookdna_tokens");
 } catch {

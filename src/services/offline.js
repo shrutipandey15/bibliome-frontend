@@ -1,5 +1,5 @@
 /**
- * Local cache for Book DNA.
+ * Local cache for Bibliome.
  *
  * Caches entries in localStorage so the shelf loads instantly on revisit.
  * Server fetch runs in the background and silently replaces cached data.
@@ -7,7 +7,7 @@
  * Full offline queue/sync will be added when journal feature ships.
  */
 
-const ENTRIES_KEY = "bookdna_entries";
+const ENTRIES_KEY = "bibliome_entries";
 
 export function getCachedEntries() {
   try {

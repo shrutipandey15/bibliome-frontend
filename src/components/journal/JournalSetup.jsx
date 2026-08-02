@@ -123,13 +123,13 @@ function RecoveryCodeStep({ prepared, onCommit, onDone }) {
 
   const download = () => {
     // A Blob URL, built and revoked here. The code never touches the network.
-    const body = `BookDNA journal recovery code\n\n${code}\n\n` +
+    const body = `Bibliome journal recovery code\n\n${code}\n\n` +
       `This is the only backup key for your journal.\n` +
       `Anyone holding it can read your journal. We do not have a copy.\n`;
     const url = URL.createObjectURL(new Blob([body], { type: "text/plain" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "bookdna-recovery-code.txt";
+    a.download = "bibliome-recovery-code.txt";
     a.click();
     URL.revokeObjectURL(url);
   };

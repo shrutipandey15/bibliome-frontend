@@ -112,6 +112,29 @@ export function hydrateEmotions(vocab) {
   }
 }
 
+// Pull the server's vocabulary and merge it in. Called once from main.jsx.
+//
+// hydrateEmotions sat here for a while with no caller outside the tests, which
+// meant the seed above and the backend's EMOTIONS list agreed only because
+// someone kept them in step by hand — the exact setup that produced the
+// emotion-key drift this file exists to prevent. Now it actually runs.
+//
+// Deliberately fire-and-forget: the seed is a complete, correct vocabulary on
+// its own, so a failed fetch is a no-op rather than a broken app. Never let this
+// block first paint.
+export async function syncEmotions() {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || "/api"}/emotions`, {
+      credentials: "same-origin",
+    });
+    if (!res.ok) return false;
+    hydrateEmotions(await res.json());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function getEmotionFamilies() {
   const order = [];
   const byFamily = new Map();

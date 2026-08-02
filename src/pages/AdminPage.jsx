@@ -394,11 +394,11 @@ export default function AdminPage() {
           <div className="admin-cmd-section">
             <h3 className="admin-subhead">Backup Command</h3>
             <div className="admin-code-block">
-              pg_dump -U bookdna -d bookdna -F c -f bookdna_backup_$(date +%Y%m%d).dump
+              pg_dump -U bibliome -d bibliome -F c -f bibliome_backup_$(date +%Y%m%d).dump
             </div>
             <h3 className="admin-subhead">Restore Command</h3>
             <div className="admin-code-block">
-              pg_restore -U bookdna -d bookdna -c bookdna_backup_YYYYMMDD.dump
+              pg_restore -U bibliome -d bibliome -c bibliome_backup_YYYYMMDD.dump
             </div>
           </div>
         </div>

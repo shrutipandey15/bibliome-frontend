@@ -49,7 +49,7 @@ export async function saveCardAsImage(domNode, username) {
     document.body.removeChild(clone);
 
     const link = document.createElement("a");
-    link.download = `bookdna-${username || "card"}.png`;
+    link.download = `bibliome-${username || "card"}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
     return true;

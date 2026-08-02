@@ -357,10 +357,10 @@ function Dashboard() {
   // First-run welcome: shown once (localStorage-gated), only to a brand-new user
   // with an empty shelf. [F2.10]
   const [showWelcome, setShowWelcome] = useState(() => {
-    try { return !localStorage.getItem("bookdna_onboarded"); } catch { return false; }
+    try { return !localStorage.getItem("bibliome_onboarded"); } catch { return false; }
   });
   const dismissWelcome = () => {
-    try { localStorage.setItem("bookdna_onboarded", "1"); } catch { /* ignore */ }
+    try { localStorage.setItem("bibliome_onboarded", "1"); } catch { /* ignore */ }
     setShowWelcome(false);
   };
   const [filterEmotion, setFilterEmotion] = useState(null);
@@ -382,7 +382,7 @@ function Dashboard() {
   useEffect(() => {
     if (tab !== "dna") return;
     let asked = true;
-    try { asked = !!localStorage.getItem("bookdna_readfor_asked"); } catch { /* ignore */ }
+    try { asked = !!localStorage.getItem("bibliome_readfor_asked"); } catch { /* ignore */ }
     const answered = (analytics.profile?.reads_for || []).length > 0;
     if (!asked && !answered) setShowReadFor(true);
   }, [tab, analytics.profile]);
@@ -437,7 +437,7 @@ function Dashboard() {
     try { await saveCardAsImage(dnaCardRef.current, user?.username); showToast("Card saved", "success"); }
     catch { showToast("Couldn't save card — try a screenshot instead."); }
   };
-  const markReadForAsked = () => { try { localStorage.setItem("bookdna_readfor_asked", "1"); } catch { /* ignore */ } };
+  const markReadForAsked = () => { try { localStorage.setItem("bibliome_readfor_asked", "1"); } catch { /* ignore */ } };
   const handleSaveReadFor = async (values) => {
     await setReadFor(values);              // let errors surface inline in ReadForQuestion
     markReadForAsked();
@@ -512,7 +512,7 @@ function Dashboard() {
                   totalCount={entries.length}
                 />
                 <div className="rr-footer">
-                  <span>Book DNA · personal edition · printed for one</span>
+                  <span>Bibliome · personal edition · printed for one</span>
                   <span>fin —</span>
                 </div>
               </>
@@ -589,7 +589,7 @@ function Dashboard() {
       {showWelcome && !loading && entries.length === 0 && (
         <Modal
           onClose={dismissWelcome}
-          ariaLabel="Welcome to BookDNA"
+          ariaLabel="Welcome to Bibliome"
           className="rr-modal-card"
           backdropClassName="rr-modal-backdrop"
         >

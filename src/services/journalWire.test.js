@@ -104,7 +104,7 @@ describe("what actually leaves the browser", () => {
     // readable by design (contract §2): the DNA runs on them and they say
     // nothing on their own. If this ever starts failing because someone
     // encrypted the tags, the journal has quietly stopped feeding the one
-    // feature that justifies it living inside BookDNA.
+    // feature that justifies it living inside Bibliome.
     const body = JSON.parse(sent[0].body);
     expect(body.emotions).toEqual([{ emotion_id: "grief", strength: 7 }]);
     expect(sent[0].url).toContain("/journal/entries/entry-1/tags");

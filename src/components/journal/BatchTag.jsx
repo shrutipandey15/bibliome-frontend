@@ -25,7 +25,7 @@ import { formatLongDate } from "./BlankPage";
  * the split (contract §2): DNA runs on tags, never on prose. Nothing here
  * encrypts, and it should stay that way — an encrypted tag is a tag the DNA
  * pipeline can't use, which would leave the journal with no reason to live
- * inside BookDNA at all.
+ * inside Bibliome at all.
  */
 export default function BatchTag({ pages, onClose }) {
   const { tagPage } = usePrivateJournal();

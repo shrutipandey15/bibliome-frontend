@@ -44,7 +44,7 @@ export default function ShareModal({ isOpen, onClose, shareToken }) {
     if (!navigator.share) return;
     try {
       await navigator.share({
-        title: "My Book DNA",
+        title: "My Reading DNA",
         text: "Check out my reading personality!",
         url: shareLink,
       });

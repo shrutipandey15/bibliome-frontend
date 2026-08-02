@@ -1,7 +1,21 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 Disallow: /admin
 Disallow: /settings
-Disallow: /api/
 
-Sitemap: https://bookdna.fdev31.space/sitemap.xml
+# Answer engines are a growth channel, not a threat — the product is a private
+# journal whose only public surface is Echo. Let them read the marketing pages.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://bibliome.app/sitemap.xml

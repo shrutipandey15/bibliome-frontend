@@ -1,10 +1,10 @@
-# 📖 BookDNA — Frontend
+# 📖 Bibliome — Frontend
 
 **A private mirror for your reading life.**
 
-BookDNA is where you keep an honest record of what books *did* to you — not ratings, the actual weather they left behind — and watch the patterns add up to a portrait of who you are as a reader. Everything is private by default. The one public surface is **Echo**: a pseudonymous, book-anchored place to put the raw thing a book did to you and read others doing the same.
+Bibliome is where you keep an honest record of what books *did* to you — not ratings, the actual weather they left behind — and watch the patterns add up to a portrait of who you are as a reader. Everything is private by default. The one public surface is **Echo**: a pseudonymous, book-anchored place to put the raw thing a book did to you and read others doing the same.
 
-⚙️ **Backend repo:** [bookDNA](https://github.com/shrutipandey15/bookDNA) (FastAPI)
+⚙️ **Backend repo:** [bibliome](https://github.com/shrutipandey15/bibliome) (FastAPI)
 
 This repo is one of a three-document set that governs the work:
 - [`ROADMAP.md`](./ROADMAP.md) — the phased task list (what's built, what's next)
@@ -15,7 +15,7 @@ This repo is one of a three-document set that governs the work:
 
 ## The product, in one paragraph
 
-BookDNA is a private journal for readers. You log a book, tag what it did to you from a shared vocabulary of **18 emotions**, and — after **5 books** — the app reflects a **reading DNA** back at you: one of **8 archetypes** drawn from the geometry of your shelf, plus resurfaced memories ("three months ago, *this* wrecked you"). The single public surface, **Echo**, is built to be structurally incapable of becoming social media: chronological, it **ends**, and it renders **no counts of any kind** — no followers, no likes, no karma, ever.
+Bibliome is a private journal for readers. You log a book, tag what it did to you from a shared vocabulary of **18 emotions**, and — after **5 books** — the app reflects a **reading DNA** back at you: one of **8 archetypes** drawn from the geometry of your shelf, plus resurfaced memories ("three months ago, *this* wrecked you"). The single public surface, **Echo**, is built to be structurally incapable of becoming social media: chronological, it **ends**, and it renders **no counts of any kind** — no followers, no likes, no karma, ever.
 
 ---
 
@@ -147,7 +147,7 @@ npm run dev        # → localhost:3000
 ```
 
 Vite proxies `/api` to `localhost:8000` (same-origin, which the cookie auth relies on).
-Make sure the [backend](https://github.com/shrutipandey15/bookDNA) is running.
+Make sure the [backend](https://github.com/shrutipandey15/bibliome) is running.
 
 ```bash
 npm test           # run the suite once

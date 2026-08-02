@@ -7,7 +7,7 @@
  * dot rather than a number.
  */
 
-const SEEN_KEY = "bookdna_resonance_seen";
+const SEEN_KEY = "bibliome_resonance_seen";
 
 /**
  * Matches that are actually waiting on the reader: a fresh suggestion, or a note

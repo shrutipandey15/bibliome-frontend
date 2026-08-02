@@ -4,21 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Book DNA™ — The Emotional Fingerprint of Your Reading Life</title>
-    <meta name="description" content="Discover your unique reading personality. Book DNA maps the emotions your books triggered, the patterns you didn't know you had, and the reader you've become. Free. No ads." />
-    <meta name="keywords" content="book dna, reading personality, book emotions, reading tracker, emotional reading, book journal, reading psychology, book personality test" />
-    <meta name="author" content="Book DNA" />
+    <title>Bibliome — The Emotional Fingerprint of Your Reading Life</title>
+    <meta name="description" content="Discover your unique reading personality. Bibliome maps the emotions your books triggered, the patterns you didn't know you had, and the reader you've become. Free. No ads." />
+    <meta name="keywords" content="bibliome, reading personality, book emotions, reading tracker, emotional reading, book journal, reading psychology, book personality test" />
+    <meta name="author" content="Bibliome" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://bookdna.fdev31.space/" />
+    <link rel="canonical" href="https://bibliome.app/" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://bookdna.fdev31.space/" />
-    <meta property="og:title" content="Book DNA™ — The Emotional Fingerprint of Your Reading Life" />
-    <meta property="og:description" content="Every book you've ever loved changed you. Book DNA maps how — tracking 18 emotions across your library to reveal your unique reading personality." />
-    <meta property="og:site_name" content="Book DNA" />
+    <meta property="og:url" content="https://bibliome.app/" />
+    <meta property="og:title" content="Bibliome — The Emotional Fingerprint of Your Reading Life" />
+    <meta property="og:description" content="Every book you've ever loved changed you. Bibliome maps how — tracking 18 emotions across your library to reveal your unique reading personality." />
+    <meta property="og:site_name" content="Bibliome" />
+    <meta property="og:image" content="https://bibliome.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Bibliome — the emotional fingerprint of your reading life" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Book DNA™ — What Kind of Reader Are You?" />
+    <meta name="twitter:title" content="Bibliome — What Kind of Reader Are You?" />
     <meta name="twitter:description" content="Map the emotional fingerprint of your reading life. Discover if you're a Grief Romantic, a Chaos Cartographer, or something else entirely." />
+    <meta name="twitter:image" content="https://bibliome.app/og-image.png" />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
@@ -30,9 +35,9 @@
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "Book DNA",
-      "url": "https://bookdna.fdev31.space",
-      "description": "Discover your unique reading personality. Book DNA maps the emotions your books triggered into a visual personality profile.",
+      "name": "Bibliome",
+      "url": "https://bibliome.app",
+      "description": "Discover your unique reading personality. Bibliome maps the emotions your books triggered into a visual personality profile.",
       "applicationCategory": "LifestyleApplication",
       "operatingSystem": "Web",
       "offers": {
@@ -60,7 +65,9 @@
       /* Vellum / Lamplight, decided before the first paint. React sets this too
          (see contexts/ThemeContext.jsx), but an effect runs *after* the first
          frame — so without this a Lamplight reader saw the page flash Vellum on
-         every hard load. Kept deliberately tiny and dependency-free. */
+         every hard load. Kept deliberately tiny and dependency-free.
+         NOTE: this and the JSON-LD block above need `script-src 'unsafe-inline'`
+         in the nginx CSP (see deploy/bibliome.nginx.conf in the backend repo). */
       (function () {
         var t = "light";
         try {
@@ -75,8 +82,8 @@
   <body>
     <div id="root"></div>
     <noscript>
-      <h1>Book DNA™ - The Emotional Fingerprint of Your Reading Life</h1>
-      <p>Every book you've ever loved changed you in ways you can't articulate. Book DNA maps those changes.</p>
+      <h1>Bibliome - The Emotional Fingerprint of Your Reading Life</h1>
+      <p>Every book you've ever loved changed you in ways you can't articulate. Bibliome maps those changes.</p>
       <p>Track the emotions your books triggered. Discover patterns you didn't know you had. Generate your unique reading personality — are you a Grief Romantic? A Chaos Cartographer? A Soft Masochist who keeps picking up books that destroy you?</p>
       <h2>How It Works</h2>
       <p>Log what books did to you — not ratings, but the raw emotional truth. Tag from 18 emotions like Devastation, Tenderness, Rage, Longing, Awe, and Catharsis. After 5 books, our engine maps your emotional patterns into a unique DNA personality profile.</p>

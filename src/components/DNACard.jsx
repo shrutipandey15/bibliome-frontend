@@ -48,7 +48,7 @@ const DNACard = forwardRef(function DNACard(
 
         <div className="dna-header">
           <div>
-            <div className="dna-label">BOOK DNA · ONE OF EIGHT</div>
+            <div className="dna-label">BIBLIOME · ONE OF EIGHT</div>
             <div className="dna-vol">{profile.book_count || 0} VOLUMES · MMXXVI</div>
           </div>
           <div className="dna-glyph">{p.glyph || "◈"}</div>
@@ -87,7 +87,7 @@ const DNACard = forwardRef(function DNACard(
         )}
 
         <div className="dna-footer">
-          <span>BOOKDNA.APP</span>
+          <span>BIBLIOME.APP</span>
           <span>@{(username || "you").toUpperCase()}</span>
         </div>
       </div>

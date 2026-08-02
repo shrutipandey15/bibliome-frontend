@@ -1,17 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Static for now: only routes that render something meaningful to a visitor.
+  Regenerate at build time once per-book aggregate and archetype pages land —
+  those are the ones actually worth crawling.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://bookdna.fdev31.space/</loc>
+    <loc>https://bibliome.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://bookdna.fdev31.space/login</loc>
+    <loc>https://bibliome.app/echoes</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://bibliome.app/login</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://bookdna.fdev31.space/reset-password</loc>
+    <loc>https://bibliome.app/reset-password</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>

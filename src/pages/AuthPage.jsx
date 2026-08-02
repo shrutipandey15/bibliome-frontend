@@ -110,7 +110,7 @@ export default function AuthPage() {
             <div className="label-sm auth-rr-echo-by">— @arun.d · Tomorrow ×3</div>
           </div>
         </div>
-        <div className="auth-rr-foot">BOOK DNA · ESTD. 2024 · A PRIVATE READER'S LEDGER</div>
+        <div className="auth-rr-foot">BIBLIOME · ESTD. 2024 · A PRIVATE READER'S LEDGER</div>
       </div>
 
       <div className="auth-rr-right">

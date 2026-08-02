@@ -127,7 +127,7 @@ export default function LandingPage({ onGetStarted }) {
         <div className="lrr-how-head">
           <div>
             <div className="label" style={{ marginBottom: 10 }}>· method ·</div>
-            <h2 className="lrr-h2">How <em>Book DNA</em> works.</h2>
+            <h2 className="lrr-h2">How <em>Bibliome</em> works.</h2>
           </div>
           <div className="lrr-how-dek">
             A slow, small ritual. Like writing in the margins, but the margins remember.
@@ -219,9 +219,9 @@ export default function LandingPage({ onGetStarted }) {
         </button>
 
         <footer className="lrr-footer">
-          <span>© {new Date().getFullYear()} BOOK DNA · made with emotional damage</span>
+          <span>© {new Date().getFullYear()} BIBLIOME · made with emotional damage</span>
           <span>
-            <a href="https://github.com/topic/bookdna" target="_blank" rel="noopener noreferrer">github</a>
+            <a href="https://github.com/shrutipandey15/bibliome" target="_blank" rel="noopener noreferrer">github</a>
             <span className="lrr-sep">·</span>
             <Link to="/reset-password">reset password</Link>
             <span className="lrr-sep">·</span>
