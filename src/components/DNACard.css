@@ -59,14 +59,14 @@
 }
 .dna-label {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: rgba(224, 196, 122, 0.9);
 }
 .dna-vol {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(245, 236, 210, 0.45);
@@ -122,14 +122,14 @@
 }
 .dna-fp-label {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: rgba(245, 236, 210, 0.42) !important;
 }
 .dna-fp-note {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(245, 236, 210, 0.28);
@@ -167,7 +167,7 @@
 }
 .dna-fp-count {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   color: rgba(224, 196, 122, 0.85);
 }
@@ -188,7 +188,7 @@
 }
 .dna-blinds .label-sm {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: rgba(245, 236, 210, 0.36);
@@ -208,7 +208,7 @@
   border-top: 1px solid rgba(224, 196, 122, 0.18);
   display: flex; justify-content: space-between; gap: 14px;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(245, 236, 210, 0.4);

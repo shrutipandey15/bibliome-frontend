@@ -29,7 +29,7 @@
   padding-bottom: 11px;
   border-bottom: 1px solid var(--ink);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--ink-quiet);
@@ -40,7 +40,7 @@
   text-align: center;
   color: var(--ink-ghost);
   letter-spacing: 1.4em;
-  font-size: 9px;
+  font-size: 10.5px;
   margin: 22px 0;
 }
 /* The standfirst: what you said you read for, in the page's own voice. It was
@@ -59,7 +59,7 @@
   padding: 0 0 1px;
   border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono); font-style: normal;
-  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--ink-faint);
 }
 .dna-readfor-edit:hover { color: var(--ink); border-bottom-color: var(--ink); }
@@ -70,7 +70,7 @@
 .dna-section-label {
   display: flex; align-items: baseline; gap: 14px;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.26em;
   text-transform: uppercase;
@@ -178,7 +178,7 @@
 }
 .evo-gap-when {
   font-family: var(--font-mono);
-  font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+  font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase;
   color: var(--ink-faint);
 }
 .evo-gap-name {
@@ -234,7 +234,7 @@
   font-size: 16.5px;
   break-inside: avoid;
 }
-.dna-portrait-mark { font-size: 9px; color: var(--ink-ghost); }
+.dna-portrait-mark { font-size: 10.5px; color: var(--ink-ghost); }
 .dna-portrait-name { font-family: var(--font-display); color: var(--ink); white-space: nowrap; }
 .dna-portrait-leader {
   border-bottom: 1px dotted var(--rule);

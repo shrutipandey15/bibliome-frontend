@@ -52,7 +52,7 @@
 }
 .auth-rr-echo-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.25em;
   color: #d2a14a;
   margin-bottom: 10px;
@@ -67,7 +67,7 @@
 
 .auth-rr-foot {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.2em;
   color: rgba(245, 236, 210, 0.4);
   text-transform: uppercase;

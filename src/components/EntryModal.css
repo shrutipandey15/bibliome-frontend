@@ -40,7 +40,7 @@
 }
 .em-left-eyebrow {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.24em;
   color: rgba(245, 236, 210, 0.7);
 }
@@ -62,7 +62,7 @@
 .em-left-int-wrap { margin-top: 24px; }
 .em-left-int-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.2em;
   opacity: 0.6;
 }
@@ -180,7 +180,7 @@
 .em-dupe-line em { font-style: italic; }
 .em-dupe-meta {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0.08em;
   text-transform: lowercase;
   color: var(--ink-quiet);
@@ -232,7 +232,7 @@
 }
 .em-search-book-author {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-quiet);
@@ -267,7 +267,7 @@
   background: var(--brass);
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
 }
 .em-fam-chips { margin-top: 10px; }
 
@@ -418,5 +418,5 @@
 .em-progress-label { flex: none; }
 .em-progress-range { flex: 1; min-width: 140px; accent-color: var(--brass); }
 .em-progress-value { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-quiet); min-width: 62px; }
-.em-progress-clear { border: none; background: none; cursor: pointer; padding: 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--ink-faint); }
+.em-progress-clear { border: none; background: none; cursor: pointer; padding: 0; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.12em; color: var(--ink-faint); }
 .em-progress-clear:hover { color: var(--oxblood); }

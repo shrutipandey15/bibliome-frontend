@@ -103,11 +103,15 @@ function buildDashboardStats(entries) {
     freq[id] = (freq[id] || 0) + 1;
   }));
   const topEmotion = Object.entries(freq).sort((a, b) => b[1] - a[1])[0] || [null, 0];
+  // How many of the eighteen registers this shelf has ever reached for. The
+  // fourth figure the strip needed: real, countable here, and the same one the
+  // study prints, so the two surfaces agree.
+  const registers = Object.keys(freq).length;
   // No books/month here. It divided by the shelf's date span in months, which is
   // near-zero for a shelf built in one sitting — it rendered as 57387453.9. The
   // rate is not worth showing on the shelf; the backend's own guarded figure
   // (dna_engine.books_per_month, floored at a 30-day window) is the only one.
-  return { total, avg, topEmotion };
+  return { total, avg, topEmotion, registers };
 }
 
 function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
@@ -151,9 +155,27 @@ function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenera
               the intended amount of pressure. */}
           <ResonanceMark />
           <NotificationCenter />
-          <button className="rr-theme-toggle" onClick={() => navigate("/me")} title="Your study (profile)" aria-label="Your profile">◐</button>
           <ThemeToggle className="rr-theme-toggle" />
-          <button className="rr-avatar" onClick={() => navigate("/settings")} title="Settings">{initial}</button>
+          {/* Settings was behind the avatar and the study behind a `◐`, which is
+              backwards: everywhere else on the web the avatar is you, and a gear
+              is settings. Nobody was going to read a half-filled circle as "your
+              study", and it sat beside three other unlabelled glyphs. */}
+          <button
+            className="rr-theme-toggle"
+            onClick={() => navigate("/settings")}
+            title="Settings"
+            aria-label="Settings"
+          >
+            <Settings size={17} />
+          </button>
+          <button
+            className="rr-avatar"
+            onClick={() => navigate("/me")}
+            title="Your study — profile, collections and your signature"
+            aria-label="Your study"
+          >
+            {initial}
+          </button>
         </div>
       </div>
       <div className="rr-tabs">
@@ -232,8 +254,12 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
 
 function ReadingRoomStatStrip({ stats }) {
   const top = EMOTIONS[stats.topEmotion?.[0]] || { name: "—", color: "var(--ink-quiet)" };
+  // Four figures across four columns. There were three in a grid declared for
+  // six, so the strip crowded into the left half and left a bare rule hanging in
+  // the space where the missing ones would have been.
   const items = [
     { l: "volumes",        v: String(stats.total).padStart(2, "0") },
+    { l: "registers felt", v: String(stats.registers ?? 0).padStart(2, "0"), suf: `/${EMO_LIST.length}` },
     { l: "avg intensity",  v: stats.avg, suf: "/10" },
     { l: "top emotion",    v: top.name, color: top.color },
   ];

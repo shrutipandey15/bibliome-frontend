@@ -236,9 +236,10 @@ export default function CollectionsEditor({ collections, shelf, onChanged }) {
         </button>
       </div>
 
-      {hidden > 0 && (
-        <button type="button" className="cols-more" onClick={() => setExpanded(true)}>
-          all {collections.length} collections →
+      {/* Expanding was one-way; the same control now closes it again. */}
+      {(hidden > 0 || expanded) && (
+        <button type="button" className="cols-more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
+          {expanded ? "← show fewer" : `all ${collections.length} collections →`}
         </button>
       )}
 

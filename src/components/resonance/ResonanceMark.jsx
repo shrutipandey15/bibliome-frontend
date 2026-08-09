@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mail, MailOpen } from "lucide-react";
 import { getResonanceMatches } from "../../services/api";
 import { hasUnseen, hasLive } from "./signal";
 import "./ResonanceMark.css";
@@ -44,10 +45,17 @@ export default function ResonanceMark() {
     <button
       className={`res-mark ${isNew ? "is-new" : "is-live"}`}
       onClick={() => navigate("/resonance")}
-      title={isNew ? "Someone read it the way you did" : "Your open letters"}
+      title={isNew ? "Resonance — someone read it the way you did" : "Resonance — your open letters"}
       aria-label={isNew ? "Resonance — someone read it the way you did" : "Resonance — your open letters"}
     >
-      <span className="res-mark-glyph" aria-hidden="true">❋</span>
+      {/* A sealed letter when something is waiting, an opened one when the
+          conversation is already underway — the two states the mark has.
+          It was a `❋`, which sat beside the theme toggle's `☀` in the same
+          weight and colour and could not be told apart from it, and said
+          nothing about what it opened either way. */}
+      <span className="res-mark-glyph" aria-hidden="true">
+        {isNew ? <Mail size={16} /> : <MailOpen size={16} />}
+      </span>
     </button>
   );
 }

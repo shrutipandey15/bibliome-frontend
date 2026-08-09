@@ -33,7 +33,9 @@
 .res-mark.is-live:hover { color: var(--ink-quiet); border-color: var(--rule); background: transparent; }
 
 .res-mark-glyph {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 

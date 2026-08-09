@@ -42,7 +42,7 @@
   font-family: var(--font-display);
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--ink-soft);
   white-space: nowrap;
   line-height: 1.1;
@@ -68,7 +68,7 @@
 .hm-row-count {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   color: var(--ink-faint);
 }
 .hm-cell {
@@ -78,7 +78,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
 }
 
 .hm-legend {
@@ -88,7 +88,7 @@
   align-items: center;
 }
 .hm-legend-row { display: flex; align-items: center; gap: 8px; }
-.hm-legend-item { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 9px; color: var(--ink-faint); }
+.hm-legend-item { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint); }
 .hm-legend-swatch { width: 24px; height: 12px; background: var(--oxblood); }
 
 .hm-rail { display: flex; flex-direction: column; gap: 22px; }
@@ -131,7 +131,7 @@
 .hm-blind-count {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--ink-faint);
 }
 

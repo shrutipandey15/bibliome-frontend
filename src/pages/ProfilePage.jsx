@@ -7,6 +7,7 @@ import { getMyProfile, updateMyProfile, getInsight } from "../services/api";
 import DNACard from "../components/DNACard";
 import CollectionsEditor from "../components/profile/CollectionsEditor";
 import { MIN_BOOKS } from "../components/dna/constants";
+import { romanYear } from "../utils/roman";
 import "./ProfilePage.css";
 
 /**
@@ -26,16 +27,9 @@ import "./ProfilePage.css";
 
 // How much each section shows before it offers the rest. Nothing here scrolls
 // inside itself: a section you can't Ctrl+F is a section you can't find things in.
-const CAP = { nowReading: 3, recent: 6, margins: 2 };
+const CAP = { nowReading: 3, recent: 6, margins: 3 };
 
 const MONTH = { month: "long", year: "numeric" };
-const ROMAN = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
-
-function roman(n) {
-  let out = "";
-  for (const [v, s] of ROMAN) while (n >= v) { out += s; n -= v; }
-  return out;
-}
 
 function monthYear(iso) {
   if (!iso) return null;
@@ -60,6 +54,21 @@ function SectionHead({ children, aside }) {
       <span>{children}</span>
       {aside && <span className="pf-head-aside">{aside}</span>}
     </div>
+  );
+}
+
+/**
+ * The show-more control, which is also the show-less control.
+ *
+ * Expanding used to be one-way: a reader who opened all 24 kept lines had no way
+ * back to two except reloading the page. Same button, both directions.
+ */
+function MoreToggle({ open, onToggle, hidden, label }) {
+  if (hidden <= 0) return null;
+  return (
+    <button className="pf-more" onClick={onToggle} aria-expanded={open}>
+      {open ? "← show fewer" : `+${hidden} more ${label} →`}
+    </button>
   );
 }
 
@@ -281,8 +290,12 @@ export default function ProfilePage() {
     }
     : null;
 
-  const since = profile.member_since ? new Date(profile.member_since) : null;
-  const sinceRoman = since && !Number.isNaN(since.getTime()) ? roman(since.getFullYear()) : null;
+  // The earliest date the shelf can evidence, not the signup date — an imported
+  // decade of reading must not sit under "since 2026". Falls back to the join
+  // date for a payload cached before the field existed.
+  const sinceRaw = profile.shelf_since || profile.member_since;
+  const since = sinceRaw ? new Date(sinceRaw) : null;
+  const sinceRoman = since && !Number.isNaN(since.getTime()) ? romanYear(since.getFullYear()) : null;
 
   // Day one. Every section below is computed from entries, so they all correctly
   // render nothing — which is exactly why the page needs to say so itself.
@@ -334,11 +347,12 @@ export default function ProfilePage() {
               <div className="pf-opens">
                 {openShown.map((b) => <OpenBook key={b.entry_id} book={b} />)}
               </div>
-              {!showAllOpen && nowReading.length > CAP.nowReading && (
-                <button className="pf-more" onClick={() => setShowAllOpen(true)}>
-                  +{nowReading.length - CAP.nowReading} more open →
-                </button>
-              )}
+              <MoreToggle
+                open={showAllOpen}
+                onToggle={() => setShowAllOpen((v) => !v)}
+                hidden={nowReading.length - CAP.nowReading}
+                label="open"
+              />
             </section>
           )}
         </div>
@@ -391,37 +405,12 @@ export default function ProfilePage() {
               <div className="pf-shelf-grid">
                 {recentShown.map((b) => <ShelfBook key={b.entry_id} book={b} onClick={() => navigate("/")} />)}
               </div>
-              {!showAllRecent && recent.length > CAP.recent && (
-                <button className="pf-more" onClick={() => setShowAllRecent(true)}>
-                  +{recent.length - CAP.recent} more →
-                </button>
-              )}
-            </section>
-          )}
-
-          {/* 7. From your margins — the lines you kept. Owner-only by contract;
-              the backend sends [] to anyone else, so there is nothing to gate here. */}
-          {margins.length > 0 && (
-            <section className="pf-section">
-              <SectionHead aside="lines you kept">from your margins</SectionHead>
-              <div className="pf-margins">
-                {marginsShown.map((m) => {
-                  const emo = m.dominant_emotion ? EMOTIONS[m.dominant_emotion] : null;
-                  return (
-                    <blockquote key={m.entry_id} className="pf-margin" style={{ borderLeftColor: emo?.color || "var(--brass)" }}>
-                      <p className="pf-margin-text">“{m.quote}”</p>
-                      <footer className="pf-margin-cite">
-                        {m.title}{monthYear(m.at) ? ` · ${monthYear(m.at)}` : ""}
-                      </footer>
-                    </blockquote>
-                  );
-                })}
-              </div>
-              {!showAllMargins && margins.length > CAP.margins && (
-                <button className="pf-more" onClick={() => setShowAllMargins(true)}>
-                  +{margins.length - CAP.margins} more from your margins →
-                </button>
-              )}
+              <MoreToggle
+                open={showAllRecent}
+                onToggle={() => setShowAllRecent((v) => !v)}
+                hidden={recent.length - CAP.recent}
+                label=""
+              />
             </section>
           )}
         </div>
@@ -461,6 +450,39 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* From your margins — the lines you kept. Owner-only by contract; the
+          backend sends [] to anyone else, so there is nothing to gate here.
+
+          Full width, below both columns, rather than inside the left one. Kept
+          lines run long — a paragraph someone copied out by hand — and in a
+          half-width column two of them tower over the rail beside them and leave
+          it visibly empty. Across the page they set in three, and the quotes
+          clamp so one very long passage can't set the height for the rest. */}
+      {margins.length > 0 && (
+        <section className="pf-section pf-margins-section">
+          <SectionHead aside="lines you kept">from your margins</SectionHead>
+          <div className="pf-margins">
+            {marginsShown.map((m) => {
+              const emo = m.dominant_emotion ? EMOTIONS[m.dominant_emotion] : null;
+              return (
+                <blockquote key={m.entry_id} className="pf-margin" style={{ borderLeftColor: emo?.color || "var(--brass)" }}>
+                  <p className="pf-margin-text">“{m.quote}”</p>
+                  <footer className="pf-margin-cite">
+                    {m.title}{monthYear(m.at) ? ` · ${monthYear(m.at)}` : ""}
+                  </footer>
+                </blockquote>
+              );
+            })}
+          </div>
+          <MoreToggle
+            open={showAllMargins}
+            onToggle={() => setShowAllMargins((v) => !v)}
+            hidden={margins.length - CAP.margins}
+            label="from your margins"
+          />
+        </section>
+      )}
 
       <footer className="pf-footer">
         <span>bibliome.app</span>

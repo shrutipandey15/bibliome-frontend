@@ -72,23 +72,28 @@ describe("ProfilePage self-view [F2.8]", () => {
     expect(screen.getByText("not yet")).toBeInTheDocument();
   });
 
-  it("renders the lines you kept, and offers the rest rather than scrolling", async () => {
+  it("renders the lines you kept, and expanding is reversible", async () => {
     getMyProfile.mockResolvedValue({
       ...profile,
       margins: [
         { entry_id: "m1", title: "Gilead", quote: "the first line", at: "2025-03-04", dominant_emotion: "awe" },
         { entry_id: "m2", title: "Middlemarch", quote: "the second line", at: "2025-02-01", dominant_emotion: "grief" },
         { entry_id: "m3", title: "Piranesi", quote: "the third line", at: "2025-01-01", dominant_emotion: "awe" },
+        { entry_id: "m4", title: "Beach Read", quote: "the fourth line", at: "2024-12-01", dominant_emotion: "comfort" },
       ],
     });
     render(<ProfilePage />);
     await waitFor(() => screen.getByText("Alice"));
 
     expect(screen.getByText(/the first line/)).toBeInTheDocument();
-    expect(screen.queryByText(/the third line/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/the fourth line/)).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /more from your margins/i }));
-    expect(screen.getByText(/the third line/)).toBeInTheDocument();
+    expect(screen.getByText(/the fourth line/)).toBeInTheDocument();
+
+    // …and back again. Expanding used to be a one-way door.
+    await userEvent.click(screen.getByRole("button", { name: /show fewer/i }));
+    expect(screen.queryByText(/the fourth line/)).not.toBeInTheDocument();
   });
 
   it("says nothing when the shelf has noticed nothing", async () => {

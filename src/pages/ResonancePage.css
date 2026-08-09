@@ -61,7 +61,7 @@
    product. Saying them plainly is cheaper than being asked. */
 .rp-promises {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-ghost);
@@ -225,7 +225,7 @@
 .rm-body { min-width: 0; }
 .rm-kicker {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -241,7 +241,7 @@
 }
 .rm-author {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-quiet);
@@ -289,7 +289,7 @@
 .rm-emo-close {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--res-accent);
@@ -303,7 +303,7 @@
 }
 .rm-emo-who {
   font-family: var(--font-mono);
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-ghost);
@@ -339,7 +339,7 @@
 }
 .rm-their-note-kicker {
   font-family: var(--font-mono);
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -379,7 +379,7 @@
   padding: 0 0 2px;
   border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -390,7 +390,7 @@
 .rm-handle {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   color: var(--ink-faint);
 }
@@ -454,7 +454,7 @@
   color: var(--ink-faint);
   max-width: 40ch;
 }
-.res-composer-count { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); }
+.res-composer-count { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint); }
 .res-composer-count.over { color: var(--oxblood); }
 .res-composer-actions { display: flex; gap: 12px; align-items: center; margin-left: auto; }
 
@@ -484,7 +484,7 @@
   background: none;
   padding: 0;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--ink-quiet);
@@ -494,7 +494,7 @@
 .rt-plate { width: 96px; }
 .rt-kicker {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -509,7 +509,7 @@
   padding-top: 18px;
   border-top: 1px solid var(--rule-soft);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-ghost);
@@ -522,7 +522,7 @@
   padding: 0 0 2px;
   border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -572,7 +572,7 @@
   background: none;
   border: none;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -607,7 +607,7 @@
 }
 .rt-msg-who {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -615,7 +615,7 @@
 .rt-msg.theirs .rt-msg-who { color: var(--res-accent); }
 .rt-msg-date {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-ghost);
@@ -641,7 +641,7 @@
 }
 .rt-compose-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -669,7 +669,7 @@
 }
 .rt-compose-note {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-ghost);

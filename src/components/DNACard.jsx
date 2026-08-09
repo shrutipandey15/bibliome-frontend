@@ -1,6 +1,7 @@
 import { forwardRef, useState } from "react";
 import { EMOTIONS, EMO_LIST } from "../services/emotions";
 import { generateShareToken } from "../services/api";
+import { romanYear } from "../utils/roman";
 import ShareModal from "./ShareModal";
 import "./DNACard.css";
 
@@ -79,7 +80,10 @@ const DNACard = forwardRef(function DNACard(
         <div className="dna-header">
           <div>
             <div className="dna-label">BIBLIOME · ONE OF EIGHT</div>
-            <div className="dna-vol">{profile.book_count || 0} VOLUMES · MMXXVI</div>
+            {/* The year was hardcoded MMXXVI, so every card minted from 2027 on
+                would have carried the wrong date. It's the year of issue — the
+                day the plate was drawn — so it comes off the clock. */}
+            <div className="dna-vol">{profile.book_count || 0} VOLUMES · {romanYear()}</div>
           </div>
           <div className="dna-glyph">{p.glyph || "◈"}</div>
         </div>
