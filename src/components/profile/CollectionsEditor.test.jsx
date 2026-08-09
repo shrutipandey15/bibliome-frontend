@@ -8,12 +8,20 @@ vi.mock("../../services/api", () => ({
 }));
 
 import CollectionsEditor from "./CollectionsEditor";
-import { createCollection, addCollectionItem, reorderCollection } from "../../services/api";
+import { createCollection, addCollectionItem, reorderCollection, deleteCollection } from "../../services/api";
 
 const shelf = [
   { id: "e1", title: "Piranesi", author: "Susanna Clarke" },
   { id: "e2", title: "The Employees", author: "Olga Ravn" },
 ];
+
+const ordered = [{
+  id: "c1", title: "Ordered", visibility: "private", position: 0,
+  books: [
+    { entry_id: "e1", title: "First", dominant_emotion: "grief" },
+    { entry_id: "e2", title: "Second", dominant_emotion: "awe" },
+  ],
+}];
 
 describe("CollectionsEditor [F2.8]", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -23,21 +31,23 @@ describe("CollectionsEditor [F2.8]", () => {
     const onChanged = vi.fn().mockResolvedValue();
     render(<CollectionsEditor collections={[]} shelf={shelf} onChanged={onChanged} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /new collection/i }));
+    await userEvent.click(screen.getByRole("button", { name: /start a shelf/i }));
     await userEvent.type(screen.getByLabelText(/collection name/i), "books that ruined me");
     await userEvent.click(screen.getByRole("button", { name: /^create$/i }));
 
-    expect(createCollection).toHaveBeenCalledWith({ title: "books that ruined me", visibility: "private" });
+    expect(createCollection).toHaveBeenCalledWith({
+      title: "books that ruined me", description: null, visibility: "private",
+    });
     expect(onChanged).toHaveBeenCalled();
   });
 
-  it("adds a book from the shelf to a collection", async () => {
+  it("adds a book from the shelf, via the card's drawer", async () => {
     addCollectionItem.mockResolvedValue();
     const onChanged = vi.fn().mockResolvedValue();
     const collections = [{ id: "c1", title: "Comfort reads", visibility: "private", position: 0, books: [] }];
     render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /add a book/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Comfort reads/i }));
     await userEvent.selectOptions(screen.getByLabelText(/choose a book from your shelf/i), "e1");
     await userEvent.click(screen.getByRole("button", { name: /^add$/i }));
 
@@ -47,16 +57,42 @@ describe("CollectionsEditor [F2.8]", () => {
   it("reorders books with keyboard-operable up/down (not drag-only) [a11y]", async () => {
     reorderCollection.mockResolvedValue();
     const onChanged = vi.fn().mockResolvedValue();
-    const collections = [{
-      id: "c1", title: "Ordered", visibility: "private", position: 0,
-      books: [
-        { entry_id: "e1", title: "First", dominant_emotion: "grief" },
-        { entry_id: "e2", title: "Second", dominant_emotion: "awe" },
-      ],
-    }];
-    render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} />);
+    render(<CollectionsEditor collections={ordered} shelf={shelf} onChanged={onChanged} />);
 
+    await userEvent.click(screen.getByRole("button", { name: /Ordered/i }));
     await userEvent.click(screen.getByRole("button", { name: /move Second up/i }));
     expect(reorderCollection).toHaveBeenCalledWith("c1", ["e2", "e1"]);
+  });
+
+  it("the card is a single control — the grid has no nested buttons", async () => {
+    render(<CollectionsEditor collections={ordered} shelf={shelf} onChanged={vi.fn()} />);
+    const card = screen.getByRole("button", { name: /Ordered/i });
+    expect(card.querySelector("button")).toBeNull();
+    // The count and who-can-see-it are on the card, not hidden in the drawer.
+    expect(card).toHaveAccessibleName(/2 volumes, private/i);
+  });
+
+  it("asks before deleting a collection", async () => {
+    deleteCollection.mockResolvedValue();
+    const onChanged = vi.fn().mockResolvedValue();
+    render(<CollectionsEditor collections={ordered} shelf={shelf} onChanged={onChanged} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Ordered/i }));
+    await userEvent.click(screen.getByRole("button", { name: /delete collection/i }));
+    expect(deleteCollection).not.toHaveBeenCalled();  // one click is not enough
+
+    await userEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+    expect(deleteCollection).toHaveBeenCalledWith("c1");
+  });
+
+  it("offers the rest rather than scrolling once the grid is full", async () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({
+      id: `c${i}`, title: `Shelf ${i}`, visibility: "private", position: i, books: [],
+    }));
+    render(<CollectionsEditor collections={many} shelf={shelf} onChanged={vi.fn()} />);
+
+    expect(screen.queryByRole("button", { name: /Shelf 7/i })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /all 9 collections/i }));
+    expect(screen.getByRole("button", { name: /Shelf 7/i })).toBeInTheDocument();
   });
 });

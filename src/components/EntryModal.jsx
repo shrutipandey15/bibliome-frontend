@@ -103,6 +103,11 @@ export default function EntryModal({
   const [quote, setQuote] = useState(entry?.quote || "");
   // Full entry fields [F2.1 / B2.4]: reading status, dates, private notes.
   const [status, setStatus] = useState(entry?.status || "finished");
+  // How far in, only asked while a book is open. "" means the reader hasn't
+  // said, which is saved as null — not as 0%. [F2.8]
+  const [progress, setProgress] = useState(
+    entry?.progress == null ? "" : String(entry.progress)
+  );
   const [startedAt, setStartedAt] = useState(entry?.started_at || "");
   const [finishedAt, setFinishedAt] = useState(entry?.finished_at || "");
   const [notes, setNotes] = useState(entry?.notes || "");
@@ -202,6 +207,8 @@ export default function EntryModal({
       verdict: verdict || null,
       // DNF reason only means anything on an abandoned book.
       dnf_reason: status === "abandoned" ? (dnfReason || null) : null,
+      // A closed book has no "how far in" — its status is the answer.
+      progress: status === "reading" && progress !== "" ? Number(progress) : null,
     }, entry?.id || null);
   };
   const handleDelete = () => { if (entry?.id) onDelete(entry.id); };
@@ -390,6 +397,35 @@ export default function EntryModal({
                     onChange={(e) => setFinishedAt(e.target.value)}
                   />
                 </label>
+              )}
+            </div>
+          )}
+
+          {/* Roughly how far in — asked only of an open book, and only ever
+              optional. A page number would mean asking which printing you hold;
+              a rough share is the question a reader can actually answer. */}
+          {status === "reading" && (
+            <div className="em-progress">
+              <label className="em-progress-label" htmlFor="em-progress-input">
+                <span className="label-sm em-field-label">roughly how far in</span>
+              </label>
+              <input
+                id="em-progress-input"
+                type="range"
+                className="em-progress-range"
+                min={0}
+                max={100}
+                step={5}
+                value={progress === "" ? 0 : progress}
+                onChange={(e) => setProgress(e.target.value)}
+              />
+              <span className="em-progress-value">
+                {progress === "" ? "not said" : `${progress}%`}
+              </span>
+              {progress !== "" && (
+                <button type="button" className="em-progress-clear" onClick={() => setProgress("")}>
+                  clear
+                </button>
               )}
             </div>
           )}

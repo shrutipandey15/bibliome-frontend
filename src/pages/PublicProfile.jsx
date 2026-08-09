@@ -71,7 +71,11 @@ export default function PublicProfile() {
   const nowReading = profile.now_reading || [];
   const recent = profile.recent || [];
   const collections = profile.collections || [];
-  const milestones = profile.milestones || [];
+  // Milestones now carry what's still ahead as well as what's been reached. A
+  // stranger sees only the reached ones — the study is where you look at your
+  // own unfinished business. (Payloads written before the flag existed have no
+  // `achieved`; those were all reached.)
+  const milestones = (profile.milestones || []).filter((m) => m.achieved !== false);
 
   return (
     <div className="pf-page">

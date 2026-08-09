@@ -115,46 +115,70 @@
   background: rgba(224, 196, 122, 0.22);
   margin: 22px 0 16px;
 }
-.dna-fp-label {
+.dna-fp-head {
   position: relative;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin-bottom: 13px;
+}
+.dna-fp-label {
   font-family: var(--font-mono);
   font-size: 8px;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: rgba(245, 236, 210, 0.42) !important;
-  margin-bottom: 12px;
+}
+.dna-fp-note {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 236, 210, 0.28);
 }
 
-/* Leader dots and the figure — the same index-page treatment as the portrait on
-   the DNA page. A bar track added a length to estimate next to a number that
-   already said it. */
-.dna-fp-row {
+/* The fingerprint proper: one bar per register, tallest first, in that
+   register's own colour. Heights are a share of the reader's own peak, so the
+   silhouette is about THEIR shelf and not about how many books they own. */
+.dna-fp-bars {
   position: relative;
-  display: flex; align-items: baseline; gap: 9px;
-  margin-bottom: 9px;
+  display: flex; align-items: flex-end; gap: 2px;
+  height: 56px;
+  margin-bottom: 13px;
 }
-.dna-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  flex: none;
-  transform: translateY(-2px);
-  display: inline-block;
-}
-.dna-fp-name {
-  font-family: var(--font-display);
-  font-size: 15px;
-  color: rgba(245, 236, 210, 0.9);
-}
-.dna-fp-leader {
+.dna-fp-bar {
   flex: 1;
-  border-bottom: 1px dotted rgba(224, 196, 122, 0.26);
-  transform: translateY(-3px);
+  min-width: 0;
+  border-radius: 2px;
+  opacity: 0.88;
+}
+/* A register never reached: present, and visibly nothing. */
+.dna-fp-bar--none {
+  background: rgba(245, 236, 210, 0.28) !important;
+  opacity: 0.55;
+}
+
+.dna-fp-top {
+  position: relative;
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
+}
+.dna-fp-cell {
+  min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
 }
 .dna-fp-count {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   color: rgba(224, 196, 122, 0.85);
+}
+.dna-fp-name {
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 14px;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: rgba(245, 236, 210, 0.66);
 }
 
 .dna-blinds {
@@ -326,5 +350,8 @@
   .dna-name { font-size: 30px; }
   .dna-blurb { font-size: 13px; }
   .dna-tagline { font-size: 14px; }
-  .dna-fp-name { font-size: 14px; }
+  /* The bars keep their proportions at any width; the labels under them are
+     what runs out of room first. */
+  .dna-fp-bars { height: 44px; }
+  .dna-fp-name { font-size: 11px; }
 }

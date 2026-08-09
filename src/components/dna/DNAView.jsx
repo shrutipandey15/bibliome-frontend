@@ -140,9 +140,18 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
   const avgIntensity = stats?.avg_intensity ?? null;
 
   // The shareable card uses the legacy signature shape; adapt the v2 payload for it.
+  //
+  // The fingerprint is drawn from `stats.emotion_counts` — REAL books per
+  // register off this reader's shelf. `profiles.current` is a weighted recency
+  // vector: right for "who you've been lately", wrong for a bar chart, because
+  // its numbers are shares scaled to 100 and would draw the same silhouette for
+  // a reader with six books as for one with six hundred. It stays only as the
+  // fallback for the moment before the stats ledger lands.
   const cardProfile = arch && {
     personality: arch,
     book_count: count,
+    emotion_counts: stats?.emotion_counts || null,
+    archetype_share: profile.archetype_share,
     top_emotions: vectorRows(profile.profiles?.current, 5)
       .map((r) => ({ emotion_id: r.slug, count: Math.round(r.weight * 100) })),
   };

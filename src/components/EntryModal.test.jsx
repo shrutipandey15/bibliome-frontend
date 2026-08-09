@@ -140,6 +140,16 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
     expect(onSave.mock.calls[0][0]).toMatchObject({ verdict: "no", dnf_reason: null });
   });
 
+  it("asks how far in only for an open book, and saves null until answered", async () => {
+    const onSave = vi.fn();
+    render(<EntryModal entry={base({ status: "finished" })} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
+    // A finished book is not asked — its status is the answer.
+    expect(screen.queryByLabelText(/roughly how far in/i)).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("radio", { name: /^reading$/i }));
+    expect(screen.getByText("not said")).toBeInTheDocument();  // never a default 0%
+  });
+
   it("shows the DNF reason only when abandoned and saves it", async () => {
     const onSave = vi.fn();
     render(<EntryModal entry={base({ status: "abandoned" })} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);

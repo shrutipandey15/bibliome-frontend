@@ -1,39 +1,153 @@
-/* Profile self-view [F2.8 / §Feature 2] */
-.pf-page { max-width: 820px; margin: 0 auto; padding: 32px 26px 80px; }
-.pf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+/* Profile self-view [F2.8 / §Feature 2] — the study: a wide desk and a rail. */
+.pf-page { max-width: 1260px; margin: 0 auto; padding: 32px 40px 80px; }
 
-.pf-identity { display: flex; flex-direction: column; gap: 6px; padding-bottom: 28px; border-bottom: 2px solid var(--rule, rgba(0,0,0,0.12)); }
-.pf-name { font-family: var(--font-display); font-size: 44px; font-style: italic; color: var(--ink); line-height: 1.05; margin: 0; }
-.pf-handle { font-family: var(--font-mono); font-size: 13px; color: var(--ink-quiet); }
-.pf-disposition { font-family: var(--font-display); font-size: 18px; color: var(--brass); margin-top: 4px; }
+.pf-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 44px; }
+.pf-topbar-title { color: var(--ink-faint); letter-spacing: 0.42em; }
+.pf-topbar-edit { border: none; background: none; cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-quiet); padding: 4px 0; }
+.pf-topbar-edit:hover { color: var(--brass); }
 
-.pf-bio { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-.pf-bio-text { font-family: var(--font-display); font-size: 16px; line-height: 1.5; color: var(--ink); margin: 0; }
-.pf-bio-empty { font-family: var(--font-display); font-style: italic; font-size: 15px; color: var(--ink-quiet); margin: 0; }
+/* The two columns. The rail is a fixed measure because the signature card is a
+   fixed artifact — it must not stretch to whatever the desk leaves over. */
+.pf-grid { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 64px; align-items: start; }
+.pf-grid--upper { padding-bottom: 52px; border-bottom: 1px solid var(--rule); margin-bottom: 52px; }
+.pf-col { min-width: 0; }
+.pf-rail { min-width: 0; display: flex; flex-direction: column; gap: 36px; }
+
+.pf-section { margin-top: 44px; }
+.pf-section--flush { margin-top: 0; }
+
+.pf-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  padding-bottom: 11px; margin-bottom: 20px; border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--ink-quiet);
+}
+.pf-head-aside { color: var(--ink-faint); letter-spacing: 0.2em; }
+.pf-head-link { border: none; background: none; cursor: pointer; padding: 0; font: inherit; letter-spacing: 0.2em; color: var(--brass); }
+.pf-head-link:hover { text-decoration: underline; }
+
+.pf-more { margin-top: 16px; border: none; background: none; cursor: pointer; padding: 4px 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass); }
+.pf-more:hover { text-decoration: underline; }
+
+/* ── Identity ── */
+.pf-since { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--ink-faint); }
+.pf-name { font-family: var(--font-display); font-size: 68px; font-weight: 300; font-style: italic; line-height: 1; letter-spacing: -0.03em; color: var(--ink); margin: 16px 0 0; }
+.pf-idline { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+.pf-idline-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--brass); align-self: center; }
+.pf-handle { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.12em; color: var(--ink-quiet); }
+.pf-disposition { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--brass); }
+
+.pf-bio { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; max-width: 56ch; }
+.pf-bio-text { font-family: var(--font-display); font-size: 19px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
+.pf-bio-empty { font-family: var(--font-display); font-style: italic; font-size: 16px; color: var(--ink-quiet); margin: 0; }
 .pf-bio-edit { align-self: flex-start; border: none; background: none; cursor: pointer; font-family: var(--font-mono); font-size: 11px; color: var(--brass); padding: 0; }
 .pf-bio-edit:hover { text-decoration: underline; }
-.pf-bio-input { padding: 10px 12px; border: 1px solid var(--rule, rgba(0,0,0,0.15)); border-radius: 2px; background: var(--bg-vellum); font-family: var(--font-display); font-size: 16px; color: var(--ink); resize: vertical; }
+.pf-bio-input { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-vellum); font-family: var(--font-display); font-size: 16px; color: var(--ink); resize: vertical; }
 .pf-bio-input:focus { border-color: var(--brass); outline: none; }
 .pf-bio-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
-.pf-section { margin-top: 34px; }
-.pf-section-label { color: var(--ink-quiet); margin-bottom: 14px; }
+/* ── The figures. A hairline grid, so an absent figure leaves no hole. ── */
+.pf-figures {
+  display: flex; flex-wrap: wrap; gap: 1px; margin-top: 38px;
+  background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden;
+}
+.pf-figure { flex: 1 1 0; min-width: 120px; background: var(--bg-card); padding: 18px 20px; }
+.pf-figure-n { font-family: var(--font-mono); font-size: 26px; letter-spacing: -0.02em; color: var(--ink); }
+.pf-figure--quiet .pf-figure-n { color: var(--ink-quiet); }
+.pf-figure-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin-top: 7px; }
 
-.pf-books { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
-.pf-book { display: flex; gap: 10px; align-items: center; padding: 8px; border: 1px solid var(--rule, rgba(0,0,0,0.1)); border-left-width: 3px; border-radius: 2px; background: var(--bg-card); }
-.pf-book-cover { width: 34px; height: 50px; object-fit: cover; border-radius: 1px; flex-shrink: 0; }
-.pf-book-cover--none { opacity: 0.6; }
-.pf-book-meta { min-width: 0; }
-.pf-book-title { font-family: var(--font-display); font-size: 14px; color: var(--ink); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.pf-book-author { font-family: var(--font-mono); font-size: 10px; color: var(--ink-quiet); margin-top: 2px; }
+/* ── Day one ── */
+.pf-empty { margin-top: 38px; padding: 26px 26px 24px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-card); max-width: 56ch; }
+.pf-empty-eyebrow { color: var(--ink-faint); }
+.pf-empty-lead { font-family: var(--font-display); font-size: 19px; line-height: 1.55; color: var(--ink-soft); margin: 12px 0 0; }
+.pf-empty-list { list-style: none; margin: 18px 0 22px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pf-empty-list li { font-family: var(--font-display); font-size: 15.5px; line-height: 1.45; color: var(--ink-quiet); padding-left: 16px; border-left: 1px solid var(--rule); }
+.pf-empty-list b { font-style: italic; font-weight: 400; color: var(--ink); }
 
-.pf-signature { display: flex; justify-content: center; }
+.pf-pending { font-family: var(--font-display); font-style: italic; font-size: 16px; line-height: 1.5; color: var(--ink-quiet); margin: 0; }
 
-.pf-milestones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.pf-milestone { display: flex; gap: 10px; align-items: center; font-family: var(--font-display); font-size: 16px; color: var(--ink); }
-.pf-milestone-glyph { color: var(--brass); }
+/* ── Now reading ── */
+.pf-opens { display: flex; flex-direction: column; }
+.pf-open { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid var(--rule-soft); }
+.pf-open:last-child { border-bottom: none; }
+.pf-open-cover { width: 52px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 1px; box-shadow: 0 6px 18px -8px var(--shelf-shadow); }
+.pf-open-cover--none { display: block; opacity: 0.65; }
+.pf-open-meta { min-width: 0; }
+.pf-open-title { font-family: var(--font-display); font-size: 20px; color: var(--ink); line-height: 1.25; }
+.pf-open-author { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; color: var(--ink-quiet); margin-top: 5px; }
+.pf-open-progress { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.pf-open-track { flex: 1; height: 2px; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.pf-open-fill { display: block; height: 2px; border-radius: 2px; }
+.pf-open-pct { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; color: var(--ink-faint); }
 
-@media (max-width: 560px) {
+.pf-open-weather { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-quiet); }
+.pf-open-when { font-style: normal; color: var(--ink-faint); }
+.pf-open-note { max-width: 22ch; text-align: right; font-family: var(--font-display); font-style: italic; font-size: 15px; line-height: 1.5; color: var(--ink-quiet); }
+.pf-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Recently shelved ── */
+.pf-shelf-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px 16px; }
+.pf-shelf-book { min-width: 0; display: flex; flex-direction: column; text-align: left; border: none; background: none; padding: 0; cursor: pointer; }
+.pf-shelf-book:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+.pf-shelf-cover { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 2px; box-shadow: 0 10px 24px -12px var(--shelf-shadow); }
+.pf-shelf-cover--none { display: block; opacity: 0.7; }
+.pf-shelf-title { font-family: var(--font-display); font-size: 15px; line-height: 1.28; color: var(--ink); margin-top: 10px; }
+.pf-shelf-author { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ink-quiet); margin-top: 4px; }
+.pf-shelf-emo { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-family: var(--font-display); font-style: italic; font-size: 13px; color: var(--ink-quiet); }
+
+/* ── From your margins ── */
+.pf-margins { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pf-margin { margin: 0; padding: 22px 24px; border-left: 2px solid var(--brass); background: var(--bg-card); }
+.pf-margin-text { font-family: var(--font-display); font-size: 19px; font-style: italic; line-height: 1.5; color: var(--ink-soft); margin: 0; }
+.pf-margin-cite { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-top: 14px; }
+
+/* ── The rail ── */
+/* The card, its actions and the "your signature" rule all share one left edge.
+   `.dna-wrapper` centres and pads itself for the standalone surfaces; in the
+   rail that padding is what breaks the alignment. */
+.pf-signature { display: flex; }
+.pf-signature .dna-wrapper { padding: 0; width: 100%; align-items: stretch; }
+.pf-signature .dna-card { width: 100%; }
+
+.pf-milestones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.pf-milestone { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--rule-soft); }
+.pf-milestone:last-child { border-bottom: none; }
+.pf-milestone--ahead { opacity: 0.45; }
+.pf-milestone-glyph { color: var(--brass); font-size: 13px; line-height: 1.5; }
+.pf-milestone--ahead .pf-milestone-glyph { color: var(--ink-faint); }
+.pf-milestone-label { font-family: var(--font-display); font-size: 17px; color: var(--ink); line-height: 1.3; }
+.pf-milestone-when { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-top: 5px; }
+
+.pf-says { padding: 22px 22px 20px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-card); }
+.pf-says-text { font-family: var(--font-display); font-size: 17.5px; line-height: 1.58; color: var(--ink-soft); margin: 12px 0 0; }
+.pf-says-link { display: inline-block; margin-top: 14px; border: none; background: none; cursor: pointer; padding: 0; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass); }
+.pf-says-link:hover { text-decoration: underline; }
+
+.pf-footer {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+  margin-top: 72px; padding-top: 16px; border-top: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* ── The rail folds under the desk before the desk gets narrow ── */
+@media (max-width: 1080px) {
+  .pf-grid { grid-template-columns: minmax(0, 1fr); gap: 44px; }
+  .pf-grid--upper { padding-bottom: 40px; margin-bottom: 40px; }
+  .pf-rail { max-width: 372px; }
+  .pf-shelf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
   .pf-page { padding: 24px 18px 60px; }
-  .pf-name { font-size: 34px; }
+  .pf-name { font-size: 40px; }
+  .pf-shelf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pf-margins { grid-template-columns: minmax(0, 1fr); }
+  /* The pull-quote stops being a margin note and becomes a line under the book. */
+  .pf-open { grid-template-columns: 44px minmax(0, 1fr); gap: 14px; }
+  .pf-open-cover { width: 44px; }
+  .pf-open-note { grid-column: 1 / -1; max-width: none; text-align: left; }
+}
+
+@media (max-width: 460px) {
+  .pf-shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-figure { min-width: 45%; }
 }

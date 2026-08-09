@@ -426,8 +426,20 @@ export async function changePassword(currentPassword, newPassword, journalKeyBun
 
 // ── Profile — the private mirror as a place [F2.8 / B2.1 §Feature 2] ──
 // Composed dict: { restricted, handle, display_name, bio, profile_visibility,
-// personality_type, is_self, signature, now_reading[], collections[], milestones[],
-// book_count, recent[] }.
+// personality_type, member_since, is_self, signature, now_reading[], collections[],
+// milestones[], book_count, registers_felt, avg_intensity, set_down, recent[],
+// margins[] }.
+//
+// Everything countable is counted server-side from real entries, and a figure the
+// shelf can't support comes back null rather than 0 (`avg_intensity` on an empty
+// shelf) — the study omits the tile instead of printing a fabricated number.
+//   milestones[] — now { kind, label, achieved, achieved_at }, and includes the
+//     ones NOT yet reached so the study can show what's ahead. Other people's
+//     profiles must filter to `achieved !== false`.
+//   margins[]    — the line you kept per book (`entry.quote`, first one wins when
+//     a book was read twice). OWNER ONLY: [] for every other viewer, because the
+//     quote is written alongside the private notes.
+//   now_reading[].last_checkin — { emotion, note, at } | null, owner-only too.
 export async function getMyProfile() {
   const res = await apiFetch("/me/profile");
   if (!res.ok) return null;
