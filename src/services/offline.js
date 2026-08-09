@@ -1,10 +1,18 @@
 /**
- * Local cache for Bibliome.
+ * Read-through cache for the BOOK shelf. Not offline support — the name is a
+ * leftover and the distinction matters.
  *
- * Caches entries in localStorage so the shelf loads instantly on revisit.
- * Server fetch runs in the background and silently replaces cached data.
+ * What this does: keeps the last-seen entries in localStorage so the shelf
+ * paints instantly on revisit, while the server fetch runs behind it and
+ * silently replaces what's here. What it does NOT do: queue writes, sync, or
+ * resolve conflicts. Offline, you get a stale read and failed writes.
  *
- * Full offline queue/sync will be added when journal feature ships.
+ * (An earlier note here promised a queue "when the journal feature ships". The
+ * journal has shipped and the queue hasn't, so the promise is deleted rather
+ * than left to rot. If one is ever built, it must stay book-only for the same
+ * reason journal pages live in React state and die with the tab: localStorage
+ * outlives the session and is readable by any XSS. Book titles can take that.
+ * Journal prose cannot — see contexts/PrivateJournalContext.jsx.)
  */
 
 const ENTRIES_KEY = "bibliome_entries";

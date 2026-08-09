@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
 import { Settings } from "lucide-react";
 import { Routes, Route, useParams, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
@@ -33,6 +33,7 @@ import Shelf from "./components/Shelf";
 import { ShelfDecoration } from "./components/Shelf";
 import { EMO_LIST, EMOTIONS, getPrimaryEmotion, hydrateEmotions } from "./services/emotions";
 import { clearCache } from "./services/offline";
+import { findDuplicateEntry } from "./utils/findDuplicate";
 import "./App.css";
 
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -74,7 +75,9 @@ function SharedProfile() {
     <div className="app public-view">
       <header className="header">
         <div className="brand">
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}><div className="logo">BOOK <span>DNA</span></div></Link>
+          {/* `.logo` had no stylesheet rule anywhere — this header rendered the
+              brand as unstyled body text. Same wordmark class as the reading room. */}
+          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}><div className="rr-logo">Biblio<em>me</em></div></Link>
         </div>
         <div className="header-right">
           <Link to="/" className="gen-btn">{currentUser ? "My Dashboard" : "Get Your Own"}</Link>
@@ -124,7 +127,7 @@ function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenera
     <div className="rr-header">
       <div className="rr-header-row">
         <div className="rr-brand">
-          <div className="rr-logo">Book <em>DNA</em></div>
+          <div className="rr-logo">Biblio<em>me</em></div>
           <div className="rr-brand-meta">
             <div className="label rr-volume">vol. iv · {new Date().getFullYear()}</div>
             <div className="rr-tagline">{user?.display_name || user?.username || "your"}'s reading journal</div>
@@ -419,6 +422,18 @@ function Dashboard() {
       setModal(null);
     } catch (err) { showToast("Failed to save book"); }
   };
+  // The whole library is already in memory, so "have I shelved this?" is a local
+  // question — no lookup endpoint, no debounce, no round trip per keystroke.
+  // Memoised because EntryModal recomputes the match inside a useMemo keyed on
+  // this function's identity.
+  const findDuplicate = useCallback(
+    (fields) => findDuplicateEntry(entries, fields, {
+      // Editing an existing book must not flag that book as its own duplicate.
+      excludeId: modal && modal !== "new" ? modal.id : null,
+    }),
+    [entries, modal],
+  );
+
   const handleDeleteEntry = async (id) => {
     try { await removeEntry(id); setModal(null); }
     catch (err) { showToast("Failed to delete book"); }
@@ -554,12 +569,19 @@ function Dashboard() {
           backdropClassName="rr-modal-backdrop"
         >
           <EntryModal
+            // EntryModal seeds every field from `entry` in useState initialisers,
+            // which only run on mount — so swapping to the already-shelved copy
+            // has to remount it, or the new-entry form state would survive the
+            // switch and quietly overwrite the book they asked to open.
+            key={modal === "new" ? "new" : modal.id}
             entry={modal === "new" ? null : modal}
             onSave={handleSaveEntry}
             onDelete={handleDeleteEntry}
             onClose={() => setModal(null)}
             onFinish={(entry) => { setModal(null); setFinishTarget(entry); }}
             onCheckin={(entry) => { setModal(null); setCheckinTarget(entry); }}
+            findDuplicate={findDuplicate}
+            onOpenExisting={(existing) => setModal(existing)}
           />
         </Modal>
       )}

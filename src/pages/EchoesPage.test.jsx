@@ -18,7 +18,7 @@ vi.mock("../services/api", () => ({
   reportReply: vi.fn(),
 }));
 
-import EchoesPage from "./EchoesPage";
+import EchoesPage, { MINE_FILTER_SUPPORTED } from "./EchoesPage";
 import { getEchoFeed, blockHandle } from "../services/api";
 
 const feed = {
@@ -30,7 +30,26 @@ const feed = {
   caught_up: true,
 };
 
-describe("EchoesPage — your echoes [B: ?mine=true]", () => {
+// The toggle is hidden until the backend honours `?mine=true` — see the flag in
+// EchoesPage.jsx. These tests are kept intact and gated on the same constant, so
+// the day the param lands the suite that proves it works comes back with it.
+describe.runIf(!MINE_FILTER_SUPPORTED)("EchoesPage — 'your echoes' is withheld", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("does not offer a view it cannot actually filter", async () => {
+    getEchoFeed.mockResolvedValue(feed);
+    render(<EchoesPage />);
+    await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
+
+    // A feed labelled "yours" that silently returns everyone's echoes is worse
+    // than no toggle at all: it invites the author to reread in public.
+    expect(screen.queryByRole("button", { name: /your echoes/i })).toBeNull();
+    expect(screen.queryByRole("group", { name: /whose echoes/i })).toBeNull();
+    expect(getEchoFeed).toHaveBeenLastCalledWith(expect.objectContaining({ mine: false }));
+  });
+});
+
+describe.skipIf(!MINE_FILTER_SUPPORTED)("EchoesPage — your echoes [B: ?mine=true]", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("requests only your own echoes when the view is switched", async () => {

@@ -157,6 +157,55 @@
   max-height: 320px;
   overflow-y: auto;
 }
+/* "Already on your shelf" — a marginal note, not an alarm. Brass rather than
+   oxblood: nothing has gone wrong, and a red box for a reread would be a telling
+   off. Tokens only, so it inverts with Lamplight for free. */
+.em-dupe {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 11px 13px;
+  background: var(--bg-sunken);
+  border-left: 2px solid var(--brass);
+  border-radius: 1px;
+}
+.em-dupe-body { flex: 1; min-width: 0; }
+.em-dupe-line {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.em-dupe-line em { font-style: italic; }
+.em-dupe-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--ink-quiet);
+  margin-top: 3px;
+}
+.em-dupe-sub {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-quiet);
+  margin: 6px 0 0;
+}
+.em-dupe-open {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--oxblood);
+  border-bottom: 1px solid transparent;
+}
+.em-dupe-open:hover { border-bottom-color: var(--oxblood); }
+
 .em-search-item {
   display: flex; gap: 12px; align-items: center;
   padding: 10px 14px;

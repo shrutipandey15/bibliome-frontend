@@ -56,5 +56,8 @@
 .nc-digest-memory { font-family: var(--font-display); font-style: italic; font-size: 13px; color: var(--ink-quiet); }
 
 @media (max-width: 560px) {
-  .nc { min-width: 0; width: 100%; }
+  /* The card is a full-bleed bottom sheet here, so the 460px reading cap has to
+     be lifted too — otherwise the sheet spans the screen while its contents stop
+     short, and the leftover strip reads as a column nobody filled in. */
+  .nc { min-width: 0; width: 100%; max-width: none; }
 }

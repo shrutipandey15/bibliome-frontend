@@ -11,7 +11,7 @@ const STEPS = [
 ];
 
 function Wordmark() {
-  return <div className="rp-wordmark">Book&nbsp;<em>DNA</em></div>;
+  return <div className="rp-wordmark">Biblio<em>me</em></div>;
 }
 
 function Triptych({ activeIdx, children }) {

@@ -363,8 +363,16 @@
   padding: 40px;
 }
 .rr-modal-card {
-  max-width: 1100px;
-  width: 100%;
+  /* Size to the CONTENT, capped — not to 1100px regardless of what's inside.
+     This shell is shared by nine dialogs and only ONE of them is 1100px wide
+     (.em-card, which says so itself). The rest cap themselves far narrower:
+     notifications 460, welcome 480, report 420, finish/check-in/import 520. With
+     a forced `width: 100%` they all rendered as a column of text pinned left in
+     a very wide card, and the dead space to the right read as an unbuilt panel —
+     it was never a panel, just an oversized shell. `fit-content` lets each one
+     be its own width; the cap and the flex-centred backdrop do the rest. */
+  width: fit-content;
+  max-width: min(1100px, 100%);
   max-height: 92vh;
   overflow: auto;
   transform-origin: left center;

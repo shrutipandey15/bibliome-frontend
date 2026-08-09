@@ -149,3 +149,77 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
     expect(onSave.mock.calls[0][0]).toMatchObject({ dnf_reason: "drifted" });
   });
 });
+
+describe("EntryModal — already on your shelf", () => {
+  const shelved = {
+    id: "existing-1",
+    title: "Piranesi",
+    author: "Susanna Clarke",
+    status: "finished",
+    finished_at: "2026-01-12",
+    emotions: [{ emotion_id: "awe", strength: 9 }],
+  };
+  // Stands in for App's memoised findDuplicateEntry over the live shelf.
+  const finder = ({ title }) =>
+    title.trim().toLowerCase() === "piranesi" ? { entry: shelved, reason: "title_author" } : null;
+
+  it("says nothing until what's typed actually matches something", async () => {
+    render(
+      <EntryModal entry={null} onSave={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()} findDuplicate={finder} />,
+    );
+    expect(screen.queryByText(/already on your shelf/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /^shelve it$/i })).toBeInTheDocument();
+
+    await userEvent.type(screen.getByPlaceholderText(/search for a book/i), "Piranesi");
+    expect(await screen.findByText(/already on your shelf/i)).toBeInTheDocument();
+  });
+
+  it("shows what the shelved copy already holds, rather than just 'duplicate'", async () => {
+    render(
+      <EntryModal entry={null} onSave={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()} findDuplicate={finder} />,
+    );
+    await userEvent.type(screen.getByPlaceholderText(/search for a book/i), "Piranesi");
+    const notice = (await screen.findByText(/already on your shelf/i)).closest(".em-dupe");
+    expect(notice.textContent).toMatch(/finished/i);
+    expect(notice.textContent).toMatch(/tagged awe/i);
+  });
+
+  it("offers the existing entry instead of the new one", async () => {
+    const onOpenExisting = vi.fn();
+    render(
+      <EntryModal
+        entry={null} onSave={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()}
+        findDuplicate={finder} onOpenExisting={onOpenExisting}
+      />,
+    );
+    await userEvent.type(screen.getByPlaceholderText(/search for a book/i), "Piranesi");
+    await userEvent.click(await screen.findByRole("button", { name: /open that entry/i }));
+    expect(onOpenExisting).toHaveBeenCalledWith(shelved);
+  });
+
+  it("still lets a reread through — it warns, it does not block", async () => {
+    const onSave = vi.fn();
+    render(
+      <EntryModal entry={null} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} findDuplicate={finder} />,
+    );
+    await userEvent.type(screen.getByPlaceholderText(/search for a book/i), "Piranesi");
+
+    // The button states plainly what it is about to do; nothing is disabled.
+    const save = await screen.findByRole("button", { name: /shelve it again/i });
+    expect(save).toBeEnabled();
+    await userEvent.click(save);
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSave.mock.calls[0][0]).toMatchObject({ title: "Piranesi" });
+  });
+
+  it("never flags an entry being edited as a duplicate of itself", async () => {
+    render(
+      <EntryModal
+        entry={shelved} onSave={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()}
+        findDuplicate={() => ({ entry: shelved, reason: "title_author" })}
+      />,
+    );
+    expect(screen.queryByText(/already on your shelf/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
+  });
+});

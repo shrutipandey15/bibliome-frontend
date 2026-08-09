@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Loader2, BookOpen, Pencil } from "lucide-react";
 import { EMOTIONS, getEmotionFamilies } from "../services/emotions";
 import { searchBooks } from "../services/api";
@@ -61,7 +61,35 @@ function OneTap({ label, options, value, onChange, wrap }) {
   );
 }
 
-export default function EntryModal({ entry, onSave, onDelete, onClose, onFinish, onCheckin }) {
+// How an already-shelved copy describes itself in the notice. Only ever states
+// what the entry actually holds — no date invented for a book that hasn't got one.
+function describeShelved(e) {
+  const parts = [];
+  const when = (iso) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? null
+      : d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  };
+  const finished = e.finished_at && when(e.finished_at);
+  const started = e.started_at && when(e.started_at);
+  if (e.status === "finished" && finished) parts.push(`finished ${finished}`);
+  else if (e.status === "finished") parts.push("finished");
+  else if (e.status === "reading") parts.push(started ? `reading since ${started}` : "currently reading");
+  else if (e.status === "want_to_read") parts.push("on your want-to-read");
+  else if (e.status === "abandoned") parts.push("put down");
+  const emo = e.emotions?.[0] && EMOTIONS[e.emotions[0].emotion_id];
+  if (emo) parts.push(`tagged ${emo.name.toLowerCase()}`);
+  return parts.join(" · ");
+}
+
+export default function EntryModal({
+  entry, onSave, onDelete, onClose, onFinish, onCheckin,
+  // Returns the already-shelved copy of what's being typed, or null. Defaulted
+  // so every existing caller (and every test) behaves exactly as before.
+  findDuplicate = () => null,
+  onOpenExisting,
+}) {
   const [title, setTitle] = useState(entry?.title || "");
   const [author, setAuthor] = useState(entry?.author || "");
   const [coverUrl, setCoverUrl] = useState(entry?.cover_url || "");
@@ -178,6 +206,20 @@ export default function EntryModal({ entry, onSave, onDelete, onClose, onFinish,
   };
   const handleDelete = () => { if (entry?.id) onDelete(entry.id); };
 
+  // Already on the shelf? Recomputed as they type — including for a title typed
+  // straight in without ever touching the search, which is exactly the path that
+  // produces accidental doubles. A memo, not state: `findDuplicate` returns a
+  // fresh object each call, and storing that in state would re-render forever.
+  //
+  // This NEVER blocks the save. Rereading is real, and a shelf that argues with
+  // you about your own second reading is worse than one with two rows in it. The
+  // notice informs and offers the other entry; the primary button just stops
+  // pretending it's the first copy.
+  const duplicate = useMemo(
+    () => (isEditing.current ? null : findDuplicate({ title, author, isbn })),
+    [findDuplicate, title, author, isbn],
+  );
+
   const isEdit = !!entry?.id;
   const primaryEmo = emotions[0] ? EMOTIONS[emotions[0].id] : null;
   const coverColor = primaryEmo?.color || "var(--oxblood)";
@@ -274,6 +316,38 @@ export default function EntryModal({ entry, onSave, onDelete, onClose, onFinish,
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
             />
+          )}
+
+          {/* aria-live, because it appears mid-typing rather than on an action —
+              a sighted user sees it arrive; a screen reader user is told. */}
+          {duplicate && (
+            <div className="em-dupe" role="status" aria-live="polite">
+              <div className="em-dupe-body">
+                <div className="em-dupe-line">
+                  {duplicate.reason === "title"
+                    ? <>You have a <em>{duplicate.entry.title}</em> on the shelf already.</>
+                    : <><em>{duplicate.entry.title}</em> is already on your shelf.</>}
+                </div>
+                {(() => {
+                  const said = describeShelved(duplicate.entry);
+                  return said ? <div className="em-dupe-meta">{said}</div> : null;
+                })()}
+                <p className="em-dupe-sub">
+                  {duplicate.reason === "title"
+                    ? "Same title, and one of the two has no author — so it might be a different book entirely."
+                    : "Reading it again? A second entry keeps both records, and both sets of feelings, separate."}
+                </p>
+              </div>
+              {onOpenExisting && (
+                <button
+                  type="button"
+                  className="em-dupe-open"
+                  onClick={() => onOpenExisting(duplicate.entry)}
+                >
+                  open that entry →
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -458,8 +532,11 @@ export default function EntryModal({ entry, onSave, onDelete, onClose, onFinish,
               </button>
             )}
             <button className="btn ghost" onClick={onClose}>cancel</button>
+            {/* The label carries the warning, so the click doesn't have to be
+                intercepted. "shelve it again" is an accurate description of what
+                the button is about to do — no confirm step, no disabled state. */}
             <button className="btn brass" onClick={handleSave} disabled={!title.trim()}>
-              {isEdit ? "save changes" : "shelve it"}
+              {isEdit ? "save changes" : duplicate ? "shelve it again" : "shelve it"}
             </button>
           </div>
         </div>

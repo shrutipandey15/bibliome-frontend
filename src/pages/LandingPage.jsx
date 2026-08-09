@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import Shelf, { ShelfDecoration } from "../components/Shelf";
 import ThemeToggle from "../components/ThemeToggle";
-import { ARCHETYPE_COUNT } from "../components/dna/constants";
+import { ARCHETYPE_COUNT, MIN_BOOKS } from "../components/dna/constants";
+import { EMO_LIST } from "../services/emotions";
 import "./LandingPage.css";
 
 const ARCHETYPES_PREVIEW = [
@@ -53,7 +54,7 @@ const MANIFESTO = [
 function Wordmark({ size = 28 }) {
   return (
     <div className="rr-wordmark" style={{ fontSize: size }}>
-      Book&nbsp;<em>DNA</em>
+      Biblio<em>me</em>
     </div>
   );
 }
@@ -100,7 +101,15 @@ export default function LandingPage({ onGetStarted }) {
             <div className="lrr-trust-row">
               <div className="label-sm">free forever · no ads · no feeds</div>
               <div className="lrr-trust-sep" />
-              <div className="lrr-trust-text">2,841 readers shelved this week</div>
+              {/* This slot used to read "2,841 readers shelved this week" — a
+                  hardcoded string, derived from nothing. A fabricated number is
+                  bad enough on a product whose first rule is honest states or
+                  none; a *reader count* is also the exact comparative metric the
+                  rest of the app refuses to render. So: the shape of the thing,
+                  counted from the constants that actually define it. */}
+              <div className="lrr-trust-text">
+                {EMO_LIST.length} emotions · {ARCHETYPE_COUNT} archetypes · {MIN_BOOKS} books to begin
+              </div>
             </div>
           </div>
 

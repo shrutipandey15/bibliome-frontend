@@ -90,7 +90,7 @@ export default function AuthPage() {
     <div className="auth-rr">
       <div className="auth-rr-left">
         <div className="auth-rr-brand">
-          Book&nbsp;<em>DNA</em>
+          Biblio<em>me</em>
         </div>
         <div>
           <h1 className="auth-rr-h1">

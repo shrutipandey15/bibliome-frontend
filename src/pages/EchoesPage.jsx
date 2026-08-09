@@ -26,6 +26,17 @@ import "./EchoesPage.css";
  * eighteen equal buttons; in the rail they read as an index, grouped by the
  * families the vocabulary already has.
  */
+// The "your echoes" view needs `?mine=true` on GET /echoes/feed, which the
+// backend does not implement (app/routers/echo.py reads cursor/limit/book_title/
+// book_author/emotion/prompt_id and ignores anything else). An ignored param
+// returns the everyone-feed — so shipping the toggle labels a public feed as
+// "yours", which is the one lie this surface cannot afford: it invites someone
+// to reread what they think is only theirs.
+//
+// Everything downstream (state, queries, both empty states, the private-counts
+// note) is already written and correct. Flip this the day the param lands.
+export const MINE_FILTER_SUPPORTED = false;
+
 export default function EchoesPage() {
   const navigate = useNavigate();
   const [echoes, setEchoes] = useState([]);
@@ -121,10 +132,12 @@ export default function EchoesPage() {
         {/* WHOSE — everyone vs your own. It composes with the feeling anchor in
             the rail: "your echoes" + "grief" is one query. */}
         <div className="ep-scope">
-          <div className="ep-seg" role="group" aria-label="Whose echoes">
-            <button aria-pressed={!mine} onClick={() => setMine(false)}>everyone</button>
-            <button aria-pressed={mine} onClick={() => setMine(true)}>your echoes</button>
-          </div>
+          {MINE_FILTER_SUPPORTED && (
+            <div className="ep-seg" role="group" aria-label="Whose echoes">
+              <button aria-pressed={!mine} onClick={() => setMine(false)}>everyone</button>
+              <button aria-pressed={mine} onClick={() => setMine(true)}>your echoes</button>
+            </div>
+          )}
           {activeEmo && (
             <button
               className="ep-active-filter"
