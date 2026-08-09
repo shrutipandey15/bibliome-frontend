@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, Copy, Download, KeyRound, Lock } from "lucide-react";
 import { useJournalKey } from "../../contexts/JournalKeyContext";
+import PasswordField from "../PasswordField";
 import { normalizeRecoveryCode } from "../../services/journalCrypto";
 
 /**
@@ -79,8 +80,7 @@ export default function JournalSetup({ onDone }) {
           your journal's key. We already have your password's hash for logging
           in; this is a different thing, computed locally, and not sent.
         </p>
-        <input
-          type="password"
+        <PasswordField
           autoFocus
           autoComplete="current-password"
           value={password}

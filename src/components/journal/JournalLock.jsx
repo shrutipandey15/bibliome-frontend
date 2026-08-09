@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
 import { useJournalKey } from "../../contexts/JournalKeyContext";
+import PasswordField from "../PasswordField";
 
 /**
  * The lock screen. Reached two ways, and it matters which:
@@ -77,9 +78,8 @@ export default function JournalLock() {
 
       <label className="jr-field">
         <span>{mode === "recovery" ? "Current account password" : "Password"}</span>
-        <input
+        <PasswordField
           className="jr-input"
-          type="password"
           autoFocus={mode === "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}

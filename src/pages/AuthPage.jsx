@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import PasswordField from "../components/PasswordField";
 import "./AuthPage.css";
 
 function passwordStrength(pw) {
@@ -163,9 +164,8 @@ export default function AuthPage() {
 
             <div className="auth-rr-field">
               <div className="label-sm auth-rr-fl">password</div>
-              <input
+              <PasswordField
                 className="auth-rr-input"
-                type="password"
                 placeholder={isLogin ? "your key" : "min 8 chars"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

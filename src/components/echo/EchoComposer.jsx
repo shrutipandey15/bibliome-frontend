@@ -26,7 +26,9 @@ export default function EchoComposer({ onPosted, onClose }) {
   const [bookAuthor, setBookAuthor] = useState("");
   const [primary, setPrimary] = useState(null);
   const [secondary, setSecondary] = useState(null);
-  const [visibility, setVisibility] = useState("community");
+  // Not a choice any more — see the note by "who sees this". The field stays in
+  // the payload because the API still requires one of community|public.
+  const visibility = "community";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [crisis, setCrisis] = useState(null);
@@ -147,26 +149,17 @@ export default function EchoComposer({ onPosted, onClose }) {
           ))}
         </div>
 
+        {/* This was a choice between "community" and "public — anyone with the
+            link". There is no such link: every echo route requires a signed-in
+            user, and `/echoes` renders the landing page to anyone who isn't, so
+            a logged-out visitor has no URL that could show them an echo. The two
+            options selected the same audience. A statement of who actually sees
+            it beats a question with one real answer. */}
         <div className="ec-vis-block">
           <div className="ec-label">who sees this</div>
-          <div className="ec-vis" role="radiogroup" aria-label="Echo visibility">
-            {[
-              { v: "community", l: "community", sub: "readers who are signed in" },
-              { v: "public", l: "public", sub: "anyone with the link" },
-            ].map((o) => (
-              <button
-                key={o.v}
-                type="button"
-                role="radio"
-                aria-checked={visibility === o.v}
-                className={`ec-vis-opt ${visibility === o.v ? "active" : ""}`}
-                onClick={() => setVisibility(o.v)}
-              >
-                <div className="ec-vis-name">{o.l}</div>
-                <div className="ec-vis-sub">{o.sub}</div>
-              </button>
-            ))}
-          </div>
+          <p className="ec-vis-note">
+            Every signed-in reader, in one shared room. Nobody outside Bibliome can reach it.
+          </p>
         </div>
 
         {error && <div className="ec-error" role="alert" aria-live="assertive">{error}</div>}

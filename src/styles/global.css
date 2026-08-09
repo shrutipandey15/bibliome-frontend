@@ -3,6 +3,11 @@
 
 /* ---------- TOKENS — Vellum (light, default) ---------- */
 :root, [data-theme="light"] {
+  /* Tells the browser which way its own chrome should go: native select popups,
+     date pickers, scrollbars and autofill. Without it those render light on both
+     themes, so a dark form opened a white dropdown. */
+  color-scheme: light;
+
   /* surfaces */
   --bg-page:    #ece2cf;
   --bg-paper:   #f6ecd6;
@@ -73,11 +78,21 @@
 
 /* ---------- TOKENS — Lamplight (dark) ---------- */
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --bg-page:    #0c0805;
   --bg-paper:   #14100a;
   --bg-vellum:  #1b160e;
   --bg-card:    #1a140c;
   --bg-sunken:  #080604;
+  /* Lamplight had NO value for this, so every writing surface in the app fell
+     through to the light theme's #fffdf6 and rendered as a sheet of white paper
+     in a dark room — with --ink (cream) written on it, which was close to
+     invisible. It is the same relationship as in Vellum, inverted: a shade
+     LIGHTER than the card, so a fresh sheet still reads as laid on top.
+     Eleven surfaces depend on it — the echo composer, echo cards and threads,
+     the resonance letters, and three in the journal. */
+  --bg-field:   #221b12;
   --rule:       #2a2014;
   --rule-soft:  #1f180e;
 
@@ -85,7 +100,11 @@
   --ink-soft:   #d8c69d;
   --ink-quiet:  #9a8867;
   --ink-faint:  #6a5b42;
-  --ink-ghost:  #3a2f1f;
+  /* Was #3a2f1f, which against --bg-card (#1a140c) is about 1.7:1 — below the
+     point where text is text. It carries 30-odd placeholders and quiet hints,
+     so "barely there" was rendering as "not there". Still the quietest ink in
+     the set, now at roughly 3:1. */
+  --ink-ghost:  #5f5039;
 
   --walnut:        #1a0d04;
   --walnut-mid:    #2a1707;

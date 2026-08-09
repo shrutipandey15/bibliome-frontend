@@ -35,7 +35,7 @@ vi.mock("../services/api", () => ({
 }));
 
 import SettingsPage from "./SettingsPage";
-import { updateSettings, generateShareToken, revokeShareTokens, changeHandle, updateNotificationPrefs } from "../services/api";
+import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, updateNotificationPrefs } from "../services/api";
 
 async function openVisibility() {
   render(<SettingsPage />);
@@ -62,11 +62,27 @@ describe("SettingsPage visibility control [F2.8 / B2.1]", () => {
   it("reverts the selection if the update fails", async () => {
     updateSettings.mockRejectedValueOnce(new Error("nope"));
     await openVisibility();
-    await waitFor(() => screen.getByRole("radio", { name: /Public/i }));
-    await userEvent.click(screen.getByRole("radio", { name: /Public/i }));
+    await waitFor(() => screen.getByRole("radio", { name: /Community/i }));
+    await userEvent.click(screen.getByRole("radio", { name: /Community/i }));
     await waitFor(() =>
       expect(screen.getByRole("radio", { name: /Private/i })).toBeChecked(),
     );
+  });
+
+  it("does not offer Public — nothing here is readable without an account", async () => {
+    await openVisibility();
+    await waitFor(() => screen.getByRole("radio", { name: /Community/i }));
+    expect(screen.queryByRole("radio", { name: /Public/i })).not.toBeInTheDocument();
+  });
+
+  it("still shows the retired option to an account already set to it", async () => {
+    // Once, not permanently: clearAllMocks resets calls but keeps implementations,
+    // so a lasting override here would follow the later tests.
+    getSettings.mockResolvedValueOnce({ profile_visibility: "public", username: "alice", reads_for: [] });
+    await openVisibility();
+    // Their real setting must stay visible and selected — we don't quietly
+    // rewrite someone's privacy choice, we explain it and let them move.
+    await waitFor(() => expect(screen.getByRole("radio", { name: /Public \(retired\)/i })).toBeChecked());
   });
 
   it("persists notification preferences and the one-tap 'fewer' shortcut [F4.3]", async () => {

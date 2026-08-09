@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import PasswordField from "../components/PasswordField";
 import "./ResetPassword.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
@@ -169,9 +170,8 @@ function ResetForm({ token }) {
     <Triptych activeIdx={2}>
       <form onSubmit={handleSubmit}>
         <div className="label-sm rp-field-label">new password</div>
-        <input
+        <PasswordField
           className="rp-input"
-          type="password"
           placeholder="min 8 characters"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -179,9 +179,8 @@ function ResetForm({ token }) {
           autoComplete="new-password"
         />
         <div className="label-sm rp-field-label" style={{ marginTop: 14 }}>confirm</div>
-        <input
+        <PasswordField
           className="rp-input"
-          type="password"
           placeholder="and again"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}

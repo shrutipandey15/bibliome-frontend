@@ -104,6 +104,8 @@
 }
 .ec-input:first-of-type { margin-top: 10px; }
 .ec-input:focus { border-color: var(--brass); outline: none; }
+.ec-input::placeholder,
+.ec-body::placeholder { font-style: italic; }
 
 .ec-feel-head {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -152,6 +154,14 @@
 .ec-emo-chip:focus-visible { outline: 2px solid var(--emo-c); outline-offset: 2px; }
 
 .ec-vis-block { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rule-soft); }
+.ec-vis-note {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-quiet);
+  margin: 8px 0 0;
+  max-width: 40ch;
+}
 .ec-vis { display: flex; gap: 6px; margin-top: 9px; }
 /* Each option says what it means. "COMMUNITY / PUBLIC" as two bare words made
    the reader guess which one was wider. */

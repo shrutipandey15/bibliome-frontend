@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import PasswordField from "../components/PasswordField";
 import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor } from "../services/api";
 import { useJournalKey } from "../contexts/JournalKeyContext";
 import ReadForQuestion from "../components/dna/ReadForQuestion";
@@ -19,13 +20,27 @@ const SECTIONS = [
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const fmtHour = (h) => `${String(h).padStart(2, "0")}:00`;
 
-// The 3-way profile_visibility control [F2.8 / B2.1]. Shelf, journal, and DNA are
+// The profile_visibility control [F2.8 / B2.1]. Shelf, journal, and DNA are
 // ALWAYS private — this governs only the profile page.
+//
+// "Public — anyone on the web; indexable and shareable" is gone: it was never
+// any of those things. `GET /profile/{handle}` requires a signed-in user, and
+// the only unauthenticated route in the API is the share-token DNA card, which
+// is a capability link that ignores this setting. So the option selected the
+// same audience as Community while promising the open web. An account already
+// set to public is still described honestly below rather than silently rewritten
+// — changing someone's privacy setting for them is not ours to do.
 const VISIBILITY_OPTIONS = [
   { value: "private",   title: "Private",   desc: "Only you. Your profile page is visible to no one else." },
-  { value: "community", title: "Community", desc: "Any signed-in member who visits your handle can see your profile." },
-  { value: "public",    title: "Public",   desc: "Anyone on the web; indexable and shareable." },
+  { value: "community", title: "Community", desc: "Any signed-in reader who visits your handle can see your profile. Nobody outside Bibliome can." },
 ];
+
+// Shown only to accounts already holding the retired value, so the radio group
+// still reflects reality for them and they can move off it.
+const LEGACY_PUBLIC = {
+  value: "public", title: "Public (retired)",
+  desc: "Behaves exactly like Community — nothing on Bibliome is readable without an account. Pick Community to say so plainly.",
+};
 
 export default function SettingsPage() {
   const { user, logout, refreshUser } = useAuth();
@@ -308,7 +323,10 @@ export default function SettingsPage() {
               </p>
 
               <div className="set-vis" role="radiogroup" aria-label="Profile visibility">
-                {VISIBILITY_OPTIONS.map((opt) => (
+                {(visibility === "public"
+                  ? [...VISIBILITY_OPTIONS, LEGACY_PUBLIC]
+                  : VISIBILITY_OPTIONS
+                ).map((opt) => (
                   <label
                     key={opt.value}
                     className={`set-vis-opt ${visibility === opt.value ? "active" : ""}`}
@@ -469,15 +487,15 @@ export default function SettingsPage() {
               <h3 className="set-card-h">Write a new key.</h3>
               <div className="set-field">
                 <div className="label-sm set-field-label">current password</div>
-                <input className="set-input" type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="your current key" />
+                <PasswordField className="set-input" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="your current key" />
               </div>
               <div className="set-field">
                 <div className="label-sm set-field-label">new password</div>
-                <input className="set-input" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="min 8 chars" />
+                <PasswordField className="set-input" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="min 8 chars" />
               </div>
               <div className="set-field">
                 <div className="label-sm set-field-label">confirm</div>
-                <input className="set-input" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} placeholder="and again" />
+                <PasswordField className="set-input" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} placeholder="and again" />
               </div>
               <button className="btn brass" onClick={handleChangePassword} disabled={changingPw || !currentPw || !newPw || !confirmPw}>
                 <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 15 }}>

@@ -18,10 +18,15 @@ import "./CollectionsEditor.css";
  * blueprint's a11y requirement, and the reason the editing UI moved into a Modal
  * rather than a bespoke popover: focus trap, Esc, and focus restore come with it.
  */
+// "public" is deliberately absent. Nothing anonymous can read a profile — the
+// only unauthenticated route in the API is the share-token DNA card, which is a
+// capability link and ignores visibility entirely — so `public` selected exactly
+// the same audience as `community` while implying a wider one. Collections
+// already stored as public keep working and still render their own badge; this
+// only stops new ones being created under a label that promises more than it does.
 const VIS = [
-  { value: "private", label: "private" },
-  { value: "community", label: "community" },
-  { value: "public", label: "public" },
+  { value: "private", label: "private", sub: "only you" },
+  { value: "community", label: "community", sub: "any signed-in reader" },
 ];
 
 // How many collections the study shows before it offers the rest. Past this the
@@ -192,7 +197,7 @@ function NewCollection({ onClose, onChanged }) {
         <label className="cols-new-vislabel">
           who sees it
           <select className="cols-new-vis" value={visibility} onChange={(e) => setVisibility(e.target.value)} aria-label="Collection visibility">
-            {VIS.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}
+            {VIS.map((v) => <option key={v.value} value={v.value}>{v.label} — {v.sub}</option>)}
           </select>
         </label>
       </div>
