@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+const navigate = vi.fn();
+vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
 vi.mock("../../services/api", () => ({
   getNotifications: vi.fn(),
   markNotificationsRead: vi.fn(),
@@ -58,5 +60,62 @@ describe("NotificationCenter [F4.1 / F4.2 / F3.8]", () => {
     render(<NotificationCenter />);
     await userEvent.click(await screen.findByRole("button", { name: /notifications/i }));
     expect(await screen.findByText(/all caught up/i)).toBeInTheDocument();
+  });
+});
+
+describe("NotificationCenter — clicking a notification takes you there", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("navigates to the echo that was replied to, and closes the panel", async () => {
+    getNotifications.mockResolvedValue(data);
+    markNotificationsRead.mockResolvedValue(undefined);
+    render(<NotificationCenter />);
+    await userEvent.click(screen.getByRole("button", { name: /notifications/i }));
+
+    const row = await screen.findByRole("button", { name: /replied to your echo/i });
+    await userEvent.click(row);
+
+    expect(navigate).toHaveBeenCalledWith("/echoes?echo=e1");
+    await waitFor(() => expect(screen.queryByText(/mark all read/i)).toBeNull());
+  });
+
+  it("reads the item it opened — going to look at it IS the acknowledgement", async () => {
+    getNotifications.mockResolvedValue(data);
+    markNotificationsRead.mockResolvedValue(undefined);
+    render(<NotificationCenter />);
+    await userEvent.click(screen.getByRole("button", { name: /notifications/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /replied to your echo/i }));
+
+    // Only that one, not the whole list.
+    expect(markNotificationsRead).toHaveBeenCalledWith(["n1"]);
+  });
+
+  it("sends a security notice to account security", async () => {
+    getNotifications.mockResolvedValue(data);
+    render(<NotificationCenter />);
+    await userEvent.click(screen.getByRole("button", { name: /notifications/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /password was changed/i }));
+    expect(navigate).toHaveBeenCalledWith("/settings?section=security");
+  });
+
+  it("picks up notifications that arrive while the tab sits open", async () => {
+    // The bug this covers: the centre used to fetch once on mount, so a reply
+    // arriving afterwards was invisible until a reload.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      getNotifications.mockResolvedValue({ unread_count: 0, notifications: [] });
+      const { container } = render(<NotificationCenter />);
+      await waitFor(() => expect(getNotifications).toHaveBeenCalledTimes(1));
+      expect(container.querySelector(".nc-dot")).toBeNull();
+
+      getNotifications.mockResolvedValue(data);
+      // act(), or the poll's state update lands outside React's batching and
+      // the suite fills with warnings about it.
+      await act(async () => { await vi.advanceTimersByTimeAsync(61_000); });
+
+      await waitFor(() => expect(container.querySelector(".nc-dot")).not.toBeNull());
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

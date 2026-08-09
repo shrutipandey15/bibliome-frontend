@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { EMOTIONS, getEmotionFamilies } from "../services/emotions";
 import {
   getEchoFeed, blockHandle, muteHandle, reportEcho, reportReply,
@@ -39,6 +39,12 @@ export const MINE_FILTER_SUPPORTED = false;
 
 export default function EchoesPage() {
   const navigate = useNavigate();
+  // `?echo=<id>` opens straight into that thread — the landing point for an
+  // "someone replied to your echo" notification. Read once, on mount: it's an
+  // entry point, not a live binding, and re-reading it would reopen the thread
+  // every time the reader closed it.
+  const [searchParams] = useSearchParams();
+  const deepLinkEchoId = useRef(searchParams.get("echo"));
   const [echoes, setEchoes] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [caughtUp, setCaughtUp] = useState(false);
@@ -51,7 +57,11 @@ export default function EchoesPage() {
   const [mine, setMine] = useState(false);
 
   const [composing, setComposing] = useState(false);
-  const [threadEcho, setThreadEcho] = useState(null);
+  // EchoThread fetches the echo itself from its id, so `{ id }` is the whole of
+  // what a deep link needs to hand it.
+  const [threadEcho, setThreadEcho] = useState(
+    () => (deepLinkEchoId.current ? { id: deepLinkEchoId.current } : null),
+  );
   const [reportTarget, setReportTarget] = useState(null); // { echo } or { echo, reply }
   const [toast, setToast] = useState(null);
   // Handles the viewer has muted/blocked — their replies never render inline. [F6.5]

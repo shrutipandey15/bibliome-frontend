@@ -39,6 +39,35 @@
   border-bottom: 1px solid var(--rule, rgba(0,0,0,0.07));
 }
 .nc-item.unread { background: color-mix(in srgb, var(--brass) 6%, transparent); }
+
+/* Rows that lead somewhere. A <button> resets to look exactly like the <div>
+   version — the difference is the hover, the focus ring and the arrow, not a
+   second visual language inside one list. */
+.nc-item-clickable {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--rule, rgba(0, 0, 0, 0.07));
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.nc-item-clickable:hover { background: color-mix(in srgb, var(--brass) 12%, transparent); }
+.nc-item-clickable:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.nc-item-go {
+  align-self: center;
+  flex-shrink: 0;
+  color: var(--ink-faint);
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.nc-item-clickable:hover .nc-item-go,
+.nc-item-clickable:focus-visible .nc-item-go { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .nc-item-go { transition: none; }
+}
 .nc-item-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); margin-top: 6px; flex-shrink: 0; }
 .nc-item-body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
 .nc-item-text { font-family: var(--font-display); font-size: 15px; line-height: 1.4; color: var(--ink); }

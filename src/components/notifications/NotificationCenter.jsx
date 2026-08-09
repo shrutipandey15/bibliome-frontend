@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { getNotifications, markNotificationsRead } from "../../services/api";
+import { notificationTarget } from "./target";
 import Modal from "../Modal";
 import "./NotificationCenter.css";
 
@@ -8,9 +10,29 @@ import "./NotificationCenter.css";
  * The notification center — the in-app source of truth. [F4.1 / B4.1]
  *
  * Calm-first: the bell shows a PRESENCE dot, not a number (no guilt-inducing
- * unread count). Items are already batched server-side (e.g. "3 readers replied").
- * Renders the weekly digest [F4.2] and echo-reply notices [F3.8] inline.
+ * unread count). Renders the weekly digest [F4.2] and echo-reply notices [F3.8]
+ * inline, and every item that has somewhere to go is a button that goes there.
+ *
+ * ## On "immediate" vs "batched"
+ *
+ * Direct notices — echo replies, resonance, a DNA shift — are tier 1 and the
+ * server writes them with `deliver_after = now`. They are already immediate.
+ * Only `weekly_digest` is weekly, and that one has its own switch in Settings.
+ *
+ * What used to make them FEEL slow was here, not there: this component fetched
+ * once on mount and once per open, so a tab left sitting on the shelf never
+ * learned anything had arrived. Hence the poll and the visibility refresh below.
+ *
+ * (Two server-side things can still delay or merge an item, and both are the
+ * user's own settings: quiet hours defer tier 1/2 to the end of the window, and
+ * repeat events on the SAME echo or thread coalesce into one unread row rather
+ * than N rows. Neither is a delivery delay for the first event.)
  */
+
+// Quiet enough not to be a drain, frequent enough that a reply lands within a
+// minute of arriving. The tab also refetches whenever it regains focus, which is
+// what actually covers the "came back after lunch" case.
+const POLL_MS = 60_000;
 function timeAgo(iso) {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (mins < 1) return "just now";
@@ -54,6 +76,7 @@ function itemText(n) {
 }
 
 export default function NotificationCenter() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [unread, setUnread] = useState(0);
@@ -69,6 +92,40 @@ export default function NotificationCenter() {
 
   // Load once on mount so the presence dot is accurate before opening.
   useEffect(() => { load(); }, [load]);
+
+  // Keep it accurate afterwards. Without this the dot only ever reflected the
+  // state of the world at page load.
+  const openRef = useRef(open);
+  openRef.current = open;
+  useEffect(() => {
+    // Don't refetch while the panel is open — reordering the list under the
+    // reader's cursor is worse than a few seconds of staleness.
+    const tick = () => { if (!openRef.current && document.visibilityState === "visible") load(); };
+    const id = setInterval(tick, POLL_MS);
+    // A backgrounded tab is throttled and may have missed hours of ticks, so
+    // catch up the moment it comes back rather than waiting for the next one.
+    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [load]);
+
+  // Clicking an item is an acknowledgement, so it reads itself on the way out —
+  // no "mark read" chore for something you just went and looked at. Optimistic:
+  // the navigation must not wait on the write, and a failed mark is harmless.
+  const openItem = (n, to) => {
+    if (!n.read) {
+      setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      setUnread((c) => Math.max(0, c - 1));
+      markNotificationsRead([n.id]).catch(() => {});
+    }
+    setOpen(false);
+    navigate(to);
+  };
 
   const markAll = async () => {
     try {
@@ -105,17 +162,38 @@ export default function NotificationCenter() {
               ) : items.length === 0 ? (
                 <div className="nc-empty">You're all caught up. Nothing new.</div>
               ) : (
-                items.map((n) => (
-                  <div key={n.id} className={`nc-item ${n.read ? "" : "unread"}`}>
-                    {!n.read && <span className="nc-item-dot" aria-hidden="true" />}
-                    <div className="nc-item-body">
-                      {n.kind === "weekly_digest"
-                        ? <DigestItem payload={n.payload} />
-                        : <div className="nc-item-text">{itemText(n)}</div>}
-                      <div className="nc-item-time">{timeAgo(n.created_at)}</div>
-                    </div>
-                  </div>
-                ))
+                items.map((n) => {
+                  const to = notificationTarget(n);
+                  const body = (
+                    <>
+                      {!n.read && <span className="nc-item-dot" aria-hidden="true" />}
+                      <div className="nc-item-body">
+                        {n.kind === "weekly_digest"
+                          ? <DigestItem payload={n.payload} />
+                          : <div className="nc-item-text">{itemText(n)}</div>}
+                        <div className="nc-item-time">{timeAgo(n.created_at)}</div>
+                      </div>
+                      {/* A quiet affordance, not a call to action. */}
+                      {to && <span className="nc-item-go" aria-hidden="true">→</span>}
+                    </>
+                  );
+                  const cls = `nc-item ${n.read ? "" : "unread"}`;
+                  // Only the ones that lead somewhere become buttons. A row that
+                  // navigates nowhere should not look, focus, or announce like a
+                  // control — an unrecognised kind is a message, not a link.
+                  return to ? (
+                    <button
+                      key={n.id}
+                      type="button"
+                      className={`${cls} nc-item-clickable`}
+                      onClick={() => openItem(n, to)}
+                    >
+                      {body}
+                    </button>
+                  ) : (
+                    <div key={n.id} className={cls}>{body}</div>
+                  );
+                })
               )}
             </div>
           </div>

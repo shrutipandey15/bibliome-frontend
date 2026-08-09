@@ -3,7 +3,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // Mock the router + auth so we can render SettingsPage in isolation.
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+  // Deep links (?echo=, ?section=) are read on mount; default to none.
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
+}));
 vi.mock("../contexts/AuthContext", () => ({
   useAuth: () => ({ user: { username: "alice" }, logout: vi.fn(), refreshUser: vi.fn() }),
 }));

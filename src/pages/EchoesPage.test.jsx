@@ -9,7 +9,11 @@ import { ThemeProvider } from "../contexts/ThemeContext";
 // that silently does nothing is the bug this provider exists to prevent.
 const render = (ui, opts) => rtlRender(ui, { wrapper: ThemeProvider, ...opts });
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+  // Deep links (?echo=, ?section=) are read on mount; default to none.
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
+}));
 vi.mock("../services/api", () => ({
   getEchoFeed: vi.fn(),
   blockHandle: vi.fn(),

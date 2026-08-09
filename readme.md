@@ -73,6 +73,12 @@ Alongside it: an emotion heatmap, stats, and *what's changed* — who you've bee
 
 A weekly insight and a resurfaced memory — *three months ago, this wrecked you*. Both can come back null, and when they do the card says so rather than filling the space.
 
+### Notifications
+
+The bell shows a presence dot, never a number. Every notice that has somewhere to go is clickable and lands there: an echo reply opens **that thread** (`/echoes?echo=<id>`), resonance notices open the room, a DNA shift opens the DNA tab, the digest opens the shelf, and anything security-tier opens account security. Opening one marks it read — going to look at a thing is the acknowledgement.
+
+Replies and resonance notices are written server-side the moment they happen; the client polls once a minute and refetches whenever the tab regains focus, so a tab left open still learns about them. Two things can still shift timing, and both are the reader's own settings: **quiet hours** defer everything except security to the end of the window, and repeat events on the *same* echo or thread **coalesce** into one row rather than stacking. The only genuinely weekly thing is the digest, which has an off switch.
+
 ### Your profile
 
 Identity, what you're reading now, your emotional signature, **collections** (curated shelves you can build and reorder from the keyboard), reading history, and milestones based on substance rather than volume.
@@ -240,7 +246,7 @@ npm run build      # → dist/
 
 For production, `VITE_API_URL=/api` (already in `.env.production`) and serve `dist/` behind a proxy forwarding `/api/*` to the backend on the same origin. The inline theme script and the JSON-LD block in `index.html` need `script-src 'unsafe-inline'` in the nginx CSP.
 
-**Verified on 2026-08-09:** `npm test` → 28 files, 181 passing and 4 skipped (the Echo "your echoes" suite, gated on a backend param that doesn't exist yet — see below). `npm run build` → clean, 3.01s.
+**Verified on 2026-08-09:** `npm test` → 29 files, 192 passing and 4 skipped (the Echo "your echoes" suite, gated on a backend param that doesn't exist yet — see below). `npm run build` → clean, 3.63s.
 
 ---
 

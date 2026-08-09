@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor } from "../services/api";
 import { useJournalKey } from "../contexts/JournalKeyContext";
@@ -32,7 +32,14 @@ export default function SettingsPage() {
   const { changePasswordWithRewrap } = useJournalKey();
   const navigate = useNavigate();
 
-  const [section, setSection] = useState("profile");
+  // `?section=security` lands a security notification on the right panel rather
+  // than on the profile tab. Validated against the real list so a junk param
+  // falls back rather than rendering an empty page.
+  const [searchParams] = useSearchParams();
+  const [section, setSection] = useState(() => {
+    const requested = searchParams.get("section");
+    return SECTIONS.some((s) => s.id === requested) ? requested : "profile";
+  });
   const [displayName, setDisplayName] = useState("");
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -358,9 +365,15 @@ export default function SettingsPage() {
             <div className="card editorial set-card">
               <div className="label" style={{ marginBottom: 12 }}>notifications</div>
               <h3 className="set-card-h">Calm by default.</h3>
+              {/* This used to read "nothing per-event", which was not what the
+                  server does: replies and resonance notices are written the
+                  moment they happen. What it actually does is collapse REPEAT
+                  events on the same echo into one row — say that instead. */}
               <p className="set-card-d">
-                Nothing per-event or guilt-based. A weekly digest, and batched notices when
-                someone replies to your echoes. Security alerts always come through.
+                Replies and resonance notices arrive when they happen. Several responses to
+                the same echo collapse into one line rather than stacking up, the weekly
+                digest is a summary you can switch off, and security alerts always come
+                through. Quiet hours hold everything but security until they end.
               </p>
 
               {!prefs ? (
