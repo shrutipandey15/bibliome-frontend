@@ -44,6 +44,7 @@ const ResonancePage = lazy(() => import("./pages/ResonancePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const JournalPage = lazy(() => import("./pages/JournalPage"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
 
 
 function SharedProfile() {
@@ -726,6 +727,10 @@ export default function App() {
         <Route path="/s/:token" element={<SharedProfile />} />
         <Route path="/u/:username" element={<PublicProfile />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* Top-level, not under the authed layout: someone deciding whether to
+            sign up is exactly who needs to read these. */}
+        <Route path="/privacy" element={<LegalPage />} />
+        <Route path="/terms" element={<LegalPage />} />
         <Route path="/login" element={authed ? <Navigate to="/" replace /> : <AuthPage />} />
 
         <Route

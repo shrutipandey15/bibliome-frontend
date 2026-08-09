@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { apiFetch } from "../services/api";
+import { apiFetch, getModerationQueue, resolveReport } from "../services/api";
 import "./AdminPage.css";
 
 export default function AdminPage() {
@@ -19,6 +19,8 @@ export default function AdminPage() {
   const [catalogPage, setCatalogPage] = useState(0);
   const [catalogHasMore, setCatalogHasMore] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [queue, setQueue] = useState([]);
+  const [resolving, setResolving] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [tab, setTab] = useState("dashboard");
@@ -85,6 +87,34 @@ export default function AdminPage() {
     }
   };
 
+  const loadQueue = useCallback(async () => {
+    try {
+      setQueue(await getModerationQueue());
+    } catch {
+      showToast("Couldn't load the moderation queue", "error");
+    }
+  }, []);
+
+  // `remove` is the irreversible one, so it confirms; `dismiss` restores a held
+  // item and `clear` only closes reports against something already deleted.
+  const resolve = async (item, action) => {
+    if (action === "remove" && !confirm(
+      `Remove this ${item.target_type} permanently? Dismiss instead if it should stay up.`
+    )) return;
+    const key = `${item.target_type}:${item.target_id}`;
+    setResolving(key);
+    try {
+      await resolveReport(item.target_type, item.target_id, action);
+      showToast(
+        action === "remove" ? "Removed" : action === "dismiss" ? "Dismissed — content restored" : "Reports cleared"
+      );
+      await Promise.all([loadQueue(), loadDashboard()]);
+    } catch (e) {
+      showToast(e.message || "Couldn't resolve that report", "error");
+    }
+    setResolving(null);
+  };
+
   const loadAuditLog = async () => {
     const res = await apiFetch("/admin/audit-log?limit=50");
     if (res.ok) setAuditLogs(await res.json());
@@ -126,7 +156,11 @@ export default function AdminPage() {
         <button className="admin-back" onClick={() => navigate("/")}>←</button>
         <h1 className="admin-title">Admin</h1>
         <div className="admin-tabs">
-          {["dashboard", "users", "catalog", "audit", "database"].map((t) => (
+          {/* Moderation sits second deliberately: it is the only tab whose
+              contents grow without anyone doing anything, and its badge is the
+              whole reason it exists — otherwise you still have to remember to
+              go and look, which is what the queue not being here amounted to. */}
+          {["dashboard", "moderation", "users", "catalog", "audit", "database"].map((t) => (
             <button
               key={t}
               className={`admin-tab ${tab === t ? "active" : ""}`}
@@ -135,9 +169,13 @@ export default function AdminPage() {
                 if (t === "database") loadDbHealth();
                 if (t === "catalog") loadCatalog();
                 if (t === "audit") loadAuditLog();
+                if (t === "moderation") loadQueue();
               }}
             >
               {t}
+              {t === "moderation" && stats?.open_reports > 0 && (
+                <span className="admin-tab-badge">{stats.open_reports}</span>
+              )}
             </button>
           ))}
         </div>
@@ -160,6 +198,94 @@ export default function AdminPage() {
               Cleanup {stats.expired_refresh_tokens} expired tokens
             </button>
           )}
+        </div>
+      )}
+
+      {/* ── Moderation queue ── */}
+      {tab === "moderation" && (
+        <div className="admin-section">
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Reported</th>
+                  <th>Author</th>
+                  <th>Reports</th>
+                  <th>Categories</th>
+                  <th>First</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queue.map((item) => {
+                  const key = `${item.target_type}:${item.target_id}`;
+                  const busy = resolving === key;
+                  return (
+                    <tr key={key} className={item.target_exists ? "" : "admin-row-gone"}>
+                      <td>
+                        <div className="admin-mod-type">
+                          {item.target_type}
+                          {item.status === "held" && <span className="admin-held-badge">held</span>}
+                        </div>
+                        {item.target_type === "thread" ? (
+                          /* No transcript here on purpose — resolving a report
+                             doesn't require reading a private conversation. */
+                          <div className="admin-mod-preview muted">
+                            private thread · {item.participants?.join(" ↔ ") || "—"} ·{" "}
+                            {item.message_count ?? 0} messages
+                          </div>
+                        ) : item.target_exists ? (
+                          <div className="admin-mod-preview">
+                            {item.preview}{item.truncated ? "…" : ""}
+                          </div>
+                        ) : (
+                          <div className="admin-mod-preview muted">
+                            target deleted — nothing left to review
+                          </div>
+                        )}
+                      </td>
+                      <td>{item.author_handle || "—"}</td>
+                      <td>{item.report_count}</td>
+                      <td>{item.categories.join(", ")}</td>
+                      <td className="admin-mono">
+                        {item.first_reported_at
+                          ? new Date(item.first_reported_at).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td>
+                        {item.target_exists ? (
+                          <div className="admin-mod-actions">
+                            <button
+                              className="admin-mod-btn danger"
+                              disabled={busy}
+                              onClick={() => resolve(item, "remove")}
+                            >Remove</button>
+                            <button
+                              className="admin-mod-btn"
+                              disabled={busy}
+                              onClick={() => resolve(item, "dismiss")}
+                            >Dismiss</button>
+                          </div>
+                        ) : (
+                          /* Remove/dismiss both 404 against a target that is
+                             already gone; clear is the only way to close these
+                             out, and without it they'd sit here forever. */
+                          <button
+                            className="admin-mod-btn"
+                            disabled={busy}
+                            onClick={() => resolve(item, "clear")}
+                          >Clear</button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {queue.length === 0 && (
+                  <tr><td colSpan={6} className="admin-empty">Nothing reported. Queue is clear.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -208,7 +334,6 @@ export default function AdminPage() {
               <div className="admin-detail-item"><span className="admin-detail-label">Personality</span> {selectedUser.personality_type || "Not generated"}</div>
               <div className="admin-detail-item"><span className="admin-detail-label">Books</span> {selectedUser.book_count}</div>
               <div className="admin-detail-item"><span className="admin-detail-label">DNA Dirty</span> {selectedUser.dna_dirty ? "Yes" : "No"}</div>
-              <div className="admin-detail-item"><span className="admin-detail-label">Share Token</span> {selectedUser.share_token || "None"}</div>
               <div className="admin-detail-item"><span className="admin-detail-label">Joined</span> {new Date(selectedUser.created_at).toLocaleString()}</div>
             </div>
 

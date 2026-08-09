@@ -421,3 +421,69 @@
   .admin-detail-grid { grid-template-columns: 1fr; }
   .admin-tabs { flex-wrap: wrap; }
 }
+
+/* ---------- Moderation queue ---------- */
+.admin-tab-badge {
+  display: inline-block;
+  margin-left: 6px;
+  min-width: 16px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: var(--oxblood);
+  color: var(--bg-page);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+}
+.admin-mod-type {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+}
+.admin-held-badge {
+  padding: 1px 6px;
+  border: 1px solid var(--oxblood);
+  border-radius: 2px;
+  color: var(--oxblood);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+/* Reported text is the thing being judged, so it gets the readable face and
+   room to wrap — but capped, so one long echo can't push the actions offscreen. */
+.admin-mod-preview {
+  margin-top: 4px;
+  max-width: 46ch;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.admin-mod-preview.muted { color: var(--ink-faint); font-style: italic; }
+.admin-mod-actions { display: flex; gap: 8px; }
+.admin-mod-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.admin-mod-btn:hover { border-color: var(--ink); color: var(--ink); }
+.admin-mod-btn.danger { color: var(--oxblood); }
+.admin-mod-btn.danger:hover {
+  border-color: var(--oxblood);
+  background: color-mix(in srgb, var(--oxblood) 8%, transparent);
+  color: var(--oxblood);
+}
+.admin-mod-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.admin-row-gone { opacity: 0.55; }

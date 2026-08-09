@@ -1,0 +1,98 @@
+/* Legal pages: the same paper as the rest of Bibliome, set for continuous
+   reading. A policy nobody can read is a policy nobody has agreed to. */
+
+.legal-page {
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--ink);
+}
+
+.legal-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--rule);
+}
+.legal-brand {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.legal-brand em { font-style: italic; }
+
+.legal-nav { display: flex; gap: 18px; }
+.legal-nav a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+  text-decoration: none;
+  padding-bottom: 2px;
+}
+.legal-nav a:hover { color: var(--ink); }
+.legal-nav a.active {
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.legal-body {
+  /* ~68 characters: long enough not to feel chopped, short enough to read. */
+  max-width: 68ch;
+  margin: 0 auto;
+  padding: 44px 24px 80px;
+}
+
+.legal-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 400;
+  margin: 0 0 8px;
+}
+.legal-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 40px;
+}
+
+.legal-section { margin-bottom: 34px; }
+.legal-heading {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+.legal-body p {
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+.legal-list {
+  margin: 0 0 14px;
+  padding-left: 20px;
+}
+.legal-list li {
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+
+.legal-footer {
+  margin-top: 48px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  color: var(--ink-quiet);
+}
+.legal-body a { color: inherit; }

@@ -881,3 +881,29 @@ export async function reportThread(threadId, category, block = true) {
   if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't file that report");
   return res.json().catch(() => ({ status: "received" }));
 }
+
+// ── Admin: moderation ──
+// Only the moderation calls live here. The rest of AdminPage builds its URLs
+// inline; that's pre-existing and not worth churning, but these two carry a
+// request shape worth having one definition of.
+
+// Open reports grouped by target, most-reported first. Each row carries a body
+// preview and the target's live status — threads carry participants and a
+// message count instead, never the transcript.
+export async function getModerationQueue() {
+  return apiGet("/admin/moderation/queue");
+}
+
+// action: "remove" takes the target down · "dismiss" clears the reports and
+// restores a held item · "clear" closes reports whose target is already gone.
+export async function resolveReport(targetType, targetId, action) {
+  const res = await apiFetch("/admin/moderation/resolve", {
+    method: "POST",
+    body: JSON.stringify({ target_type: targetType, target_id: targetId, action }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't resolve that report");
+  }
+  return res.json();
+}

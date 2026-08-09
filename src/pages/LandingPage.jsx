@@ -299,9 +299,13 @@ export default function LandingPage({ onGetStarted }) {
           <span>
             <a href="https://github.com/shrutipandey15/bibliome" target="_blank" rel="noopener noreferrer">github</a>
             <span className="lrr-sep">·</span>
-            {/* "privacy" sat here as bare text between two separators, so it
-                read as a third link and went nowhere. There is no privacy page
-                to point it at yet. */}
+            {/* "privacy" used to sit here as bare text between two separators —
+                it read as a link and went nowhere, because there was no page.
+                There is now. */}
+            <Link to="/privacy">privacy</Link>
+            <span className="lrr-sep">·</span>
+            <Link to="/terms">terms</Link>
+            <span className="lrr-sep">·</span>
             <Link to="/reset-password">reset password</Link>
           </span>
         </footer>
