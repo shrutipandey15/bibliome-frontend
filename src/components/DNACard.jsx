@@ -53,9 +53,12 @@ function BasisLine({ basis }) {
     const emo = EMOTIONS[c.emotion];
     return `${(emo?.name || c.emotion).toLowerCase()} in ${c.books} of your ${c.of} books`;
   });
+  // Only when the reader's highest-rated books agree on ONE register. Listing
+  // three is a list, not a finding, and "all" would then be a lie.
   if (topRated.length === 1) {
     const emo = EMOTIONS[topRated[0]];
-    clauses.push(`your highest-rated are ${(emo?.name || topRated[0]).toLowerCase()}`);
+    const n = basis.top_rated_n || 3;
+    clauses.push(`your ${n} highest-rated were all ${(emo?.name || topRated[0]).toLowerCase()}`);
   }
   if (clauses.length === 0) return null;
   return <p className="dna-basis">{clauses.join(" · ")}</p>;

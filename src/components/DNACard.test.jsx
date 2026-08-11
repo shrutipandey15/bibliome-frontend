@@ -135,13 +135,32 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
           basis: {
             counts: [{ emotion: "grief", books: 14, of: 31 }],
             top_rated_emotions: ["devastation"],
+            top_rated_n: 3,
           },
         }}
         username="alice"
       />
     );
     expect(screen.getByText(/grief in 14 of your 31 books/)).toBeInTheDocument();
-    expect(screen.getByText(/highest-rated are devastation/)).toBeInTheDocument();
+    expect(screen.getByText(/your 3 highest-rated were all devastation/)).toBeInTheDocument();
+  });
+
+  it("makes no 'all' claim when the top-rated books disagree", () => {
+    render(
+      <DNACard
+        profile={{
+          ...profile,
+          basis: {
+            counts: [{ emotion: "grief", books: 14, of: 31 }],
+            top_rated_emotions: ["devastation", "rage", "awe"],
+            top_rated_n: 3,
+          },
+        }}
+        username="alice"
+      />
+    );
+    expect(screen.getByText(/grief in 14 of your 31 books/)).toBeInTheDocument();
+    expect(screen.queryByText(/highest-rated/)).not.toBeInTheDocument();
   });
 
   it("makes no claim it can't support: 'no two alike' is gone", () => {
