@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import DNACard from "../components/DNACard";
+import { cardArchetype } from "../services/dnaCard";
 import { EMOTIONS } from "../services/emotions";
 import { getProfileByHandle } from "../services/api";
 import "./ProfilePage.css";
@@ -108,7 +109,7 @@ export default function PublicProfile() {
             </section>
           )}
 
-          {profile.signature?.personality && (
+          {cardArchetype(profile.signature) && (
             <section className="pf-section">
               <div className="label pf-section-label">their signature</div>
               <div className="pf-signature">

@@ -115,9 +115,12 @@ const Divider = () => <div className="dna-divider" aria-hidden="true">◆ ◆ �
 export default function DNAView({ profile, username, onSave, onEditReadFor, cardRef, bookCount = 0, stats = null }) {
   const count = profile?.book_count ?? bookCount;
   const needed = profile?.needed ?? MIN_BOOKS;
-  // The mirror auto-computes on read; `enough` is the honest gate. Treat present
-  // content as enough too, so a stale cache never hides real data.
-  const enough = profile?.enough === true || !!(profile?.insights?.length) || !!profile?.archetype;
+  // The mirror auto-computes on read; `enough` is the honest gate. Present
+  // insights still count as enough, so a stale cache never hides real data — but
+  // `archetype` no longer does: it can legitimately be null on an `enough: true`
+  // payload now (the engine is allowed to abstain), and treating it as the signal
+  // would have flipped the gate the wrong way for a reader with nothing to name.
+  const enough = profile?.enough === true || !!(profile?.insights?.length);
 
   // Snapshot history for "what's changed" now rides along on the profile payload
   // (B: `snapshot_count`/`has_two_snapshots`, present on BOTH branches), so this
@@ -148,10 +151,16 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
   // a reader with six books as for one with six hundred. It stays only as the
   // fallback for the moment before the stats ledger lands.
   const cardProfile = arch && {
-    personality: arch,
+    archetype: arch,
     book_count: count,
     emotion_counts: stats?.emotion_counts || null,
     archetype_share: profile.archetype_share,
+    // How decisive the label was, what it was nearly instead, and the counts that
+    // earn it. The backend computes all three; before this they were computed and
+    // then rendered nowhere.
+    margin: profile.margin,
+    runner_up: profile.runner_up,
+    basis: profile.basis,
     top_emotions: vectorRows(profile.profiles?.current, 5)
       .map((r) => ({ emotion_id: r.slug, count: Math.round(r.weight * 100) })),
   };
@@ -236,11 +245,21 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
             not the finding) but no longer hidden behind a toggle: it is the one
             thing here anybody wants to keep, and it was being rendered
             off-screen purely so `onSave` could rasterise it. */}
-        {arch && (
-          <aside className="dna-aside" aria-labelledby="dna-arch-title">
-            <h2 id="dna-arch-title" className="dna-section-label">
-              <span className="dna-numeral">V</span> The shorthand
-            </h2>
+        <aside className="dna-aside" aria-labelledby="dna-arch-title">
+          <h2 id="dna-arch-title" className="dna-section-label">
+            <span className="dna-numeral">V</span> The shorthand
+          </h2>
+          {/* No archetype is a real answer, not a loading state: past the gate,
+              the reader's tally can still name nobody. Saying so is the whole
+              point — the alternative is the label the engine used to hand out by
+              list order to anyone who had tagged nothing. */}
+          {!arch ? (
+            <p className="dna-arch-none">
+              Not enough tagged books to name a shorthand yet. The findings above
+              are still yours — the label is the one thing that needs a clear
+              favourite, and yours is still a tie.
+            </p>
+          ) : (
             <DNACard
               ref={cardRef}
               profile={cardProfile}
@@ -253,8 +272,8 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
               showDescription={false}
               footer={arch.description && <p className="dna-arch-desc">{arch.description}</p>}
             />
-          </aside>
-        )}
+          )}
+        </aside>
       </div>
     </div>
   );

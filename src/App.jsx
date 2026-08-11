@@ -23,6 +23,7 @@ import WelcomeModal from "./components/WelcomeModal";
 import NotificationCenter from "./components/notifications/NotificationCenter";
 import ResonanceMark from "./components/resonance/ResonanceMark";
 import DNACard from "./components/DNACard";
+import { cardArchetype } from "./services/dnaCard";
 import DNAView from "./components/dna/DNAView";
 import ReadForQuestion from "./components/dna/ReadForQuestion";
 import { MIN_BOOKS } from "./components/dna/constants";
@@ -61,12 +62,15 @@ function SharedProfile() {
   }, [token]);
 
   if (loading) return <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Deciphering Link...</div></div>;
-  if (!profile || !profile.personality) {
+  // Two different nulls behind one screen: a revoked/expired token, and a live
+  // link belonging to a reader whose DNA isn't ready yet (the backend 404s that
+  // case rather than serving a card the app itself wouldn't show them).
+  if (!cardArchetype(profile)) {
     return (
       <div className="empty-state" style={{ height: "100vh" }}>
         <div className="empty-glyph">?</div>
-        <div className="empty-title">Link Expired</div>
-        <div className="empty-sub">This profile is no longer accessible.</div>
+        <div className="empty-title">Nothing to see here</div>
+        <div className="empty-sub">This link has expired, or its reader's DNA isn't ready yet.</div>
         <Link to="/" className="back-btn">Go Home</Link>
       </div>
     );
@@ -86,7 +90,9 @@ function SharedProfile() {
       </header>
       <main className="main" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
          <div className="dna-reveal-label" style={{ marginTop: 0 }}>Reading Personality</div>
-         <DNACard profile={profile} username={profile.username || "Reader"} allowShare={false} />
+         {/* The endpoint returns `handle`, never `username` — this read the wrong
+             key and so every shared card was signed @READER. */}
+         <DNACard profile={profile} username={profile.handle || "Reader"} allowShare={false} />
       </main>
     </div>
   );

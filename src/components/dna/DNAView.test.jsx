@@ -4,8 +4,14 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 // Isolate DNAView from the shareable card's network/ShareModal deps. The stub
 // still renders the `footer` slot — DNAView puts the archetype's description
 // there, and swallowing it would hide real layout rather than a network call.
+// `cardProps` captures what DNAView actually handed the card, so a test can
+// assert on fields the stub doesn't render.
+const cardProps = {};
 vi.mock("../DNACard", () => ({
-  default: ({ footer }) => <div data-testid="dna-card">{footer}</div>,
+  default: ({ footer, profile }) => {
+    Object.assign(cardProps, profile || {});
+    return <div data-testid="dna-card">{footer}</div>;
+  },
 }));
 
 // DNAView no longer calls the API — snapshot history arrives on the profile
@@ -60,6 +66,42 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
     expect(screen.getByText(/at 5, the mirror starts to see you/i)).toBeInTheDocument();
     expect(document.querySelector(".insight")).toBeNull();
     expect(screen.queryByText(/2\.3 points/)).toBeNull();
+  });
+
+  // ── The engine is allowed to abstain [P0-2] ──
+
+  it("says so when the engine named nobody, rather than showing a card", async () => {
+    // `enough: true` with `archetype: null` is a real payload now: the reader is
+    // past the gate and their tally still has no clear favourite.
+    await renderView({ profile: { ...fullProfile, archetype: null }, username: "alice" });
+    expect(screen.getByText(/not enough tagged books to name a shorthand yet/i)).toBeInTheDocument();
+    expect(screen.queryByTestId("dna-card")).toBeNull();
+    // The findings are still theirs — abstaining on the label hides nothing else.
+    expect(screen.getByText(/2\.3 points higher/)).toBeInTheDocument();
+  });
+
+  it("does not treat a missing archetype as 'not enough' [P0-2]", async () => {
+    // The `enough` fallback used to read `|| !!profile.archetype`, which flips the
+    // wrong way once the engine can legitimately return null.
+    await renderView({ profile: { ...fullProfile, archetype: null }, username: "alice" });
+    expect(screen.queryByText(/the mirror starts to see you/i)).toBeNull();
+  });
+
+  it("passes the margin, runner-up and basis through to the card [P2-8]", async () => {
+    const spy = vi.fn();
+    await renderView({
+      profile: { ...fullProfile, margin: 0.04, runner_up: "The Soft Masochist", basis: { counts: [] } },
+      username: "alice",
+      onSave: spy,
+    });
+    // The stub records what it was handed; before this the backend computed all
+    // three and the card never saw them.
+    const card = screen.getByTestId("dna-card");
+    expect(card).toBeInTheDocument();
+    expect(cardProps.margin).toBe(0.04);
+    expect(cardProps.runner_up).toBe("The Soft Masochist");
+    expect(cardProps.basis).toEqual({ counts: [] });
+    expect(cardProps.archetype.id).toBe("grief-romantic");
   });
 
   it("shows the honest empty state when there is no profile at all (never fabricates)", async () => {

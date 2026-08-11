@@ -267,6 +267,17 @@
   text-wrap: pretty;
 }
 
+/* Past the gate with no clear favourite. Set in the same voice as the locked
+   footnotes — this is a "not yet", not an error. */
+.dna-arch-none {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px; line-height: 1.66;
+  color: var(--ink-quiet);
+  margin: 0;
+  text-wrap: pretty;
+}
+
 /* The card's own Save / share-link actions (DNACard, `allowShare`) sit under the
    plate in the rail. DNAView no longer keeps a duplicate pair of buttons, nor the
    off-screen mount that existed only so `onSave` had something to rasterise. */

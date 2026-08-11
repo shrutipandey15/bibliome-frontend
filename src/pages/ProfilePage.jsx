@@ -5,6 +5,7 @@ import { EMOTIONS } from "../services/emotions";
 import { saveCardAsImage } from "../utils/cardUtils";
 import { getMyProfile, updateMyProfile, getInsight } from "../services/api";
 import DNACard from "../components/DNACard";
+import { cardArchetype } from "../services/dnaCard";
 import CollectionsEditor from "../components/profile/CollectionsEditor";
 import { MIN_BOOKS } from "../components/dna/constants";
 import { romanYear } from "../utils/roman";
@@ -281,7 +282,7 @@ export default function ProfilePage() {
   // The cached signature carries the archetype; the live payload carries this
   // reader's own register tally and how many readers share the archetype today.
   // Both move independently of the cache, so they are merged in at render.
-  const signature = profile.signature?.personality
+  const signature = cardArchetype(profile.signature)
     ? {
       ...profile.signature,
       book_count: bookCount,

@@ -300,14 +300,25 @@ export async function deleteEntry(id) {
 // on the BACKEND and filled with hard data — the frontend NEVER generates insight copy
 // (no LLM), it only renders `insight.text`. [F7.5] The mirror AUTO-COMPUTES on read
 // (no manual generate needed). Shape:
-//   Below the gate:  { enough: false, book_count, needed, message }
+// The gate counts books CARRYING A FEELING, not books: five untagged imports are
+// five titles nobody has said anything about.
+//   Below the gate:  { enough: false, book_count, tagged_count, needed, message }
 //   Above the gate:  {
 //     enough: true,
-//     book_count,
-//     archetype: { id, name, description, color, glyph, blind_spots, comfort_tropes }, // DEMOTED
+//     book_count, tagged_count,
+//     // DEMOTED — and NULLABLE. The engine abstains when the tally has no clear
+//     // favourite, so `enough: true` with `archetype: null` is a valid payload
+//     // and every consumer must handle it. Do NOT use it as a proxy for `enough`.
+//     archetype: { id, name, description, color, glyph, blind_spots, comfort_tropes } | null,
+//     archetype_scores: { type_id: number },                  // all 8, for the margin
+//     margin: number,          // how far the leader cleared the runner-up, 0..1 of its own score
+//     runner_up: string | null,// the name it was nearly instead; only sent when margin < 0.10
+//     basis: { counts: [{ emotion, books, of }], top_rated_emotions: string[] } | null,
 //     insights: [{ category, variant, text, n, surprise }],  // ranked by surprise; basis = n [F7.2]
 //     locked:   [{ category, unlocks_at, reason }],           // "not yet", real reason [F7.4]
-//     profiles: { enduring: { slug: weight }, current: { slug: weight } }, // who you've been vs lately
+//     // `current_books` is books ALONE; the other two span the journal. Only
+//     // `current_books` is ever served to a public surface.
+//     profiles: { enduring: {...}, current: {...}, current_books: {...} }, // slug: weight
 //     drift: number,                                          // 0..1 magnitude of the shift [F7.3]
 //     reads_for: string[] | null,                             // stated emotion slugs [F7.7]
 //   }
@@ -376,6 +387,15 @@ export async function revokeShareTokens() {
   if (!res.ok) throw new Error("Failed to revoke share links");
 }
 
+// The share card. Served from the OWNER'S CACHE, by the same engine their own DNA
+// tab renders — it used to recompute a second, older engine live, which could name
+// a different archetype than the app had shown them. Never recomputed here, so a
+// card can lag a just-added book until the owner's DNA is recomputed.
+//   { handle, share_token, archetype, archetype_scores, margin, basis, book_count,
+//     top_emotions: [{ emotion_id, weight }] }   // weight is a 0..1 SHARE, not a count
+// 404 → null: the token is dead, OR the reader has no DNA yet (the card refuses to
+// exist for a reader the app itself is telling to keep reading). The old
+// `personality` / `stats` keys are gone.
 export async function getSharedDNA(token) {
   const res = await apiFetch(`/public/shared/${token}`);
   if (!res.ok) return null;

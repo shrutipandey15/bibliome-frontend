@@ -90,6 +90,32 @@
   color: #f5ecd2;
 }
 .dna-name em { color: var(--dc, var(--oxblood)); font-style: italic; filter: brightness(1.6); }
+/* The hedge. Set small and quiet ABOVE the name so it reads as one sentence
+   ("closest to / The Grief Romantic") rather than as a caveat bolted on after. */
+.dna-hedge {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(245, 236, 210, 0.4);
+  margin-top: 22px;
+}
+.dna-hedge + .dna-name { margin-top: 6px; }
+.dna-hedge--after { margin-top: 8px; letter-spacing: 0.14em; }
+
+/* The receipt line: numbers off this reader's shelf, set like a caption. */
+.dna-basis {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  color: rgba(245, 236, 210, 0.55);
+  margin: 12px 0 0;
+  text-wrap: pretty;
+}
+
 .dna-tagline {
   position: relative;
   font-family: var(--font-display);

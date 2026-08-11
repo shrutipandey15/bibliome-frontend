@@ -80,4 +80,75 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
     const { container } = render(<DNACard profile={{ personality: null }} username="alice" />);
     expect(container.querySelector(".dna-card")).toBeNull();
   });
+
+  // ── One engine: the backend's card shape (`archetype`) ──
+
+  it("renders the backend's one card shape, and still reads a legacy payload", () => {
+    // What /public/shared/{token} and the profile signature now return.
+    const card = {
+      handle: "alice",
+      book_count: 12,
+      archetype: profile.personality,
+      top_emotions: [{ emotion_id: "grief", weight: 0.42 }, { emotion_id: "longing", weight: 0.19 }],
+    };
+    const { rerender } = render(<DNACard profile={card} username="alice" />);
+    expect(screen.getByText(/Grief Romantic/)).toBeInTheDocument();
+    // A share is rendered as a share — printing "42" here would read as 42 books
+    // on a shelf of twelve.
+    expect(screen.getByText("42%")).toBeInTheDocument();
+    expect(screen.getByText(/share of recent reading/i)).toBeInTheDocument();
+
+    rerender(<DNACard profile={profile} username="alice" />);
+    expect(screen.getByText(/Grief Romantic/)).toBeInTheDocument();
+    expect(screen.getByText("9")).toBeInTheDocument();          // a count stays a count
+  });
+
+  it("renders nothing when the engine abstained", () => {
+    const { container } = render(<DNACard profile={{ ...profile, personality: null, archetype: null }} username="alice" />);
+    expect(container.querySelector(".dna-card")).toBeNull();
+  });
+
+  // ── The label stops overstating itself ──
+
+  it("hedges the name and names the runner-up when the margin is thin", () => {
+    render(
+      <DNACard
+        profile={{ ...profile, margin: 0.04, runner_up: "The Soft Masochist" }}
+        username="alice"
+      />
+    );
+    expect(screen.getByText(/closest to/i)).toBeInTheDocument();
+    expect(screen.getByText(/shading toward The Soft Masochist/)).toBeInTheDocument();
+  });
+
+  it("asserts the name plainly when the margin is decisive", () => {
+    render(<DNACard profile={{ ...profile, margin: 0.42, runner_up: null }} username="alice" />);
+    expect(screen.queryByText(/closest to/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/shading toward/i)).not.toBeInTheDocument();
+  });
+
+  it("prints the basis under the name — counts the reader can go and check", () => {
+    render(
+      <DNACard
+        profile={{
+          ...profile,
+          basis: {
+            counts: [{ emotion: "grief", books: 14, of: 31 }],
+            top_rated_emotions: ["devastation"],
+          },
+        }}
+        username="alice"
+      />
+    );
+    expect(screen.getByText(/grief in 14 of your 31 books/)).toBeInTheDocument();
+    expect(screen.getByText(/highest-rated are devastation/)).toBeInTheDocument();
+  });
+
+  it("makes no claim it can't support: 'no two alike' is gone", () => {
+    // Two eight-book readers who both tag grief and comfort draw the same
+    // silhouette. The card no longer says otherwise.
+    render(<DNACard profile={{ ...profile, emotion_counts: { grief: 9, awe: 3 } }} username="alice" />);
+    expect(screen.queryByText(/no two alike/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/books per register/i)).toBeInTheDocument();
+  });
 });

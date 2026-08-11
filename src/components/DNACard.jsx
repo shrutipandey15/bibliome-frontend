@@ -1,6 +1,7 @@
 import { forwardRef, useState } from "react";
 import { EMOTIONS, EMO_LIST } from "../services/emotions";
 import { generateShareToken } from "../services/api";
+import { cardArchetype } from "../services/dnaCard";
 import { romanYear } from "../utils/roman";
 import ShareModal from "./ShareModal";
 import "./DNACard.css";
@@ -9,14 +10,16 @@ import "./DNACard.css";
  * The fingerprint: one bar per register in the vocabulary, tallest first.
  *
  * The bars are REAL — `emotion_counts` is a per-reader tally of books per
- * register, counted server-side from their own shelf, so no two cards draw the
- * same shape. The registers that come back zero are drawn too, as stubs: the
- * gaps are the half of the fingerprint that says the most, and dropping them
- * would make every reader's card look equally full.
+ * register, counted server-side from their own shelf. The registers that come
+ * back zero are drawn too, as stubs: the gaps are the half of the fingerprint
+ * that says the most, and dropping them would make every reader's card look
+ * equally full.
  *
- * `top_emotions` is the fallback for surfaces that predate the tally (a shared
- * link minted last month, a legacy DNA cache) — fewer bars, still that reader's
- * own numbers, never invented ones.
+ * `top_emotions` is the fallback for surfaces with no book tally to hand (the
+ * share card, a legacy DNA cache). Those carry `weight` — a SHARE of recent
+ * reading, 0..1 — not a book count, so the figures are rendered as percentages
+ * and labelled as such. Printing a share as a bare number would read as "37
+ * books" on a shelf of nine.
  */
 function fingerprintRows(profile) {
   const counts = profile.emotion_counts;
@@ -27,9 +30,35 @@ function fingerprintRows(profile) {
       .sort((a, b) => b.count - a.count);
   }
   return (profile.top_emotions || [])
-    .map((t) => ({ slug: t.emotion_id, emo: EMOTIONS[t.emotion_id], count: t.count }))
+    .map((t) => ({
+      slug: t.emotion_id,
+      emo: EMOTIONS[t.emotion_id],
+      // `count` on legacy payloads, `weight` (a 0..1 share) on the card payload.
+      count: t.count ?? Math.round((t.weight || 0) * 100),
+      isShare: t.count == null,
+    }))
     .filter((r) => r.emo)
     .sort((a, b) => b.count - a.count);
+}
+
+/**
+ * The evidence under the label: "grief in 14 of your 31 books · your 3
+ * highest-rated were all devastation". Counts only, no adjectives — every clause
+ * is something the reader can go and count for themselves.
+ */
+function BasisLine({ basis }) {
+  const counts = (basis.counts || []).slice(0, 2);
+  const topRated = basis.top_rated_emotions || [];
+  const clauses = counts.map((c) => {
+    const emo = EMOTIONS[c.emotion];
+    return `${(emo?.name || c.emotion).toLowerCase()} in ${c.books} of your ${c.of} books`;
+  });
+  if (topRated.length === 1) {
+    const emo = EMOTIONS[topRated[0]];
+    clauses.push(`your highest-rated are ${(emo?.name || topRated[0]).toLowerCase()}`);
+  }
+  if (clauses.length === 0) return null;
+  return <p className="dna-basis">{clauses.join(" · ")}</p>;
 }
 
 /**
@@ -49,7 +78,8 @@ const DNACard = forwardRef(function DNACard(
   const [showShare, setShowShare] = useState(false);
   const [shareToken, setShareToken] = useState(null);
 
-  if (!profile?.personality) return null;
+  const p = cardArchetype(profile);
+  if (!p) return null;
 
   const handleShareClick = async () => {
     try {
@@ -61,13 +91,24 @@ const DNACard = forwardRef(function DNACard(
     }
   };
 
-  const p = profile.personality;
   const rows = fingerprintRows(profile);
   const top = rows.filter((r) => r.count > 0).slice(0, 5);
   const peak = rows.length ? Math.max(...rows.map((r) => r.count)) : 0;
+  const isShare = rows.some((r) => r.isShare);
   const share = profile.archetype_share;
   const [first, ...rest] = (p.name || "").split(" ");
   const second = rest.join(" ");
+
+  // How far the leading archetype cleared the runner-up, as a fraction of its own
+  // score. Under 10% the label is close to a coin flip, and the card says so
+  // instead of asserting it — a hedge the reader can check against the runner-up
+  // named underneath.
+  const margin = profile.margin;
+  const close = margin != null && margin < 0.10;
+  const runnerUp = profile.runner_up;
+  // Counts only, straight off the reader's own shelf. Null until the backend
+  // computes it; nothing is invented to fill the line.
+  const basis = profile.basis;
 
   return (
     <div className="dna-wrapper">
@@ -88,9 +129,17 @@ const DNACard = forwardRef(function DNACard(
           <div className="dna-glyph">{p.glyph || "◈"}</div>
         </div>
 
+        {close && <div className="dna-hedge">closest to</div>}
         <h2 className="dna-name">
           {first}{second && <><br /><em>{second}</em></>}
         </h2>
+        {close && runnerUp && (
+          <div className="dna-hedge dna-hedge--after">shading toward {runnerUp}</div>
+        )}
+        {/* The receipt. The name is a headline for a number the reader can go and
+            check against their own shelf — without it, the label is just a bucket
+            they were sorted into. */}
+        {basis && <BasisLine basis={basis} />}
         {p.tagline && <div className="dna-tagline">“{p.tagline}”</div>}
         {showDescription && p.description && <p className="dna-blurb">{p.description}</p>}
 
@@ -99,9 +148,14 @@ const DNACard = forwardRef(function DNACard(
             and whichever loaded last won. */}
         <div className="dna-card-rule" />
 
+        {/* "no two alike" is gone. Those bars are a tally over an 18-register
+            vocabulary: two eight-book readers who both tag grief and comfort draw
+            the same silhouette. It was the one line on the card making a claim the
+            rest of the project refuses to make. What replaces it says what the
+            figures ARE, which is the thing a reader actually needs to know. */}
         <div className="dna-fp-head">
           <span className="label dna-fp-label">emotional fingerprint</span>
-          <span className="dna-fp-note">no two alike</span>
+          <span className="dna-fp-note">{isShare ? "share of recent reading" : "books per register"}</span>
         </div>
 
         {peak > 0 && (
@@ -121,7 +175,7 @@ const DNACard = forwardRef(function DNACard(
             <ul className="dna-fp-top">
               {top.map((r) => (
                 <li key={r.slug} className="dna-fp-cell">
-                  <span className="dna-fp-count">{r.count}</span>
+                  <span className="dna-fp-count">{r.count}{r.isShare ? "%" : ""}</span>
                   <span className="dna-fp-name">{(r.emo.name || r.emo.label).toLowerCase()}</span>
                 </li>
               ))}
