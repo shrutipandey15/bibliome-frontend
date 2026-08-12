@@ -97,7 +97,7 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
     expect(screen.queryByRole("button", { name: "it wrecked me" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /It hurt/i }));
     expect(screen.getByRole("button", { name: "it wrecked me" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "it grieved me" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "it left a hole" })).toBeInTheDocument();
   });
 
   it("saves two emotions at independent strengths", async () => {
@@ -105,9 +105,9 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
     render(<EntryModal entry={base()} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: /It hurt/i }));
     await userEvent.click(screen.getByRole("button", { name: "it wrecked me" }));
-    await userEvent.click(screen.getByRole("button", { name: "it grieved me" }));
+    await userEvent.click(screen.getByRole("button", { name: "it left a hole" }));
     fireEvent.change(screen.getByLabelText("it wrecked me strength"), { target: { value: "9" } });
-    fireEvent.change(screen.getByLabelText("it grieved me strength"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("it left a hole strength"), { target: { value: "2" } });
     await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     expect(onSave.mock.calls[0][0].emotions).toEqual(
@@ -127,8 +127,8 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByLabelText("it grieved me strength")).toHaveValue("3");
-    expect(screen.getByLabelText("it made me furious strength")).toHaveValue("8");
+    expect(screen.getByLabelText("it left a hole strength")).toHaveValue("3");
+    expect(screen.getByLabelText("I was so angry strength")).toHaveValue("8");
   });
 
   it("saves the verdict and leaves dnf_reason null on a non-abandoned book", async () => {

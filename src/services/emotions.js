@@ -52,27 +52,27 @@ const PRESENTATION = {
 const SEED = [
   // It hurt
   ["devastation", "It hurt", "devastation", "it wrecked me",        "#3D2B3D", "Complete emotional destruction — the books that ruin you"],
-  ["grief",       "It hurt", "grief",       "it grieved me",        "#6B4F8E", "Loss, absence, mourning — the ache"],
-  ["dread",       "It hurt", "dread",       "it kept me on edge",   "#4B6B8E", "Anxiety, foreboding, existential unease"],
-  ["rage",        "It hurt", "rage",        "it made me furious",   "#C44B4B", "Fury, injustice, the urge to burn things down"],
+  ["grief",       "It hurt", "grief",       "it left a hole",       "#6B4F8E", "Loss, absence, mourning — the ache"],
+  ["dread",       "It hurt", "dread",       "I couldn't relax",     "#4B6B8E", "Anxiety, foreboding, existential unease"],
+  ["rage",        "It hurt", "rage",        "I was so angry",       "#C44B4B", "Fury, injustice, the urge to burn things down"],
   // It held me
-  ["comfort",     "It held me", "comfort",    "it comforted me",   "#8E6B4B", "Safety, warmth, being held by a book"],
-  ["tenderness",  "It held me", "tenderness", "it was tender",     "#9B6B7B", "Gentle love, care, soft emotional moments"],
-  ["joy",         "It held me", "joy",        "it made me happy",  "#E0A458", "Delight, gladness, the lightness a book can give"],
-  ["amusement",   "It held me", "amusement",  "it made me laugh",  "#C9B24B", "Sharp humour, wit, the perfectly placed line that makes you grin"],
+  ["comfort",     "It held me", "comfort",    "it felt safe",           "#8E6B4B", "Safety, warmth, being held by a book"],
+  ["tenderness",  "It held me", "tenderness", "it was gentle with me",  "#9B6B7B", "Gentle love, care, soft emotional moments"],
+  ["joy",         "It held me", "joy",        "it made me happy",       "#E0A458", "Delight, gladness, the lightness a book can give"],
+  ["amusement",   "It held me", "amusement",  "it made me laugh",       "#C9B24B", "Sharp humour, wit, the perfectly placed line that makes you grin"],
   // It wanted something
-  ["longing",     "It wanted something", "longing",   "it left me aching", "#5B6B8E", "Distance, wanting what you cannot have"],
-  ["desire",      "It wanted something", "desire",    "it stirred me",     "#9B5B8E", "Wanting, romantic tension, the pull toward"],
-  ["nostalgia",   "It wanted something", "nostalgia", "it took me back",   "#B07B4B", "The ache of memory, a time you cannot return to"],
+  ["longing",     "It wanted something", "longing",   "I ached for it",     "#5B6B8E", "Distance, wanting what you cannot have"],
+  ["desire",      "It wanted something", "desire",    "the tension got me", "#9B5B8E", "Wanting, romantic tension, the pull toward"],
+  ["nostalgia",   "It wanted something", "nostalgia", "it took me back",    "#B07B4B", "The ache of memory, a time you cannot return to"],
   // It moved me
-  ["awe",         "It moved me", "awe",         "it stunned me",           "#4B7B6B", "Wonder, scale, the sublime"],
-  ["recognition", "It moved me", "recognition", "it saw me",               "#4B8E8A", "Being seen — the book that knew you already"],
-  ["catharsis",   "It moved me", "catharsis",   "it broke something open", "#C9A96E", "Release, relief, the exhale after tension"],
+  ["awe",         "It moved me", "awe",         "I had to stop and stare", "#4B7B6B", "Wonder, scale, the sublime"],
+  ["recognition", "It moved me", "recognition", "how did it know",         "#4B8E8A", "Being seen — the book that knew you already"],
+  ["catharsis",   "It moved me", "catharsis",   "I needed that cry",       "#C9A96E", "Release, relief, the exhale after tension"],
   // It lost me
-  ["boredom",     "It lost me", "boredom",      "it bored me",     "#8A8A7A", "Flatness, the pages that wouldn't turn"],
-  ["revulsion",   "It lost me", "revulsion",    "it repelled me",  "#6B7A4B", "Disgust, recoil, wanting to put it down"],
-  ["confusion",   "It lost me", "confusion",    "it confused me",  "#7B6B9B", "Lost the thread, couldn't follow, unmoored"],
-  ["indifference","It lost me", "indifference", "it left me cold", "#9A9A9A", "Nothing landed — you closed it and felt nothing"],
+  ["boredom",     "It lost me", "boredom",      "it bored me",           "#8A8A7A", "Flatness, the pages that wouldn't turn"],
+  ["revulsion",   "It lost me", "revulsion",    "I couldn't stomach it", "#6B7A4B", "Disgust, recoil, wanting to put it down"],
+  ["confusion",   "It lost me", "confusion",    "I lost the plot",       "#7B6B9B", "Lost the thread, couldn't follow, unmoored"],
+  ["indifference","It lost me", "indifference", "nothing landed",        "#9A9A9A", "Nothing landed — you closed it and felt nothing"],
 ];
 
 export const EMOTIONS = {};

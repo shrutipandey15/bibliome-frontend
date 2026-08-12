@@ -466,7 +466,7 @@ export default function EntryModal({
                     onClick={() => toggleEmo(id)}
                   >
                     <span className="swatch" />
-                    {(e.label || id).toLowerCase()}
+                    {e.label || id}
                   </button>
                 );
               })}
@@ -480,7 +480,9 @@ export default function EntryModal({
             <div className="em-strengths">
               {emotions.map(({ id, strength }) => {
                 const e = EMOTIONS[id] || {};
-                const label = (e.label || id).toLowerCase();
+                // Phrases are authored with their own casing — several now open
+                // with a first-person "I", so we must not lowercase them here.
+                const label = e.label || id;
                 return (
                   <div className="em-strength-row" key={id}>
                     <span className="em-strength-name">

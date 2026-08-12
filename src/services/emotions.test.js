@@ -4,9 +4,9 @@ import { EMOTIONS, EMO_LIST, hydrateEmotions, getPrimaryEmotion, getEmotionFamil
 describe("shared emotion vocabulary [F1.5 / P2-9]", () => {
   it("the display label is the human phrase, with the plain word on `name`", () => {
     // Per VISION §4 the reader sees the first-person phrase, never the word/slug.
-    expect(EMOTIONS.grief.label).toBe("it grieved me");
+    expect(EMOTIONS.grief.label).toBe("it left a hole");
     expect(EMOTIONS.devastation.label).toBe("it wrecked me");
-    expect(EMOTIONS.confusion.label).toBe("it confused me");
+    expect(EMOTIONS.confusion.label).toBe("I lost the plot");
     // The plain word is still available for compact/analytic surfaces.
     expect(EMOTIONS.grief.name).toBe("grief");
     expect(EMOTIONS.devastation.name).toBe("devastation");
