@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Loader2, BookOpen, Pencil } from "lucide-react";
 import { EMOTIONS, getEmotionFamilies } from "../services/emotions";
 import { searchBooks } from "../services/api";
+import useIsNarrow from "../hooks/useIsNarrow";
 import "./EntryModal.css";
 
 const INTENSITY_LABELS = [
@@ -114,6 +115,20 @@ export default function EntryModal({
   // Disambiguating axes [Part C]: both optional, both skippable.
   const [verdict, setVerdict] = useState(entry?.verdict || null);
   const [dnfReason, setDnfReason] = useState(entry?.dnf_reason || null);
+
+  // The optional tail — verdict, quote, notes — folds away on a phone so the
+  // fast path is one screen. It does NOT fold when editing a book that already
+  // has any of them: collapsing a reader's own notes out of sight is how they
+  // get silently overwritten by someone who thought the field was empty. Read
+  // from `entry` rather than live state, so the fold doesn't spring open again
+  // while you're typing into it.
+  const isNarrow = useIsNarrow();
+  const [moreOpen, setMoreOpen] = useState(
+    () => !isNarrow || Boolean(entry?.verdict || entry?.quote || entry?.notes),
+  );
+  // Above 640 the <summary> is hidden, so a resize must never leave it shut with
+  // no way to reopen it. Only forces open — a phone user's own toggle stands.
+  useEffect(() => { if (!isNarrow) setMoreOpen(true); }, [isNarrow]);
 
   const families = getEmotionFamilies();
 
@@ -513,15 +528,9 @@ export default function EntryModal({
           </div>
         )}
 
-        {/* Verdict — a disambiguating one-tap. Optional, skippable. [Part C] */}
-        <OneTap
-          label="would you read it again?"
-          options={VERDICT_OPTIONS}
-          value={verdict}
-          onChange={setVerdict}
-        />
-
-        {/* DNF reason — only surfaces when the book was abandoned. [Part C] */}
+        {/* DNF reason — only surfaces when the book was abandoned, so it stays
+            in the main flow: it is already conditional, and folding a field
+            that only appears when it is relevant hides it twice. [Part C] */}
         {status === "abandoned" && (
           <OneTap
             label="why did you put it down?"
@@ -532,27 +541,49 @@ export default function EntryModal({
           />
         )}
 
-        <div className="em-field">
-          <div className="label-sm em-field-label">the line that hit hardest</div>
-          <textarea
-            className="em-input em-textarea em-quote"
-            placeholder="Optional — the quote you can't forget…"
-            value={quote}
-            onChange={(e) => setQuote(e.target.value)}
-            rows={2}
-          />
-        </div>
+        {/* Fields stay mounted while folded — their values live in this
+            component's state, so nothing is lost either way, but keeping them
+            mounted means a collapse can't drop focus mid-typing. */}
+        <details
+          className="em-more"
+          open={moreOpen}
+          onToggle={(e) => setMoreOpen(e.currentTarget.open)}
+        >
+          <summary className="em-more-summary">
+            <span>Add more details</span>
+            <span className="em-more-chev" aria-hidden="true">⌄</span>
+          </summary>
 
-        <div className="em-field">
-          <div className="label-sm em-field-label">private notes</div>
-          <textarea
-            className="em-input em-textarea"
-            placeholder="Just for you — thoughts, context, where you were…"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
+          {/* Verdict — a disambiguating one-tap. Optional, skippable. [Part C] */}
+          <OneTap
+            label="would you read it again?"
+            options={VERDICT_OPTIONS}
+            value={verdict}
+            onChange={setVerdict}
           />
-        </div>
+
+          <div className="em-field">
+            <div className="label-sm em-field-label">the line that hit hardest</div>
+            <textarea
+              className="em-input em-textarea em-quote"
+              placeholder="Optional — the quote you can't forget…"
+              value={quote}
+              onChange={(e) => setQuote(e.target.value)}
+              rows={2}
+            />
+          </div>
+
+          <div className="em-field">
+            <div className="label-sm em-field-label">private notes</div>
+            <textarea
+              className="em-input em-textarea"
+              placeholder="Just for you — thoughts, context, where you were…"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
+          </div>
+        </details>
 
         <div className="em-footer">
           {isEdit ? (

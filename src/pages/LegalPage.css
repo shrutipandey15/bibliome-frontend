@@ -96,3 +96,9 @@
   color: var(--ink-quiet);
 }
 .legal-body a { color: inherit; }
+
+/* index.html sets viewport-fit=cover, so the layout viewport now runs under the
+   home indicator. This shell declares no bottom padding of its own, so its last
+   element would sit beneath it. Appended at the end of the file so the rule sits
+   after this file's own media queries; resolves to 0 without a cutout. */
+.legal-page { padding-bottom: env(safe-area-inset-bottom, 0px); }

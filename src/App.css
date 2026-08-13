@@ -59,6 +59,58 @@
 }
 
 .rr-actions { display: flex; align-items: center; gap: 10px; }
+
+/* These five were inline `style` props. Inline styles beat every stylesheet
+   rule short of !important, so the coarse-pointer touch-target block at the
+   foot of this file could not reach them — the two most important buttons in
+   the header were also the two it could not enlarge. Values are carried over
+   unchanged, so wide screens render exactly as before. */
+.rr-add-btn { font-size: 12px; padding: 8px 14px; }
+.rr-add-btn-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; }
+
+/* ---------- Add-book FAB (mobile) ----------
+   Hidden by default; only the 640 tier turns it on, where it replaces the
+   header `+`. Uses the plain `.btn` fill (--ink) rather than brass: brass is
+   what "Read your DNA" wears, and the celebratory action and the workhorse
+   action should not look like the same offer. */
+.rr-fab { display: none; }
+
+/* Above 640 the Patterns section runs inline exactly as it always has: the
+   disclosure control is hidden and the <details> is held open from App.jsx. */
+.rr-fold-summary { display: none; }
+.rr-dna-btn { font-size: 12px; padding: 9px 18px; }
+.rr-dna-btn-verb { font-family: var(--font-display); font-style: italic; font-size: 15px; }
+.rr-dna-btn-noun { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
+
+/* The header's two halves. Everything foldable carries .rr-wide-only; the `⋯`
+   that replaces them carries .rr-more-btn. They are exact complements, so the
+   header can never show both sets or neither. */
+.rr-more-btn { display: none; }
+
+/* ---------- Overflow sheet ---------- */
+.rr-sheet { min-width: min(360px, 100%); padding: 4px 0; }
+.rr-sheet-head { padding: 0 4px 10px; }
+.rr-sheet-item {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%;
+  /* 52px, not the 44px minimum. These rows are full-width and stacked, so
+     there is no horizontal neighbour to mis-tap and no reason to be tight. */
+  min-height: 52px;
+  padding: 8px 6px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule-soft);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 17px;
+  text-align: left;
+  cursor: pointer;
+}
+.rr-sheet-item:last-child { border-bottom: none; }
+.rr-sheet-item:hover { color: var(--oxblood); }
+.rr-sheet-item:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.rr-sheet-item:disabled { color: var(--ink-faint); cursor: default; }
+.rr-sheet-item svg { flex: none; color: var(--brass); }
 .rr-theme-toggle {
   width: 36px; height: 36px;
   /* Centres a drawn icon rather than letting it sit on the text baseline. */
@@ -132,6 +184,9 @@
   font-size: 11.5px;
   color: var(--brass);
 }
+/* Mobile-only. The ribbon reads as folder tabs on paper and doesn't need
+   glyphs; a bottom bar does. */
+.rr-tab-icon { display: none; }
 
 /* ---------- Hero ---------- */
 .rr-hero {
@@ -237,6 +292,64 @@
   flex-wrap: wrap;
   border-bottom: 1px solid var(--rule-soft);
 }
+.rr-filter-label { margin-right: 4px; }
+/* No box of its own on wide screens: the chips stay direct flex children of
+   .rr-filterbar, so the desktop bar wraps exactly as it always has. It becomes
+   a real scroll container only at the phone tier. */
+.rr-chiprow { display: contents; }
+.chip-count { font-family: var(--font-mono); font-size: 9px; opacity: 0.65; }
+
+/* ---------- Filter trigger + sheet (mobile) ----------
+   Everything here is fully styled but `display: none`, and only the 640 tier
+   flips it on. Nothing in this section can reach the desktop bar: the trigger
+   never generates a box there, and the sheet is unreachable without it. */
+.rr-filter-trigger {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.rr-filter-trigger:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.rr-filter-trigger-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.rr-filter-trigger-value {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink);
+}
+/* The swatch rule in global.css is scoped `.chip .swatch`, and this one isn't
+   inside a chip. */
+.rr-filter-trigger .swatch {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--chip-c, var(--ink-quiet));
+}
+.rr-filter-trigger svg { color: var(--ink-faint); flex: none; }
+
+.rr-filter-sheet { min-width: min(360px, 100%); }
+/* Wraps rather than scrolls, so the full vocabulary stays visible at once and
+   the sheet simply grows taller — which is the direction a phone has room in. */
+.rr-filter-sheet-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
 .rr-filter-sort { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .rr-sort-select {
   background: var(--bg-card);
@@ -295,6 +408,15 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 40px 28px;
+}
+/* Only rendered when the shelf is actually capped, so a library that fits under
+   STACK_STEP looks exactly as it always has. */
+.rr-stacks-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 40px;
 }
 
 /* ---------- Side rail ---------- */
@@ -479,13 +601,224 @@
   .rr-siderail { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
-  .rr-header-row { padding: 16px 18px 12px; flex-direction: column; align-items: flex-start; }
-  .rr-tabs { padding: 0 18px; overflow-x: auto; }
+  /* ── Header: two stacked rows down to one ──
+     It was `flex-direction: column` with `.rr-actions { flex-wrap: wrap }`, so
+     the brand took one row and seven controls wrapped into two or three more —
+     the header ate the first screen before any book appeared. Brand and actions
+     go back to being one row; the actions themselves are cut to three. */
+  .rr-header-row {
+    padding: 12px 18px 10px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  .rr-logo { font-size: 24px; }
+  /* The volume/tagline block is the first thing to go: "vol. iv · 2026" and
+     "your reading journal" are atmosphere, and atmosphere is what a 375px
+     first screen has least room for. */
+  .rr-brand-meta { display: none; }
+  /* The actions are fixed-size targets and must not compress, so the brand is
+     what gives. At 320px with ResonanceMark showing there are four 44px targets
+     plus the wordmark, and "Bibliome" is a single unbreakable word — without
+     this the row would push past the viewport rather than clip. */
+  .rr-brand { min-width: 0; overflow: hidden; }
+  .rr-logo { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+  .rr-actions { flex-wrap: nowrap; gap: 6px; margin-left: auto; flex: none; }
+  /* Scoped to .rr-actions for SPECIFICITY, not for tidiness. A bare
+     `.rr-wide-only` is (0,1,0) — the same weight as `.btn`, which sets
+     `display: inline-flex`. main.jsx imports App (and therefore App.css)
+     before global.css, so global.css is always the later sheet and `.btn`
+     won the tie: the gold "Read DNA" button stayed visible on mobile while
+     the plain icon buttons, whose `.rr-theme-toggle` rule lives in THIS
+     file above this block, hid correctly. Two selectors (0,2,0) beat `.btn`
+     outright and stop depending on import order. */
+  .rr-actions .rr-wide-only { display: none; }
+  .rr-more-btn { display: inline-flex; }
+  /* The header `+` is gone below 640 (it carries .rr-wide-only) and the .rr-fab
+     takes over, so the glyph-swap and the background patch that used to make it
+     match its neighbours are both gone with it. */
+
+  /* ── Tabs: folder ribbon → fixed bottom bar ──
+     Four top-level destinations is squarely what a bottom bar is for, and it
+     buys back the ~45px the ribbon cost at the top of a 660px viewport.
+
+     The ribbon's whole construction has to be undone, not just repositioned:
+     it was built to ATTACH to the content below it — `border-radius: 4px 4px 0
+     0`, `margin-bottom: -1px`, and an active tab that hides the card's top
+     border by painting its own background over it and nudging `translateY(1px)`.
+     Upside down, every one of those reads as a rendering fault. So the bar
+     drops the borders entirely and marks the active tab with colour instead.
+
+     On `env(safe-area-inset-bottom)`: index.html now carries `viewport-fit=cover`,
+     so this resolves to the real inset (~34px on a home-indicator iPhone) rather
+     than 0. That matters more than it looks. Without the meta the layout viewport
+     stopped short of the physical bottom, so this bar ended there and the page
+     background showed through beneath it as a dark band — the bar appeared to
+     float above the browser chrome. With it, the bar's own background reaches the
+     true bottom and this padding holds the labels clear of the indicator.
+
+     The whole fixed stack is measured off this one value, so it stays consistent
+     at any inset — see the block further down where the FAB and toast offsets are
+     each written as (constant + env). */
+  .rr-tabs {
+    position: fixed;
+    inset: auto 0 0 0;
+    /* Under the modal backdrop (200) and the toast (300): a bottom sheet must
+       cover the bar, not sit behind it. */
+    z-index: 100;
+    display: flex;
+    align-items: stretch;
+    padding: 0;
+    margin-bottom: 0;
+    overflow: visible;
+    background: var(--bg-card);
+    border-top: 1px solid var(--rule);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .rr-tab,
+  .rr-tab.active {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 56px;
+    padding: 8px 4px;
+    margin-right: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    transform: none;
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-quiet);
+  }
+  .rr-tab.active { color: var(--brass); font-weight: 600; }
+  .rr-tab-icon { display: block; }
+  /* Both were positioned against the ribbon's box. The count is desktop
+     inventory detail, and `✦` marked the active tab in a layout where colour
+     alone couldn't — the bar can say it with colour. */
+  .rr-tab-count, .rr-tab-mark { display: none; }
+
+  /* ── The fixed bottom stack ──
+     Three fixed things now share the bottom edge, so they are measured off one
+     another rather than each guessing:
+
+       tab bar   0                     → 56px            (+ safe area)
+       FAB       56 + 16 = 72          → 128px
+       toast     128 + 16 = 144        → upward
+
+     Content clears all of it. 128px of tail looks generous until you scroll to
+     the end without it and find the last row of covers sitting under a button.
+     Scoped off .public-view because the shared page frame is also used by the
+     public profile, which renders neither a tab bar nor a FAB. */
+  .app:not(.public-view) {
+    padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px));
+  }
+  .toast { bottom: calc(144px + env(safe-area-inset-bottom, 0px)); }
+
+  .rr-fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 18px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    /* Under the tab bar (100), the modal backdrop (200) and the toast (300).
+       They don't overlap, but if the bar ever grows the bar should win. */
+    z-index: 90;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--bg-page);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+  }
+  .rr-fab:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
+  /* `visibility` rides along so a hidden FAB is genuinely gone rather than an
+     invisible tap target and a stop on the keyboard tab order. The 0s delay
+     flips it instantly on the way in and only after the slide on the way out,
+     so the transition still plays. */
+  .rr-fab {
+    transition: transform .24s ease, opacity .24s ease, visibility 0s;
+  }
+  .rr-fab.is-hidden {
+    transform: translateY(calc(100% + 28px));
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: transform .24s ease, opacity .24s ease, visibility 0s linear .24s;
+  }
+
+  /* ---------- Collapsible section (mobile) ---------- */
+  .rr-fold-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0 18px;
+    margin-top: 8px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--font-display);
+    font-size: 19px;
+    color: var(--ink);
+    cursor: pointer;
+    /* Both are needed to drop the native disclosure triangle — the pseudo for
+       WebKit, `list-style` for Firefox. */
+    list-style: none;
+  }
+  .rr-fold-summary::-webkit-details-marker { display: none; }
+  .rr-fold-summary:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+  .rr-fold-chev { color: var(--brass); font-size: 20px; transition: transform .2s ease; }
+  .rr-fold[open] .rr-fold-chev { transform: rotate(180deg); }
+
+  /* ── Hero trims ──
+     The aside is atmosphere and "browse the stacks ↓" is a button whose entire
+     job is to scroll down, which is the one thing a phone does for free. */
+  .rr-hero-aside { display: none; }
+  .rr-hero-cta .rr-browse-btn { display: none; }
   .rr-hero, .rr-statstrip, .rr-filterbar, .rr-stacks, .rr-siderail, .rr-footer { padding-left: 18px; padding-right: 18px; }
-  .rr-hero h1 { font-size: 36px; }
-  .rr-cover-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 16px; }
-  .rr-logo { font-size: 28px; }
-  .rr-actions { flex-wrap: wrap; }
+  .rr-hero { padding-top: 26px; padding-bottom: 24px; gap: 0; }
+  .rr-hero h1 { font-size: 34px; }
+
+  /* The "in rotation" shelf is a desktop flourish. On a phone it is decorative
+     height competing with content for the first screen, and every book on it
+     already appears in The Stacks below — so nothing is lost by dropping it.
+     `.rr-hero-click` ("↑ click any spine") goes with it; it points at nothing
+     now, and "click" was never the right verb on touch anyway. */
+  .rr-hero-shelf-wrap { display: none; }
+
+  .rr-statstrip { padding-top: 12px; padding-bottom: 12px; gap: 10px 8px; }
+  .rr-stacks { padding-top: 26px; }
+  .rr-cover-grid { grid-template-columns: repeat(2, 1fr); gap: 22px 14px; }
+
+  /* ── Filter bar: one wrapping block → a column ── */
+  .rr-filterbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  /* The inline chips and their label give way to one trigger. A scrolling row
+     was the first attempt and the wrong shape: it lengthens every time the
+     reader unlocks another register, and picking one means scrubbing sideways
+     past the rest with no idea how many remain. The label goes too — the
+     trigger says "filter by feeling" on its own face. */
+  .rr-filter-label { display: none; }
+  .rr-chiprow { display: none; }
+  .rr-filter-trigger { display: flex; }
+  .rr-filter-sort { margin-left: 0; justify-content: space-between; }
 
   /* Modals become bottom sheets on mobile — docked to the bottom, full-width,
      thumb-reachable, slide-up. [F2.9 / P5-9] */
@@ -556,11 +889,19 @@
    Scoped to `pointer: coarse` so the desktop layout keeps its density.
    Chips are handled next to their own rule in global.css.
 
-   Deliberately NOT covered here: the `+ Add Book` and `Read DNA` buttons
-   in .rr-actions size themselves from inline `style` props in App.jsx,
-   which no stylesheet rule can override. They get fixed when the header
-   is restructured. */
+   The .rr-actions buttons used to be unreachable from here — they sized
+   themselves from inline `style` props, which outrank any stylesheet
+   rule. Those moved to .rr-add-btn / .rr-dna-btn when the header was
+   restructured, so they are covered now. The two hero CTAs still carry
+   an inline `fontSize`, but that is a different property from the
+   `min-height` below, so it does not block us. */
 @media (pointer: coarse) {
+  /* The hero's "Read your DNA →" is the primary route to DNA on a phone
+     now that the header copy lives in the overflow sheet, so it has to
+     be a real target rather than the ~38px `.btn` default. */
+  .rr-hero-cta .btn { min-height: 44px; }
+  .rr-add-btn, .rr-dna-btn { min-height: 44px; }
+  .rr-stacks-more-btn { min-height: 44px; }
   .rr-theme-toggle,
   .rr-avatar {
     width: 44px;
@@ -572,13 +913,28 @@
     min-height: 44px;
     padding: 10px;
   }
+  /* Missed in the first pass: this one sets an explicit 34px square, so it was
+     the smallest target in the header. `button.` outranks `.res-mark.is-live`
+     (0,2,0), which would otherwise keep its own sizing context. Its circle and
+     its deliberately faint `is-live` border are left alone — only the box
+     grows. */
+  .rr-actions button.res-mark {
+    width: 44px;
+    height: 44px;
+  }
   .rr-view-toggle button {
     min-height: 44px;
     padding: 5px 16px;
   }
-  /* Tabs are the primary navigation and were ~36px. The `.active` rule
-     carries its own padding, so it needs raising in step or the selected
-     tab jumps size when tapped. */
+}
+
+/* Tabs are the primary navigation and the ribbon was ~36px tall. This applies
+   only ABOVE the phone tier: at 640 and below the ribbon becomes a fixed bottom
+   bar with its own 56px rows, and since that block appears earlier in this file
+   these rules would otherwise win on source order and put 22px of side padding
+   back on a four-up bar. 641px is the deliberate +1 pair to the 640 tier, not a
+   fifth breakpoint. */
+@media (pointer: coarse) and (min-width: 641px) {
   .rr-tab { padding: 14px 22px 16px; }
   .rr-tab.active { padding: 16px 22px 18px; }
 }

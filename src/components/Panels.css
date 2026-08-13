@@ -81,6 +81,32 @@
   font-size: 10.5px;
 }
 
+/* The window control. Sits under the matrix on both platforms — the growth
+   problem it solves was never mobile-only. */
+.hm-more {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+.hm-more-btn {
+  padding: 9px 20px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.hm-more-btn:hover { border-color: var(--brass); color: var(--ink); }
+.hm-more-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+@media (pointer: coarse) {
+  .hm-more-btn { min-height: 44px; }
+}
+
 .hm-legend {
   margin-top: 22px;
   display: flex;
@@ -152,6 +178,10 @@
 }
 .st-h1 em { color: var(--oxblood); font-style: italic; }
 
+
+/* Was an inline `margin: 32px 0`; it needed a class so the mobile reorder could
+   give it an `order`, and the margin has to come with it. */
+.st-heatmap-slot { margin: 32px 0; }
 
 .st-bottom {
   display: grid;
@@ -252,8 +282,57 @@
 @media (max-width: 640px) {
   .hm-page, .st-page { padding: 22px 18px 36px; }
   .hm-h1, .st-h1 { font-size: 32px; }
+  /* Both mastheads are `justify-content: space-between` with a 32px display
+     title on the left and a mono `.label` on the right. At 375 the title takes
+     what it needs and the label gets the remainder — about 80px — so "your
+     shelf · in aggregate" set to four lines, and the heatmap's "69 books × 18
+     emotions / read top → down · left → right" to seven. Stacked, each gets the
+     full width and sets on one or two. */
+  .hm-masthead, .st-masthead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
   .st-ledger-row { grid-template-columns: 28px 10px 1fr 40px; }
   .st-ledger-bar { display: none; }
+
+  /* ── Order by importance ──
+     Cheap scannable facts first, the matrix last. Done with `order` rather than
+     by restructuring the JSX, so the desktop DOM and its two-column grid are
+     untouched — and so screen readers and tab order still follow the source,
+     which for a set of independent summary cards is fine.
+       1 most felt + most intense (side by side)  ← the two headline figures
+       2 shelf vibe
+       3 the ledger
+       4 the heatmap                              ← densest thing on the page */
+  .st-page { display: flex; flex-direction: column; }
+  .st-masthead { order: 1; }
+  .st-page > .rule-dbl { order: 2; }
+  .st-bottom { order: 3; }
+  .st-heatmap-slot { order: 4; }
+
+  .st-bottom { display: flex; flex-direction: column; gap: 18px; margin-top: 22px; }
+  .st-rail { order: 1; }
+  .st-ledger { order: 2; padding: 20px; }
+
+  /* The two headline figures share a row. They're short — an emotion name and a
+     book title — and stacked they cost two full cards of height to say two
+     things. */
+  .st-rail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  /* Named rather than nth-child: both cards are conditional, so positions shift
+     when a reader has no tagged emotion or no finished book. */
+  .st-card-mostfelt, .st-card-hardest { padding: 16px; }
+  .st-vibe { grid-column: 1 / -1; }
+  /* At ~160px per column the circle and the text can't sit side by side. */
+  .st-most { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .st-most-circle { width: 40px; height: 40px; font-size: 20px; }
+  .st-most-name { font-size: 20px; }
+  .st-hardest-title { font-size: 18px; }
 }
 
 /* Honest empty ledger [F5.3] */
@@ -264,3 +343,45 @@
   color: var(--ink-quiet);
   padding: 8px 0 4px;
 }
+
+/* ============================================================
+   COMPACT HEATMAP — phones only
+   Rendered instead of .hm-matrix by CompactMatrix (see Panels.jsx for why the
+   axes swap). No media query needed: the component only mounts below 640, so
+   none of this can reach the desktop matrix.
+   ============================================================ */
+.hmc { display: grid; gap: 1px; }
+/* A swatch strip rather than labels — 13px columns hold no text. The key below
+   names them in the same order. */
+.hmc-head { height: 9px; border-radius: 1px; opacity: 0.9; }
+.hmc-title {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--ink-soft);
+  /* The label column is a fixed 88px; titles run long and must not widen the
+     grid, or the whole point of transposing is lost. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hmc-cell {
+  height: 20px;
+  border: 1px solid var(--rule-soft);
+  border-radius: 1px;
+}
+.hmc-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 14px;
+}
+.hmc-key-item {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.hmc-key-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }

@@ -365,3 +365,18 @@
   .dna-gate-head { font-size: 36px; }
   .dna-divider { letter-spacing: 0.9em; }
 }
+@media (max-width: 640px) {
+  /* The running head is two mono strings at 11px with 0.26em tracking — about
+     9.5px per character, so "YOUR DNA" is ~76px and "69 VOLUMES · AVG INTENSITY
+     8.5" is ~285px. With the 16px gap that is 377px against 339px of usable
+     width at 375, and `space-between` resolved it by breaking BOTH halves: the
+     title rendered as "YOUR / DNA" over two lines.
+     Stacking is also the more faithful reading of this element — the rule right
+     above calls it "two mono lines against a rule". */
+  .dna-runhead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  .insight--headline .insight-text { font-size: 21px; }
+}

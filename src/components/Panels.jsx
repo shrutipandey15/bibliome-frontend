@@ -1,8 +1,95 @@
-import { Fragment } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { EMOTIONS, EMO_LIST } from "../services/emotions";
+import useIsNarrow from "../hooks/useIsNarrow";
 import "./Panels.css";
 
+/**
+ * How many books the matrix draws before it offers the rest.
+ *
+ * Books are the only unbounded axis here — emotions are fixed at 18 and
+ * intensity at 1–10 — so bounding books is the only thing that stops this
+ * growing forever. It was unbounded on BOTH platforms: the desktop grid is
+ * `160px + books × 28px`, which passed a 1440px screen at 45 books and is
+ * already ~2100px at 69. Mobile only made it obvious sooner.
+ *
+ * 24 fills roughly one desktop screen and a comfortable phone scroll, and the
+ * window is recent-first so it stays current as you read.
+ */
+const HEATMAP_WINDOW = 24;
+
+/**
+ * The same matrix with its axes swapped, for phones.
+ *
+ * The desktop grid is `160px + books × 28px`. At 69 books that is 2092px — 6.2
+ * screens of sideways scrolling on a 375px phone, and it gets worse with every
+ * book logged, because BOOKS is the unbounded axis and it was the horizontal
+ * one. Emotions are fixed at 18 forever.
+ *
+ * So transpose: books run down (vertical scroll is free on a phone), emotions
+ * run across (18 columns fit one screen, permanently). Book titles stop being
+ * rotated 90° and become ordinary left-aligned labels you can read.
+ *
+ * Cells carry no numeral — at ~13px wide there is no room, and the intensity is
+ * already in the opacity. The colour IS the emotion, same as everywhere else in
+ * the app, and the key underneath names each column in order.
+ */
+function CompactMatrix({ books, emos, cellMap }) {
+  return (
+    <>
+      <div
+        className="hmc"
+        style={{ gridTemplateColumns: `88px repeat(${emos.length}, minmax(0, 1fr))` }}
+      >
+        <div />
+        {emos.map((eid) => (
+          <div
+            key={eid}
+            className="hmc-head"
+            style={{ background: EMOTIONS[eid]?.color }}
+            title={EMOTIONS[eid]?.name}
+          />
+        ))}
+        {books.map((b) => (
+          <Fragment key={b.entry_id}>
+            <div className="hmc-title" title={b.title}>{b.title}</div>
+            {emos.map((eid) => {
+              const v = cellMap[`${b.entry_id}-${eid}`];
+              const e = EMOTIONS[eid];
+              return (
+                <div
+                  key={eid}
+                  className="hmc-cell"
+                  title={v ? `${b.title} · ${e?.name} ${v}/10` : undefined}
+                  style={{
+                    background: v ? e?.color : "transparent",
+                    opacity: v ? 0.18 + (v / 10) * 0.82 : 0.07,
+                  }}
+                />
+              );
+            })}
+          </Fragment>
+        ))}
+      </div>
+      {/* Without this the columns are unlabelled colour — the swatch row up top
+          says which is which only if you already know the palette. */}
+      <div className="hmc-key">
+        {emos.map((eid) => (
+          <span key={eid} className="hmc-key-item">
+            <span className="hmc-key-dot" style={{ background: EMOTIONS[eid]?.color }} />
+            {EMOTIONS[eid]?.name}
+          </span>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export function Heatmap({ data }) {
+  const narrow = useIsNarrow();
+  // Above the early return: hooks cannot run conditionally.
+  const [shown, setShown] = useState(HEATMAP_WINDOW);
+  useEffect(() => { setShown(HEATMAP_WINDOW); }, [data]);
+
   if (!data || data.total_books < 2) {
     return (
       <div className="empty-state">
@@ -20,9 +107,20 @@ export function Heatmap({ data }) {
     emoTotals[c.emotion_id] = (emoTotals[c.emotion_id] || 0) + 1;
   });
   const emos = [...active_emotions].sort((a, b) => (emoTotals[b] || 0) - (emoTotals[a] || 0));
-  const topEmoId = emos[0];
-  const topEmo = EMOTIONS[topEmoId];
-  const topPct = topEmo ? Math.round(((emoTotals[topEmoId] || 0) / books.length) * 100) : 0;
+
+  // The backend returns entries `created_at ASC` (dna.py `_get_user_entries`),
+  // so the most recent books are at the END of this array. Reversed, the window
+  // is "your most recent N" and — the reason it's reversed rather than sliced
+  // from the tail — "show older" appends BELOW the fold instead of prepending
+  // above it, so expanding never yanks the scroll position.
+  const ordered = [...books].reverse();
+  const visibleBooks = ordered.slice(0, shown);
+  const remaining = ordered.length - visibleBooks.length;
+
+  // NOTE: emoTotals, bestPair and blindSpots below stay computed over ALL books
+  // on purpose. They are aggregate facts about the shelf, not about the window —
+  // windowing them would make the row counts and "strongest pairing" silently
+  // change every time someone pressed "show older".
 
   let bestPair = null, bestCount = 0;
   for (let i = 0; i < emos.length; i++) {
@@ -42,14 +140,20 @@ export function Heatmap({ data }) {
         <div>
           <div className="label" style={{ marginBottom: 14 }}>fig. 02 · cross-reference</div>
           <h1 className="hm-h1">The <em>Heatmap</em>.</h1>
+          {/* Was "Every book × every emotion you assigned to it" — no longer
+              true once the matrix draws a window, and the corner caption saying
+              "your last 24 of 69" directly under a promise of "every book" is
+              worse than either statement alone. */}
           <p className="hm-dek">
-            Every book × every emotion you assigned to it. Darker means felt harder.
+            Your books × the emotions you assigned them. Darker means felt harder.
             The clusters tell you who you are when no one is watching.
           </p>
         </div>
         <div className="label hm-corner">
-          {books.length} books × {emos.length} emotions<br />
-          read top → down · left → right
+          {remaining > 0
+            ? <>your last {visibleBooks.length} of {books.length} books × {emos.length} emotions</>
+            : <>{books.length} books × {emos.length} emotions</>}
+          <br />newest first
         </div>
       </div>
 
@@ -57,12 +161,13 @@ export function Heatmap({ data }) {
 
       <div className="hm-grid-wrap">
         <div className="hm-matrix-wrap">
+          {narrow ? <CompactMatrix books={visibleBooks} emos={emos} cellMap={cellMap} /> : (
           <div
             className="hm-matrix"
-            style={{ gridTemplateColumns: `160px repeat(${books.length}, minmax(28px, 1fr))` }}
+            style={{ gridTemplateColumns: `160px repeat(${visibleBooks.length}, minmax(28px, 1fr))` }}
           >
             <div />
-            {books.map((b) => (
+            {visibleBooks.map((b) => (
               <div key={b.entry_id} className="hm-col-head">{b.title}</div>
             ))}
             {emos.map((eid) => {
@@ -75,7 +180,7 @@ export function Heatmap({ data }) {
                     <span className="hm-row-name">{e.name}</span>
                     <span className="hm-row-count">{String(emoTotals[eid] || 0).padStart(2, "0")}</span>
                   </div>
-                  {books.map((b) => {
+                  {visibleBooks.map((b) => {
                     const v = cellMap[`${b.entry_id}-${eid}`];
                     return (
                       <div
@@ -96,6 +201,16 @@ export function Heatmap({ data }) {
               );
             })}
           </div>
+          )}
+
+          {remaining > 0 && (
+            <div className="hm-more">
+              <button className="hm-more-btn" onClick={() => setShown((n) => n + HEATMAP_WINDOW)}>
+                show {Math.min(remaining, HEATMAP_WINDOW)} older
+              </button>
+              <span className="label-sm">{visibleBooks.length} of {books.length} books</span>
+            </div>
+          )}
 
           <div className="hm-legend">
             <div className="label-sm">intensity scale</div>
@@ -111,19 +226,11 @@ export function Heatmap({ data }) {
         </div>
 
         <div className="hm-rail">
-          {topEmo && (
-            <div className="card editorial">
-              <div className="label" style={{ marginBottom: 10 }}>most felt</div>
-              <div className="hm-rail-name" style={{ color: topEmo.color }}>
-                {topEmo.glyph} {topEmo.name}
-              </div>
-              <div className="hm-rail-sub">
-                in {emoTotals[topEmoId]} / {books.length} books · {topPct}%
-              </div>
-              <div className="hm-rail-aside">The recurring weather of your shelf.</div>
-            </div>
-          )}
-
+          {/* "Most felt" used to be rendered here as well as in the Patterns
+              rail below — the same emotion, the same count, the same percentage,
+              derived from two different sources about 600px apart. The Patterns
+              copy is the one that survives, because that is where the other
+              headline figures live. */}
           {bestPair && (
             <div className="card editorial">
               <div className="label" style={{ marginBottom: 10 }}>strongest pairing</div>
@@ -205,7 +312,7 @@ export function Patterns({ stats, heatmap, embedded = false }) {
           logged, avg intensity, books/month, diversity) are figures, not
           insight — the page leads with the heatmap and the ledger instead. */}
       {heatmap && (
-        <div style={{ margin: "32px 0" }}>
+        <div className="st-heatmap-slot">
           <Heatmap data={heatmap} />
         </div>
       )}
@@ -236,7 +343,7 @@ export function Patterns({ stats, heatmap, embedded = false }) {
 
         <div className="st-rail">
           {top && (
-            <div className="card editorial">
+            <div className="card editorial st-card-mostfelt">
               <div className="label" style={{ marginBottom: 12 }}>most felt emotion</div>
               <div className="st-most">
                 <div className="st-most-circle" style={{ background: top.color }}>{top.glyph}</div>
@@ -251,7 +358,7 @@ export function Patterns({ stats, heatmap, embedded = false }) {
             </div>
           )}
           {hardest && (
-            <div className="card editorial">
+            <div className="card editorial st-card-hardest">
               <div className="label" style={{ marginBottom: 12 }}>most intense read</div>
               <div className="st-hardest-title">{hardest.title}</div>
               <div className="label-sm">{hardest.author} · intensity {hardest.intensity}/10</div>

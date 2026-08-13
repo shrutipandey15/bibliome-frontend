@@ -2,7 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover extends the layout viewport to the physical screen
+         edges. Without it the viewport stops short of the home indicator, so
+         the fixed tab bar ended above that strip and the page background showed
+         through underneath it as a dark band — and env(safe-area-inset-*)
+         reported 0, which made the insets already written into the tab bar, the
+         FAB and the toast inert. Turning it on activates all of them; the
+         compensating padding for ordinary page content is in global.css. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <title>Bibliome — The Emotional Fingerprint of Your Reading Life</title>
     <meta name="description" content="Discover your unique reading personality. Bibliome maps the emotions your books triggered, the patterns you didn't know you had, and the reader you've become. Free. No ads." />

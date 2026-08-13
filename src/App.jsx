@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
-import { Settings } from "lucide-react";
+import {
+  Settings, MoreHorizontal, Sun, Moon, User, Sparkles, Plus,
+  Library, Dna, MessageCircle, NotebookPen, ChevronDown,
+} from "lucide-react";
 import { Routes, Route, useParams, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
 import { JournalKeyProvider } from "./contexts/JournalKeyContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
+import useIsNarrow from "./hooks/useIsNarrow";
 import ThemeToggle from "./components/ThemeToggle";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
 import { saveCardAsImage } from "./utils/cardUtils";
@@ -125,15 +129,28 @@ function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenera
   // Three tabs — Shelf · DNA · Echo. Patterns folded into DNA: both surfaced the
   // same emotion data, so the aggregate now reads as the closing section of the
   // DNA scroll rather than a competing tab.
+  // Icons are mobile-only (hidden by CSS above 640). A bottom bar of four
+  // text-only labels is legible but generic; the glyph is what makes a tab bar
+  // scannable without reading it.
   const tabs = [
-    { id: "shelf",    label: "Shelf", count: entriesCount },
-    { id: "dna",      label: "DNA"   },
-    { id: "echoes",   label: "Echo"  },
+    { id: "shelf",    label: "Shelf", count: entriesCount, Icon: Library },
+    { id: "dna",      label: "DNA",   Icon: Dna },
+    { id: "echoes",   label: "Echo",  Icon: MessageCircle },
     // Deliberately unadorned: no streak, no count, no "you haven't written in
     // 4 days". A journal that nags is a journal you start lying to.
-    { id: "journal",  label: "Journal" },
+    { id: "journal",  label: "Journal", Icon: NotebookPen },
   ];
   const initial = (user?.display_name || user?.username || "R").trim().charAt(0).toUpperCase();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const showDNA = canGenerate && tab !== "dna";
+
+  // Every sheet row closes the sheet on the way out. Navigations unmount it
+  // anyway, but Read DNA and the theme toggle both leave the reader on this
+  // page, and a sheet still sitting over the thing you just asked to see is
+  // the most common way this pattern goes wrong.
+  const fromSheet = (fn) => () => { setMenuOpen(false); fn(); };
+
   return (
     <div className="rr-header">
       <div className="rr-header-row">
@@ -145,15 +162,18 @@ function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenera
           </div>
         </div>
         <div className="rr-actions">
-          <button className="btn ghost" onClick={onAddBook} style={{ fontSize: 12, padding: "8px 14px" }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em" }}>+ ADD BOOK</span>
+          {/* Wide screens only — below 640 this is the .rr-fab above the tab
+              bar instead. It never goes into the `⋯` sheet, though: it is the
+              only control here that CREATES anything, and burying the one
+              action that makes the app worth opening is how a reader ends up
+              with an empty shelf. */}
+          <button className="btn ghost rr-add-btn rr-wide-only" onClick={onAddBook}>
+            <span className="rr-add-btn-label">+ ADD BOOK</span>
           </button>
-          {canGenerate && tab !== "dna" && (
-            <button className="btn brass" onClick={onRevealDNA} disabled={generating} style={{ fontSize: 12, padding: "9px 18px" }}>
-              <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 15 }}>
-                {generating ? "Reading" : "Read"}
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" }}>DNA</span>
+          {showDNA && (
+            <button className="btn brass rr-dna-btn rr-wide-only" onClick={onRevealDNA} disabled={generating}>
+              <span className="rr-dna-btn-verb">{generating ? "Reading" : "Read"}</span>
+              <span className="rr-dna-btn-noun">DNA</span>
             </button>
           )}
           {/* Resonance's whole entry point. Renders NOTHING unless the reader
@@ -161,14 +181,20 @@ function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenera
               who has never matched will not know the feature is there, which is
               the intended amount of pressure. */}
           <ResonanceMark />
+          {/* Stays out of the overflow sheet on purpose. It carries an unread
+              dot that has to be visible to mean anything, and it opens a Modal
+              of its own — nesting that inside the sheet would mean two stacked
+              dialogs and two focus traps. It is also the single instance that
+              owns the notification poll; a second copy inside the sheet would
+              double the request rate. */}
           <NotificationCenter />
-          <ThemeToggle className="rr-theme-toggle" />
+          <ThemeToggle className="rr-theme-toggle rr-wide-only" />
           {/* Settings was behind the avatar and the study behind a `◐`, which is
               backwards: everywhere else on the web the avatar is you, and a gear
               is settings. Nobody was going to read a half-filled circle as "your
               study", and it sat beside three other unlabelled glyphs. */}
           <button
-            className="rr-theme-toggle"
+            className="rr-theme-toggle rr-wide-only"
             onClick={() => navigate("/settings")}
             title="Settings"
             aria-label="Settings"
@@ -176,24 +202,81 @@ function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenera
             <Settings size={17} />
           </button>
           <button
-            className="rr-avatar"
+            className="rr-avatar rr-wide-only"
             onClick={() => navigate("/me")}
             title="Your study — profile, collections and your signature"
             aria-label="Your study"
           >
             {initial}
           </button>
+          {/* The mirror image of .rr-wide-only: only ever visible once the four
+              controls above have been folded away. */}
+          <button
+            className="rr-theme-toggle rr-more-btn"
+            onClick={() => setMenuOpen(true)}
+            aria-haspopup="dialog"
+            title="More"
+            aria-label="More"
+          >
+            <MoreHorizontal size={18} />
+          </button>
         </div>
       </div>
       <div className="rr-tabs">
         {tabs.map((t) => (
-          <button key={t.id} className={`rr-tab ${tab === t.id ? "active" : ""}`} onClick={() => onTab(t.id)}>
+          <button
+            key={t.id}
+            className={`rr-tab ${tab === t.id ? "active" : ""}`}
+            onClick={() => onTab(t.id)}
+            aria-current={tab === t.id ? "page" : undefined}
+          >
+            <t.Icon size={19} className="rr-tab-icon" aria-hidden="true" />
             {t.label}
             {t.count !== undefined && <span className="rr-tab-count">{String(t.count).padStart(2, "0")}</span>}
             {tab === t.id && <span className="rr-tab-mark">✦</span>}
           </button>
         ))}
       </div>
+
+      {/* A bottom sheet rather than a dropdown. Modal already gives us the focus
+          trap, Escape, backdrop-press and focus restore, and .rr-modal-card
+          already becomes a docked sheet under 640 — the same treatment
+          NotificationCenter uses, so this reads as an existing pattern rather
+          than a new one. It also buys thumb reach and rows that are naturally
+          44px+, which a dropdown anchored under the header gives up. */}
+      {menuOpen && (
+        <Modal
+          onClose={() => setMenuOpen(false)}
+          ariaLabel="More actions"
+          className="rr-modal-card"
+          backdropClassName="rr-modal-backdrop"
+        >
+          <div className="rr-sheet">
+            <div className="label rr-sheet-head">more</div>
+            {showDNA && (
+              <button className="rr-sheet-item" onClick={fromSheet(onRevealDNA)} disabled={generating}>
+                <Sparkles size={18} />
+                <span>{generating ? "Reading your DNA…" : "Read your DNA"}</span>
+              </button>
+            )}
+            <button className="rr-sheet-item" onClick={fromSheet(() => navigate("/me"))}>
+              <User size={18} />
+              <span>Your study</span>
+            </button>
+            <button className="rr-sheet-item" onClick={fromSheet(() => navigate("/settings"))}>
+              <Settings size={18} />
+              <span>Settings</span>
+            </button>
+            {/* Not <ThemeToggle/>: that renders a bare icon button, which in a
+                sheet of labelled rows would be the one target you can't read.
+                Same context, same toggleTheme — just given a label. */}
+            <button className="rr-sheet-item" onClick={fromSheet(toggleTheme)}>
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              <span>Switch to {theme === "dark" ? "Vellum" : "Lamplight"}</span>
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -231,7 +314,7 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
               <span style={{ fontStyle: "italic", fontFamily: "var(--font-display)" }}>Read</span> your DNA →
             </button>
           )}
-          <button className="btn ghost" style={{ fontSize: 12 }} onClick={() => document.querySelector(".rr-stacks")?.scrollIntoView({ behavior: "smooth" })}>
+          <button className="btn ghost rr-browse-btn" style={{ fontSize: 12 }} onClick={() => document.querySelector(".rr-stacks")?.scrollIntoView({ behavior: "smooth" })}>
             browse the stacks ↓
           </button>
         </div>
@@ -286,6 +369,30 @@ function ReadingRoomStatStrip({ stats }) {
 
 function ReadingRoomFilterBar({ entries, filter, onFilter, sort, onSort, view, onView, search, onSearch }) {
   const presentEmotions = EMO_LIST.filter(([id]) => entries.some((e) => e.emotions?.some((em) => em.emotion_id === id)));
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const activeEmotion = filter ? EMOTIONS[filter] : null;
+
+  const countFor = (id) => entries.filter((b) => b.emotions?.some((em) => em.emotion_id === id)).length;
+
+  // One chip, rendered into both the desktop row and the mobile sheet, so the
+  // two can't drift in appearance or in what a tap does. `id === null` is the
+  // "all" chip, which clears rather than toggles.
+  const chip = (id, name, color, { closeSheet = false } = {}) => (
+    <button
+      key={id ?? "all"}
+      className={`chip ${(id === null ? !filter : filter === id) ? "active" : ""}`}
+      style={{ "--chip-c": color }}
+      onClick={() => {
+        onFilter(id === null ? null : (filter === id ? null : id));
+        if (closeSheet) setSheetOpen(false);
+      }}
+    >
+      <span className="swatch" />
+      {name}
+      {id !== null && <span className="chip-count">·{countFor(id)}</span>}
+    </button>
+  );
+
   return (
     <div className="rr-filterbar">
       <div className="rr-search">
@@ -299,25 +406,38 @@ function ReadingRoomFilterBar({ entries, filter, onFilter, sort, onSort, view, o
           onChange={(e) => onSearch(e.target.value)}
         />
       </div>
-      <div className="label" style={{ marginRight: 4 }}>filter by feeling</div>
-      <button className={`chip ${!filter ? "active" : ""}`} style={{ "--chip-c": "var(--ink)" }} onClick={() => onFilter(null)}>
-        <span className="swatch" />all
+      <div className="label rr-filter-label">filter by feeling</div>
+      {/* `display: contents` on wide screens, so these stay direct flex children
+          of .rr-filterbar and the desktop bar is EXACTLY as it was — same nine
+          chips, same wrap. Hidden outright below 640, where the trigger and the
+          sheet below take over. */}
+      <div className="rr-chiprow">
+        {chip(null, "all", "var(--ink)")}
+        {presentEmotions.slice(0, 9).map(([id, e]) => chip(id, e.name, e.color))}
+      </div>
+
+      {/* Mobile only. A horizontal scroll row was the wrong shape for this: it
+          grows without bound as the reader unlocks more of the vocabulary (18
+          registers), and finding one feeling means scrubbing sideways past the
+          others with no sense of how many are left. A sheet shows the whole set
+          at once, wraps instead of scrolling, and costs one tap. */}
+      <button
+        className="rr-filter-trigger"
+        onClick={() => setSheetOpen(true)}
+        aria-haspopup="dialog"
+      >
+        <span className="rr-filter-trigger-label">filter by feeling</span>
+        <span className="rr-filter-trigger-value">
+          {activeEmotion ? (
+            <>
+              <span className="swatch" style={{ "--chip-c": activeEmotion.color }} />
+              {activeEmotion.name}
+            </>
+          ) : "all"}
+          <ChevronDown size={15} aria-hidden="true" />
+        </span>
       </button>
-      {presentEmotions.slice(0, 9).map(([id, e]) => {
-        const n = entries.filter((b) => b.emotions?.some((em) => em.emotion_id === id)).length;
-        return (
-          <button
-            key={id}
-            className={`chip ${filter === id ? "active" : ""}`}
-            style={{ "--chip-c": e.color }}
-            onClick={() => onFilter(filter === id ? null : id)}
-          >
-            <span className="swatch" />
-            {e.name}
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, opacity: 0.65 }}>·{n}</span>
-          </button>
-        );
-      })}
+
       <div className="rr-filter-sort">
         <span className="label">sort</span>
         <select className="rr-sort-select" value={sort} onChange={(e) => onSort(e.target.value)}>
@@ -331,27 +451,80 @@ function ReadingRoomFilterBar({ entries, filter, onFilter, sort, onSort, view, o
           ))}
         </div>
       </div>
+
+      {sheetOpen && (
+        <Modal
+          onClose={() => setSheetOpen(false)}
+          ariaLabel="Filter by feeling"
+          className="rr-modal-card"
+          backdropClassName="rr-modal-backdrop"
+        >
+          <div className="rr-filter-sheet">
+            <div className="label rr-sheet-head">filter by feeling</div>
+            {/* Every feeling the reader has actually recorded — not the nine the
+                desktop bar has room for. The sheet wraps and can scroll
+                vertically, so the full vocabulary costs nothing here. */}
+            <div className="rr-filter-sheet-grid">
+              {chip(null, "all", "var(--ink)", { closeSheet: true })}
+              {presentEmotions.map(([id, e]) => chip(id, e.name, e.color, { closeSheet: true }))}
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
 
+// How many books the grid puts in the DOM before it offers the rest.
+//
+// This bounds RENDERING only — the fetch still walks the whole library into
+// memory (getAllEntries), because in-library search, the stat strip and the
+// emotion chip counts all read the full set. Paginating the fetch would make
+// all three quietly wrong.
+//
+// 48 divides evenly by the 6-, 4- and 2-column grids, so a capped shelf never
+// ends on a ragged row.
+const STACK_STEP = 48;
+
 function ReadingRoomStacks({ entries, view, onBookClick, totalCount }) {
+  const [shown, setShown] = useState(STACK_STEP);
+
+  // `entries` here is the filtered/sorted memo, so its identity changes exactly
+  // when the visible set does. Without this reset a cap raised to 96 on the
+  // unfiltered shelf would carry into a filter that matches 3 books.
+  useEffect(() => { setShown(STACK_STEP); }, [entries]);
+
+  const visible = entries.slice(0, shown);
+  const remaining = entries.length - visible.length;
+
   return (
     <div className="rr-stacks">
       <div className="rr-stacks-head">
         <h2>
           The Stacks
-          <em>· {entries.length} on display</em>
+          <em>· {visible.length} on display</em>
         </h2>
         <div className="label">selecting from {totalCount}</div>
       </div>
       {view === "spine" ? (
-        <Shelf entries={entries} bookend onBookClick={onBookClick} />
+        <Shelf entries={visible} bookend onBookClick={onBookClick} />
       ) : (
         <div className="rr-cover-grid">
-          {entries.map((entry, i) => (
-            <BookCard key={entry.id} entry={entry} index={i} width={150} onClick={() => onBookClick(entry)} />
+          {visible.map((entry, i) => (
+            // `i % STACK_STEP` keeps the entrance stagger inside one batch. With
+            // a raw index the 49th book would wait 2.4s to appear and the 96th
+            // nearly 5s, so an appended batch would trickle in rather than land.
+            // Identical to the old behaviour for the first 48.
+            <BookCard key={entry.id} entry={entry} index={i % STACK_STEP} width={150} onClick={() => onBookClick(entry)} />
           ))}
+        </div>
+      )}
+      {remaining > 0 && (
+        <div className="rr-stacks-more">
+          <button className="btn ghost rr-stacks-more-btn" onClick={() => setShown((n) => n + STACK_STEP)}>
+            show {Math.min(remaining, STACK_STEP)} more ↓
+          </button>
+          <div className="label">{remaining} more {remaining === 1 ? "book" : "books"} here</div>
         </div>
       )}
     </div>
@@ -404,6 +577,45 @@ function Dashboard() {
   const [sortBy, setSortBy] = useState("date");
   const [view, setView] = useState("cover");
   const [toast, setToast] = useState(null);
+
+  // The FAB gets out of the way while you're reading down the page and comes
+  // back the moment you scroll up. DNA is almost entirely prose, and a button
+  // parked over the middle of a sentence is worse than one you have to flick to
+  // recover.
+  const [fabHidden, setFabHidden] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    let queued = false;
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      // rAF-coalesced: scroll fires far faster than we can usefully react, and
+      // this listener runs on every page in the app.
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - last;
+        // Near the top there is nothing to read past yet, so the button stays.
+        // The 6px threshold ignores jitter and iOS rubber-banding, which would
+        // otherwise flicker the FAB at the ends of the page.
+        if (y <= 120) setFabHidden(false);
+        else if (Math.abs(dy) > 6) setFabHidden(dy > 0);
+        last = y;
+        queued = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Patterns is a whole second page below the DNA argument. On a phone it opens
+  // collapsed; on desktop there is room for it inline, so it starts open and its
+  // <summary> is hidden entirely. Re-synced on breakpoint crossings so a resize
+  // doesn't strand it closed on a wide screen with no way to open it.
+  const isNarrow = useIsNarrow();
+  const [patternsOpen, setPatternsOpen] = useState(!isNarrow);
+  // Re-sync on breakpoint crossings, so a resize can't strand the section closed
+  // on a wide screen where its <summary> is hidden and there'd be no way to open it.
+  useEffect(() => { setPatternsOpen(!isNarrow); }, [isNarrow]);
   const [showReadFor, setShowReadFor] = useState(false);
   const dnaCardRef = useRef(null);
 
@@ -586,13 +798,45 @@ function Dashboard() {
                 DNA gate — patterns are real from the first book, so a reader under
                 the 5-book gate still gets their own numbers, not an empty tab. */}
             <ErrorBoundary name="Patterns">
-              {stale.stats || stale.heatmap
-                ? <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Reading your patterns...</div></div>
-                : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} embedded />}
+              <details
+                className="rr-fold"
+                open={patternsOpen}
+                onToggle={(e) => setPatternsOpen(e.currentTarget.open)}
+              >
+                {/* Hidden above 640, where the section just runs inline as
+                    before. <details> rather than a hand-rolled toggle: it comes
+                    with the disclosure semantics, keyboard operation and
+                    find-in-page behaviour already correct. */}
+                <summary className="rr-fold-summary">
+                  <span>Your patterns</span>
+                  <span className="rr-fold-chev" aria-hidden="true">⌄</span>
+                </summary>
+                {/* Not rendered while collapsed. The heatmap is a 69 × 18 matrix
+                    — well over a thousand cells — so this is the difference
+                    between a folded section and a folded section that still
+                    costs everything it would have cost open. */}
+                {patternsOpen && (stale.stats || stale.heatmap
+                  ? <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Reading your patterns...</div></div>
+                  : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} embedded />)}
+              </details>
             </ErrorBoundary>
           </>
         )}
       </main>
+
+      {/* Mobile's add-book affordance, replacing the header `+` below 640 — not
+          joining it. Two buttons for one action would split the reader's
+          attention; this one just moves it into the thumb zone, since the
+          header sits at the top of a 6.7" screen where a thumb reaches worst.
+          Mounted here rather than inside ReadingRoomHeader so it stays put
+          across all four tabs, exactly as the header button did. */}
+      <button
+        className={`rr-fab ${fabHidden ? "is-hidden" : ""}`}
+        onClick={() => setModal("new")}
+        aria-label="Add a book"
+      >
+        <Plus size={26} aria-hidden="true" />
+      </button>
 
       {modal && (
         <Modal

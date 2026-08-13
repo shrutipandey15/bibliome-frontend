@@ -25,6 +25,26 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── Safe areas ──────────────────────────────────────────────────────
+   index.html sets `viewport-fit=cover`, so the layout viewport now runs to the
+   physical screen edges: under the home indicator, and in landscape under the
+   notch. That is what lets the fixed tab bar's background reach the true bottom
+   instead of leaving a strip of page showing beneath it — but it also means
+   ordinary content will run under those obstructions unless told not to.
+
+   Horizontal insets go on `body` once, because every page wants them and none
+   wants them differently. The bottom inset goes on the full-height shells,
+   which are the ones whose content can reach the screen edge; `.app` is
+   excluded because the dashboard already budgets for the tab bar and the FAB
+   in its own padding-bottom, and would otherwise pay the inset twice.
+
+   These all resolve to 0 on any device without cutouts, so nothing changes on
+   a desktop monitor. */
+body {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
 /* ---------- TOKENS — Vellum (light, default) ---------- */
 :root, [data-theme="light"] {
   /* Tells the browser which way its own chrome should go: native select popups,
@@ -616,13 +636,7 @@ button, a, [role="button"] { touch-action: manipulation; }
   align-items: flex-end;
   gap: 1px;
   min-height: 170px;
-  /* padding-top was 0. It reserves room for the lean transforms below, which
-     rotate a spine by up to 7deg about its centre — on the tallest (215px)
-     spine that pushes ~6px above the flex line, plus the 2px translateY on
-     `hard`. Without it, turning on overflow-x would clip the leaning books or
-     raise a spurious vertical scrollbar (overflow-y computes to `auto` the
-     moment overflow-x stops being `visible`). */
-  padding: 10px 20px 6px;
+  padding: 0 20px 6px;
   position: relative;
   z-index: 2;
 
@@ -632,6 +646,18 @@ button, a, [role="button"] { touch-action: manipulation; }
      `.shelf`) keeps `.shelf-plank` full-width underneath, so the books slide
      along a fixed plank, which is what a shelf actually does. */
   overflow-x: auto;
+  /* Explicit, and it must stay explicit: `overflow-y` computes to `auto` the
+     moment `overflow-x` stops being `visible`, so leaving it off would give
+     every shelf a vertical scrollbar over a few pixels of overhang.
+
+     The overhang is the lean transforms, and it is tiny — they rotate about
+     `transform-origin: bottom center`, so the tallest spine (215px) at 7deg
+     reaches 215·cos7° + 22·sin7° ≈ 216.1px, about 1px, or ~3px once `hard`
+     adds its translateY(-2px). Clipping ~3px off one rotated corner is
+     imperceptible. Reserving space for it with padding-top was the first
+     attempt and cost 10px of height on EVERY shelf, desktop included — a
+     visible layout change to hide an invisible one. */
+  overflow-y: hidden;
   /* Don't let the row's scroll chain into the page — at the end of the shelf
      the gesture would otherwise become a horizontal page scroll or, in iOS
      Safari, a back-navigation swipe. */
