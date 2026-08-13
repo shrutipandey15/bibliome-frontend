@@ -40,4 +40,4 @@
 
 .imp-footer { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--rule, rgba(0,0,0,0.1)); padding-top: 18px; }
 
-@media (max-width: 560px) { .imp { padding: 20px; } .imp-stat-row { gap: 16px; } }
+@media (max-width: 640px) { .imp { padding: 20px; } .imp-stat-row { gap: 16px; } }

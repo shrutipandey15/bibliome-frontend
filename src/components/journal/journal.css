@@ -13,7 +13,7 @@
    ============================================================ */
 
 .jr-shell {
-  min-height: 100vh;
+  min-height: 100vh; min-height: 100dvh;
   background: var(--bg-page);
   padding: 0 0 5rem;
 }
@@ -274,6 +274,7 @@
   position: sticky;
   top: 100px;
   max-height: calc(100vh - 130px);
+  max-height: calc(100dvh - 130px);
   overflow-y: auto;
 }
 .jr-index-item {
@@ -721,7 +722,7 @@
    RESPONSIVE — the desk column folds under the page; the index
    becomes a horizontal scroller above the read-back.
    ============================================================ */
-@media (max-width: 1180px) {
+@media (max-width: 1080px) {
   .jr-today, .jr-read { flex-direction: column; align-items: center; gap: 1.75rem; }
   .jr-sheet, .jr-pages { width: 100%; max-width: 760px; }
   .jr-aside { width: 100%; max-width: 760px; }

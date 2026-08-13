@@ -243,7 +243,7 @@
 
 .empty-state { background: var(--bg-page); }
 
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .hm-page, .st-page { padding: 28px 28px 48px; }
   .hm-h1, .st-h1 { font-size: 44px; }
   .hm-grid-wrap { grid-template-columns: 1fr; }

@@ -108,6 +108,10 @@
   resize: vertical;
 }
 .et-reply-input:focus { border-color: var(--brass); outline: none; }
+/* iOS focus zoom — see the note in App.css on .rr-sort-select. */
+@media (pointer: coarse) {
+  .et-reply-input { font-size: 16px; }
+}
 .et-error { color: var(--oxblood); font-size: 13px; }
 .et-replybox-foot { display: flex; align-items: center; justify-content: space-between; }
 .et-count { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-ghost); }

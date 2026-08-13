@@ -354,7 +354,7 @@
   .dna-body { grid-template-columns: minmax(0, 1fr); gap: 48px; }
   .dna-aside { position: static; max-width: 372px; }
 }
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .dna-view { padding: 8px 18px 64px; }
   .dna-readfor-line { font-size: 19px; }
   .dna-portrait-list { column-count: 1; }

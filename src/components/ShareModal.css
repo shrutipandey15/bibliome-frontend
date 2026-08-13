@@ -67,6 +67,12 @@
 .share-link-input:focus {
   border-color: rgba(184,150,78,0.3);
 }
+/* iOS zooms the page on focus for controls under 16px and never zooms back.
+   This one is a readonly share URL, so it is tapped to select-and-copy — the
+   single most likely control in the app to be focused on a phone. */
+@media (pointer: coarse) {
+  .share-link-input { font-size: 16px; }
+}
 .share-link-copy {
   padding: 8px 14px;
   border-radius: 8px;

@@ -2,7 +2,7 @@
    reading. A policy nobody can read is a policy nobody has agreed to. */
 
 .legal-page {
-  min-height: 100vh;
+  min-height: 100vh; min-height: 100dvh;
   background: var(--bg-page);
   color: var(--ink);
 }

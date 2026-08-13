@@ -1,7 +1,7 @@
 
 .set-page {
   background: var(--bg-page);
-  min-height: 100vh;
+  min-height: 100vh; min-height: 100dvh;
   padding: 40px 56px 60px;
   color: var(--ink);
 }
@@ -198,4 +198,4 @@
 .set-quiet-field { display: flex; flex-direction: column; gap: 4px; }
 .set-quiet-field .set-input { padding: 8px 10px; }
 
-@media (max-width: 560px) { .set-quiet { flex-direction: column; } }
+@media (max-width: 640px) { .set-quiet { flex-direction: column; } }

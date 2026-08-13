@@ -160,7 +160,7 @@
   color: var(--ink-quiet);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .es-page { padding: 40px 28px; }
   .es-grid { grid-template-columns: 1fr; gap: 40px; }
   .es-h1 { font-size: 56px; }

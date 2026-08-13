@@ -106,6 +106,11 @@
 .ec-input:focus { border-color: var(--brass); outline: none; }
 .ec-input::placeholder,
 .ec-body::placeholder { font-style: italic; }
+/* iOS focus zoom — see the note in App.css on .rr-sort-select. 15.5px is only
+   half a pixel under the threshold, and iOS still zooms for it. */
+@media (pointer: coarse) {
+  .ec-input { font-size: 16px; }
+}
 
 .ec-feel-head {
   display: flex; align-items: baseline; justify-content: space-between;

@@ -84,7 +84,7 @@
 .nc-digest-line { font-family: var(--font-display); font-size: 16px; color: var(--ink); line-height: 1.4; }
 .nc-digest-memory { font-family: var(--font-display); font-style: italic; font-size: 13px; color: var(--ink-quiet); }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   /* The card is a full-bleed bottom sheet here, so the 460px reading cap has to
      be lifted too — otherwise the sheet spans the screen while its contents stop
      short, and the leftover strip reads as a column nobody filled in. */

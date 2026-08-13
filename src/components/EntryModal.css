@@ -381,7 +381,7 @@
   .em-card { grid-template-columns: 1fr; }
   .em-left { min-height: 220px; }
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .em-right { padding: 24px; }
   .em-h { font-size: 22px; }
   .em-left-title { font-size: 28px; }

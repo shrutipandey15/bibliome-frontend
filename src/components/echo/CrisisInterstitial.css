@@ -22,4 +22,4 @@
 .crisis-resource-detail { font-size: 13px; color: var(--ink-quiet); }
 .crisis-footer { margin-top: 4px; }
 
-@media (max-width: 560px) { .crisis { padding: 24px; } }
+@media (max-width: 640px) { .crisis { padding: 24px; } }

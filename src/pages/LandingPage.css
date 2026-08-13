@@ -1,5 +1,5 @@
 
-.landing-rr { background: var(--bg-page); color: var(--ink); min-height: 100vh; }
+.landing-rr { background: var(--bg-page); color: var(--ink); min-height: 100vh; min-height: 100dvh; }
 
 .rr-wordmark {
   font-family: var(--font-display);
@@ -303,7 +303,7 @@
 .lrr-sep { margin: 0 6px; }
 
 /* responsive */
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .lrr-hero, .lrr-how, .lrr-arch, .lrr-manifesto, .lrr-final { padding-left: 28px; padding-right: 28px; }
   .lrr-hero-grid { grid-template-columns: 1fr; gap: 50px; }
   .lrr-h1 { font-size: 64px; }

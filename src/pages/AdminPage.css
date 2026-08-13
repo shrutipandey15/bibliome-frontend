@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 40px 56px 60px;
   background: var(--bg-page);
-  min-height: 100vh;
+  min-height: 100vh; min-height: 100dvh;
   color: var(--ink);
 }
 

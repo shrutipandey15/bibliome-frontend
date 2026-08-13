@@ -67,7 +67,7 @@ function SharedProfile() {
   // case rather than serving a card the app itself wouldn't show them).
   if (!cardArchetype(profile)) {
     return (
-      <div className="empty-state" style={{ height: "100vh" }}>
+      <div className="empty-state empty-state-full">
         <div className="empty-glyph">?</div>
         <div className="empty-title">Nothing to see here</div>
         <div className="empty-sub">This link has expired, or its reader's DNA isn't ready yet.</div>

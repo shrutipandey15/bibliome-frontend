@@ -145,7 +145,7 @@
   .pf-margins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .pf-page { padding: 24px 18px 60px; }
   .pf-name { font-size: 40px; }
   .pf-shelf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -157,7 +157,7 @@
   .pf-open-note { grid-column: 1 / -1; max-width: none; text-align: left; }
 }
 
-@media (max-width: 460px) {
+@media (max-width: 480px) {
   .pf-shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pf-figure { min-width: 45%; }
 }

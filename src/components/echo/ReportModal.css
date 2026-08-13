@@ -19,4 +19,4 @@
 .rep-footer { display: flex; justify-content: flex-end; margin-top: 6px; }
 .rep-glyph { font-size: 34px; color: var(--moss, var(--brass)); }
 
-@media (max-width: 560px) { .rep { padding: 20px; } }
+@media (max-width: 640px) { .rep { padding: 20px; } }

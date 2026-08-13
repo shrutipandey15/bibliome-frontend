@@ -1,3 +1,27 @@
+/* ═══════════════════════════════════════════════════════════════════
+   BREAKPOINTS — four values, app-wide. Do not invent a fifth.
+
+     480   small phone
+     640   phone
+     900   tablet
+     1080  small desktop
+
+   These are literals on purpose. CSS variables cannot be used inside a
+   media query condition (spec limitation, not a tooling gap), and
+   `@custom-media` would mean adding postcss-preset-env to a project that
+   otherwise has no PostCSS step — a build dependency bought for syntax
+   sugar alone. Four numbers, used consistently, is cheaper.
+
+   Check before adding a query (anchored, so this comment isn't a hit):
+     grep -rn "^@media (max-w" src --include=*.css \
+       | grep -vE "480px|640px|900px|1080px"
+   That should print nothing.
+
+   NOTE: there is deliberately no tier below 480. Phones narrower than
+   that are handled by the 640 tier staying FLUID — no fixed pixel widths
+   on anything that has to fit the viewport — which is what makes 320px
+   work. A 375px tier would only mask a fixed width that shouldn't exist.
+   ═══════════════════════════════════════════════════════════════════ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -250,6 +274,26 @@ button, a, [role="button"] { touch-action: manipulation; }
   cursor: pointer;
 }
 .chip:hover { border-color: var(--chip-c, var(--ink)); }
+
+/* ── Touch targets ──────────────────────────────────────────────────
+   At its desktop size a chip is ~24px tall: exactly on the WCAG 2.5.8
+   minimum (24x24) and well under the 44px both Apple and Material ask
+   for. That was survivable while chips wrapped in a static block; it is
+   not once they sit in a horizontally scrolling row, where a near-miss
+   scrolls the row instead of toggling the filter.
+
+   Real size rather than an invisible ::after hit area: neighbouring
+   chips are only 8–14px apart, so expanded hitboxes would overlap each
+   other and hand taps to the wrong filter. `pointer: coarse` scopes all
+   of this to touch, so the desktop density is untouched. */
+@media (pointer: coarse) {
+  .chip {
+    min-height: 44px;
+    padding: 8px 14px 8px 10px;
+    font-size: 13px;
+    gap: 7px;
+  }
+}
 .chip.active {
   background: var(--chip-c, var(--ink));
   color: var(--bg-page);
@@ -572,10 +616,33 @@ button, a, [role="button"] { touch-action: manipulation; }
   align-items: flex-end;
   gap: 1px;
   min-height: 170px;
-  padding: 0 20px 6px;
+  /* padding-top was 0. It reserves room for the lean transforms below, which
+     rotate a spine by up to 7deg about its centre — on the tallest (215px)
+     spine that pushes ~6px above the flex line, plus the 2px translateY on
+     `hard`. Without it, turning on overflow-x would clip the leaning books or
+     raise a spurious vertical scrollbar (overflow-y computes to `auto` the
+     moment overflow-x stops being `visible`). */
+  padding: 10px 20px 6px;
   position: relative;
   z-index: 2;
+
+  /* The Stacks' spine view renders EVERY entry into this one row with no wrap,
+     at 16–44px each — 40 books is ~1000px of unscoped width, which scrolled the
+     whole document sideways rather than the shelf. Scrolling the row (not
+     `.shelf`) keeps `.shelf-plank` full-width underneath, so the books slide
+     along a fixed plank, which is what a shelf actually does. */
+  overflow-x: auto;
+  /* Don't let the row's scroll chain into the page — at the end of the shelf
+     the gesture would otherwise become a horizontal page scroll or, in iOS
+     Safari, a back-navigation swipe. */
+  overscroll-behavior-x: contain;
+  /* No visible scrollbar: it would land in the 6px gap between the books and
+     the plank and read as a crack in the furniture. The affordance is the
+     books being cut off at the edge, and every spine is focusable, so Tab
+     scrolls the row natively for keyboard users. */
+  scrollbar-width: none;
 }
+.shelf-row::-webkit-scrollbar { display: none; }
 .shelf-plank {
   height: 22px;
   background:

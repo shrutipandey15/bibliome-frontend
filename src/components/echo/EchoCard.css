@@ -255,7 +255,7 @@
 
 /* Below the fold-in width the margin stops being a margin: it lays flat above
    the prose as a single meta line, and the prose keeps its full measure. */
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .eco-row { grid-template-columns: 1fr; gap: 12px; padding: 26px 0 24px; }
   .eco-margin {
     flex-direction: row;

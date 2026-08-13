@@ -12,7 +12,7 @@
   --res-accent: #8a6a2e;
   --res-accent-soft: color-mix(in srgb, #8a6a2e 18%, transparent);
   background: var(--bg-page);
-  min-height: 100vh;
+  min-height: 100vh; min-height: 100dvh;
   padding: 56px 56px 120px;
   max-width: 1240px;
   /* Centred. Pinned left, the leftover width on a wide monitor reads as the
@@ -686,8 +686,11 @@
     gap: 20px 28px;
   }
   .rt-facts { border-top: 0; padding-top: 0; }
-}
-@media (max-width: 980px) {
+
+  /* Was its own 980px block. Merged into the tablet tier when the breakpoints
+     were standardised — the two rule sets touch disjoint selectors (.rt* vs
+     .rp*), so the only change is that this padding now also applies across
+     981–1080px, which is the tier it belonged in anyway. */
   .resonance-page { padding: 40px 32px 80px; }
   .rp-h1 { font-size: 44px; }
   .rp-masthead { flex-direction: column; align-items: flex-start; gap: 20px; }

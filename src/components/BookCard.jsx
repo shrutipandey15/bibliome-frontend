@@ -2,6 +2,12 @@ import { useState } from "react";
 import { EMOTIONS, getPrimaryEmotion } from "../services/emotions";
 import "./BookCard.css";
 
+/* `width` is a CAP, not a fixed size. It used to be applied literally, so a
+   150px card sat inside whatever track the grid gave it — fine at desktop
+   widths, but at 320px the 2-column track is ~134px and the card overflowed its
+   own cell, scrolling the whole page sideways. Fluid with a max-width renders
+   identically wherever the track is wider than the cap (every desktop
+   breakpoint) and simply shrinks below it. */
 export default function BookCard({ entry, index = 0, onClick, width = 144, showCaption = true }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgFailed, setImgFailed] = useState(!entry.cover_url);
@@ -20,12 +26,12 @@ export default function BookCard({ entry, index = 0, onClick, width = 144, showC
   return (
     <div
       className="book-cover-wrap anim-fadeup"
-      style={{ width, "--cover-w": `${width}px`, animationDelay: `${index * 0.05}s` }}
+      style={{ width: "100%", maxWidth: width, "--cover-w": "100%", animationDelay: `${index * 0.05}s` }}
     >
       <div
         className="book-cover"
         onClick={onClick}
-        style={{ "--cover-w": `${width}px`, "--cv-color": coverColor }}
+        style={{ "--cover-w": "100%", "--cv-color": coverColor }}
         role="button"
         tabIndex={0}
       >

@@ -65,6 +65,10 @@
 .col-empty { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-quiet); margin: 0; }
 .col-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
 .col-add-select { flex: 1; min-width: 180px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-vellum); font-family: var(--font-display); font-size: 14px; color: var(--ink); }
+/* iOS focus zoom — see the note in App.css on .rr-sort-select. */
+@media (pointer: coarse) {
+  .col-add-select { font-size: 16px; }
+}
 
 .col-drawer-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--rule-soft); }
 .col-drawer-warn { flex: 1; font-family: var(--font-display); font-size: 14px; color: var(--ink-quiet); }
@@ -78,4 +82,4 @@
 .cols-new-vis { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-card); font-family: var(--font-display); font-size: 14px; color: var(--ink); }
 
 @media (max-width: 900px) { .cols-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .cols-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .cols-grid { grid-template-columns: minmax(0, 1fr); } }
