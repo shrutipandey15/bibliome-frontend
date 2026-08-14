@@ -126,14 +126,149 @@
 
 .set-danger { border-top: 3px solid var(--oxblood); }
 
+/* The section trigger + sheet (phones).
+   Declared outside the media query and hidden by default, the same shape the
+   journal index and the shelf's feeling filter use: above 640 the trigger never
+   generates a box, so none of this can reach the desktop layout. */
+.set-secbar { display: none; }
+.set-sec-sheet { min-width: min(360px, 100%); }
+.set-sec-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  /* 52px rather than the 44px floor — these rows are full-width and stacked, so
+     there is no horizontal neighbour to mis-tap and no reason to be tight. */
+  min-height: 52px;
+  padding: 8px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.set-sec-sheet-item:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.set-sec-sheet-item.is-here { background: var(--bg-vellum); font-weight: 600; }
+
 @media (max-width: 900px) {
   .set-page { padding: 28px 22px; }
   .set-header { grid-template-columns: 1fr; gap: 16px; }
   .set-h1 { font-size: 40px; }
-  .set-grid { grid-template-columns: 1fr; }
-  .set-rail { flex-direction: row; flex-wrap: wrap; overflow-x: auto; }
+  .set-grid { grid-template-columns: 1fr; gap: 22px; }
+  /* Tablet only. Seven or eight items still fit as a wrapped row here; on a
+     phone they don't, which is what the 640 tier below deals with. */
+  .set-rail { flex-direction: row; flex-wrap: wrap; }
   .set-rail-item { padding: 8px 12px; }
   .set-rail-item.active { border-left: none; border-bottom: 2px solid var(--oxblood); padding-left: 12px; }
+}
+
+@media (max-width: 640px) {
+  /* index.html sets viewport-fit=cover, so the layout viewport runs under the
+     home indicator. This page renders no tab bar and no FAB — it is a leaf
+     reached from the header — so it needs the inset and nothing more. */
+  .set-page {
+    padding: 18px 18px 32px;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ── Header: three stacked full-width rows → two ──
+     `grid-template-columns: 1fr` made the back button stretch the full width of
+     the screen, which reads as a primary action rather than the way out, and
+     pushed "member since" onto a third line of its own. Back and the membership
+     year share one thin row instead; the title gets the next. */
+  .set-header {
+    grid-template-areas: "back stat" "title title";
+    grid-template-columns: auto 1fr;
+    gap: 14px 12px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .set-back { grid-area: back; justify-self: start; }
+  .set-header-title { grid-area: title; }
+  .set-header-stat { grid-area: stat; display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
+  .set-stat-val { font-size: 16px; }
+  .set-h1 { font-size: 34px; }
+
+  /* ── Rail → sheet ── */
+  .set-rail { display: none; }
+  .set-secbar {
+    display: block;
+    /* Sticky, because the panels below run long: quiet hours sit ~2.5 screens
+       into Notifications, and without this the only way back to the section
+       list is scrolling all the way up. The page background is opaque so the
+       panel scrolls under it rather than showing through, and the negative
+       side margins let that background reach the page edges while the trigger
+       keeps its own inset. */
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 -18px 16px;
+    padding: 8px 18px 10px;
+    background: var(--bg-page);
+    border-bottom: 1px solid var(--rule);
+  }
+  .set-sec-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+  }
+  .set-sec-trigger:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .set-sec-trigger-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .set-sec-trigger-value {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  /* ── Panels ──
+     28px of card padding on each side of a 375px screen leaves ~300px for a
+     form; 18px leaves ~320 and reads no tighter once the type comes down. */
+  .set-card { padding: 20px 18px; }
+  .set-card-h { font-size: 24px; margin-bottom: 14px; }
+  .set-card-d { font-size: 15px; }
+
+  /* A long email is one unbroken token and was pushing the panel wider than the
+     viewport, which took the whole page with it. */
+  .set-field-value { overflow-wrap: anywhere; }
+
+  /* Actions go full-width: a 44px-tall button floated left in a 320px column is
+     a smaller target than the row it sits in, for no gain. */
+  /* Every panel's buttons are direct children of the card — React fragments
+     don't create elements, so the notifications shortcut is one too. */
+  .set-card > .btn,
+  .set-share-actions .btn,
+  .set-page .readfor-actions .btn { width: 100%; justify-content: center; }
+  /* "What do you read for?" ends in a small gold button pinned to the right of
+     a full-width block of chips — it looked like a caption rather than the way
+     to commit the answer. */
+  .set-page .readfor-actions { align-items: stretch; }
+  .set-share-actions { flex-direction: column; gap: 8px; }
+  .set-share-actions .btn { flex: none; }
+
+  /* App.css lifts the toast to 144px on phones to clear the tab bar and the
+     FAB. This page renders neither, so there it was a message hovering in the
+     middle of nothing. Two classes (0,2,0) outrank the global `.toast`. */
+  .set-page .toast { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ── Visibility control [F2.8 / B2.1] ── */
@@ -199,3 +334,42 @@
 .set-quiet-field .set-input { padding: 8px 10px; }
 
 @media (max-width: 640px) { .set-quiet { flex-direction: column; } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOUCH TARGETS — coarse pointers only
+   ═══════════════════════════════════════════════════════════════════
+   Every control on this page was drawn for a mouse: rail rows ~38px, the
+   notification switches 26px tall, the password reveal ~24px square, the
+   quiet-hours selects ~35px. Apple HIG and Material both ask for 44px and
+   WCAG 2.5.8 sets 24x24 as the floor, which several of these sat on.
+
+   Scoped to `pointer: coarse` and, where the selector could reach shared
+   components, to `.set-page` — so the desktop density is untouched and
+   nothing here follows ReadForQuestion or PasswordField to other screens.
+   Placed last in the file so it outranks the tier blocks above. */
+@media (pointer: coarse) {
+  .set-rail-item { min-height: 44px; }
+  .set-page .btn { min-height: 44px; }
+
+  /* Text inputs are already 16px, which is what stops iOS zooming the page on
+     focus; what they lacked was height. */
+  .set-page .set-input { min-height: 44px; }
+  .set-quiet-field .set-input { padding: 10px 12px; }
+
+  /* The switch keeps its 44x26 drawing and gains the missing 18px of height as
+     an invisible overlay. Real size would be wrong here — a pill that tall
+     stops reading as a switch — and unlike chips in a row this control has no
+     horizontal neighbour whose hitbox it could steal. */
+  .set-switch::after {
+    content: "";
+    position: absolute;
+    inset: -9px -4px;
+  }
+
+  /* The whole row is a <label>, so the radio itself is rarely the thing tapped;
+     it is still the thing aimed at. */
+  .set-vis-opt input { width: 20px; height: 20px; }
+
+  .set-page .pwf-toggle { min-width: 44px; min-height: 44px; right: 2px; }
+  .set-page .readfor-chip { min-height: 44px; padding: 10px 16px; }
+}

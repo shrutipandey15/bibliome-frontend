@@ -756,3 +756,64 @@
   .jr-setup h2, .jr-lock h2 { font-size: 25px; }
   .jr-shell--gate { padding: 1.5rem 1rem; }
 }
+
+@media (max-width: 640px) {
+  /* Journal is a route rather than a Dashboard tab, so it now renders the
+     shared bottom bar too and its content has to clear it. No FAB here, so
+     this is the bar plus a little breathing room rather than the Shelf's 128. */
+  .jr-shell { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ── The index as a sheet (phones) ──
+   Hidden above 640, where the .jr-index rail carries this. */
+.jr-index-trigger { display: none; }
+.jr-index-sheet { min-width: min(360px, 100%); }
+.jr-index-sheet-list { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.jr-index-sheet-list .jr-index-item { width: 100%; }
+
+@media (max-width: 640px) {
+  .jr-index { display: none; }
+  .jr-index-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    max-width: 760px;
+    min-height: 44px;
+    padding: 8px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .jr-index-trigger:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .jr-index-trigger-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .jr-index-trigger-value {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .jr-index-sheet-list .jr-index-item { min-height: 44px; }
+
+  /* The bottom bar carries SHELF now, so a second way back is one control too
+     many in a 56px bar that also holds three view tabs, a theme toggle and the
+     lock. Same reason "back to shelf" goes on Echo. */
+  .jr-bar > .jr-icon-btn:first-child { display: none; }
+}
+
+/* Touch targets: the bar's icon buttons were 32px and its view tabs ~31px,
+   both under the 44px minimum, and the lock is the one control here you must
+   never mis-tap into. */
+@media (pointer: coarse) {
+  .jr-icon-btn { width: 44px; height: 44px; }
+  .jr-tab { min-height: 44px; padding: 7px 16px; }
+}

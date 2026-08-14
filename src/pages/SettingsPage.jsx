@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import Modal from "../components/Modal";
 import PasswordField from "../components/PasswordField";
 import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor } from "../services/api";
 import { useJournalKey } from "../contexts/JournalKeyContext";
@@ -73,6 +74,8 @@ export default function SettingsPage() {
   const [prefsBusy, setPrefsBusy] = useState(false);
   const [readFor, setReadForState] = useState([]);
   const [savingReadFor, setSavingReadFor] = useState(false);
+  // Phones only: the rail is CSS-hidden below 640 and this sheet replaces it.
+  const [secSheet, setSecSheet] = useState(false);
 
   const showToast = (message, type = "error") => {
     setToast({ message, type });
@@ -221,11 +224,30 @@ export default function SettingsPage() {
     navigate("/");
   };
 
+  // The rail and the phone sheet render one list. Admin is a ROUTE rather than a
+  // panel, so it carries `to` instead of an id — keeping it in the same array is
+  // what stops the two navigations from drifting apart.
+  const railItems = [
+    ...SECTIONS,
+    ...(user?.is_admin ? [{ id: "admin", label: "Admin", glyph: "‡", to: "/admin" }] : []),
+  ];
+  const currentLabel = SECTIONS.find((s) => s.id === section)?.label ?? "Profile";
+
+  const pickFromSheet = (item) => {
+    setSecSheet(false);
+    if (item.to) { navigate(item.to); return; }
+    setSection(item.id);
+    // The panels swap in place under a sticky trigger, so without this you land
+    // wherever the PREVIOUS panel had you scrolled — typically halfway down a
+    // form you just left, with the new heading somewhere above the fold.
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="set-page">
       <div className="set-header">
-        <button className="btn ghost" onClick={() => navigate("/")} style={{ fontSize: 12 }}>← back to shelf</button>
-        <div>
+        <button className="btn ghost set-back" onClick={() => navigate("/")} style={{ fontSize: 12 }}>← back to shelf</button>
+        <div className="set-header-title">
           <div className="label" style={{ marginBottom: 6 }}>· housekeeping ·</div>
           <h1 className="set-h1">The <em>Drawer</em>.</h1>
         </div>
@@ -236,25 +258,58 @@ export default function SettingsPage() {
       </div>
       <div className="rule-dbl" style={{ marginBottom: 24 }} />
 
+      {/* Phones only — CSS-hidden above 640, where the rail beside the body
+          carries this. Eight sections laid out as a wrapped grid of glyphs cost
+          most of a phone's first screen and still read as a wall; a sheet keeps
+          the destination list one tap away and gives the panel the screen. */}
+      <div className="set-secbar">
+        <button
+          className="set-sec-trigger"
+          onClick={() => setSecSheet(true)}
+          aria-haspopup="dialog"
+        >
+          <span className="set-sec-trigger-label">section</span>
+          <span className="set-sec-trigger-value">{currentLabel} ⌄</span>
+        </button>
+      </div>
+
+      {secSheet && (
+        <Modal
+          onClose={() => setSecSheet(false)}
+          ariaLabel="Choose a section"
+          className="rr-modal-card"
+          backdropClassName="rr-modal-backdrop"
+        >
+          <div className="set-sec-sheet">
+            <div className="label rr-sheet-head">the drawer</div>
+            {railItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`set-sec-sheet-item ${section === item.id ? "is-here" : ""}`}
+                onClick={() => pickFromSheet(item)}
+              >
+                <span className="set-rail-glyph" aria-hidden="true">{item.glyph}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
+
       <div className="set-grid">
         {/* RAIL */}
         <nav className="set-rail">
-          {SECTIONS.map((s) => (
+          {railItems.map((item) => (
             <button
-              key={s.id}
-              className={`set-rail-item ${section === s.id ? "active" : ""}`}
-              onClick={() => setSection(s.id)}
+              key={item.id}
+              className={`set-rail-item ${section === item.id ? "active" : ""}`}
+              onClick={() => (item.to ? navigate(item.to) : setSection(item.id))}
             >
-              <span className="set-rail-glyph">{s.glyph}</span>
-              <span>{s.label}</span>
+              <span className="set-rail-glyph">{item.glyph}</span>
+              <span>{item.label}</span>
             </button>
           ))}
-          {user?.is_admin && (
-            <button className="set-rail-item" onClick={() => navigate("/admin")}>
-              <span className="set-rail-glyph">‡</span>
-              <span>Admin</span>
-            </button>
-          )}
         </nav>
 
         {/* BODY */}

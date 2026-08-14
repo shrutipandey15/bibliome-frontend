@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { ChevronDown, PenLine } from "lucide-react";
 import { EMOTIONS, getEmotionFamilies } from "../services/emotions";
 import {
   getEchoFeed, blockHandle, muteHandle, reportEcho, reportReply,
 } from "../services/api";
 import Modal from "../components/Modal";
 import ThemeToggle from "../components/ThemeToggle";
+import TabBar from "../components/TabBar";
 import EchoCard from "../components/echo/EchoCard";
 import EchoComposer from "../components/echo/EchoComposer";
 import EchoThread from "../components/echo/EchoThread";
@@ -57,6 +59,7 @@ export default function EchoesPage() {
   const [mine, setMine] = useState(false);
 
   const [composing, setComposing] = useState(false);
+  const [feelSheet, setFeelSheet] = useState(false);
   // EchoThread fetches the echo itself from its id, so `{ id }` is the whole of
   // what a deep link needs to hand it.
   const [threadEcho, setThreadEcho] = useState(
@@ -158,6 +161,25 @@ export default function EchoesPage() {
               {(activeEmo.name || emotion).toLowerCase()} ✕
             </button>
           )}
+          {/* Phones only (CSS-hidden above 640, where the rail carries this).
+              Same trigger+sheet shape as the Shelf's filter-by-feeling, so it's
+              a pattern already learned rather than a new one. */}
+          <button
+            className="ep-feel-trigger"
+            onClick={() => setFeelSheet(true)}
+            aria-haspopup="dialog"
+          >
+            <span className="ep-feel-trigger-label">a feeling</span>
+            <span className="ep-feel-trigger-value">
+              {activeEmo ? (
+                <>
+                  <span className="swatch" style={{ background: activeEmo.color }} />
+                  {(activeEmo.name || emotion).toLowerCase()}
+                </>
+              ) : "any"}
+              <ChevronDown size={15} aria-hidden="true" />
+            </span>
+          </button>
           <div className="ep-order">chronological</div>
         </div>
 
@@ -263,6 +285,55 @@ export default function EchoesPage() {
       )}
 
       {toast && <div className={`toast toast-${toast.type}`} onClick={() => setToast(null)}>{toast.message}</div>}
+
+      {/* The rail's other half. Phones only, and deliberately the same shape as
+          the Shelf's add-book FAB — this page's single creative action, put
+          where a thumb reaches. */}
+      <button className="rr-fab ep-fab" onClick={() => setComposing(true)} aria-label="Write an echo">
+        <PenLine size={24} aria-hidden="true" />
+      </button>
+
+      {feelSheet && (
+        <Modal
+          onClose={() => setFeelSheet(false)}
+          ariaLabel="Filter by feeling"
+          className="rr-modal-card"
+          backdropClassName="rr-modal-backdrop"
+        >
+          <div className="ep-feel-sheet">
+            <div className="label rr-sheet-head">a feeling</div>
+            <button
+              className={`chip ${!emotion ? "active" : ""}`}
+              style={{ "--chip-c": "var(--ink)" }}
+              onClick={() => { setEmotion(null); setFeelSheet(false); }}
+            >
+              <span className="swatch" />any feeling
+            </button>
+            {getEmotionFamilies().map(({ family, emotions }) => (
+              <div className="ep-feel-sheet-fam" key={family}>
+                <div className="ep-fam-name">{family}</div>
+                <div className="ep-feel-sheet-chips">
+                  {emotions.map(([id, e]) => (
+                    <button
+                      key={id}
+                      className={`chip ${emotion === id ? "active" : ""}`}
+                      style={{ "--chip-c": e.color }}
+                      onClick={() => { setEmotion(emotion === id ? null : id); setFeelSheet(false); }}
+                    >
+                      <span className="swatch" />
+                      {(e.name || id).toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Modal>
+      )}
+
+      {/* Phones only. Without it, tapping ECHO in the bottom bar navigated to a
+          page with no bottom bar — a persistent control that vanished on use. */}
+      <TabBar active="echoes" barOnly />
     </div>
   );
 }

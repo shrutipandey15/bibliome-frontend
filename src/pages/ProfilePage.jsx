@@ -9,6 +9,7 @@ import { cardArchetype } from "../services/dnaCard";
 import CollectionsEditor from "../components/profile/CollectionsEditor";
 import { MIN_BOOKS } from "../components/dna/constants";
 import { romanYear } from "../utils/roman";
+import useIsNarrow from "../hooks/useIsNarrow";
 import "./ProfilePage.css";
 
 /**
@@ -55,6 +56,54 @@ function SectionHead({ children, aside }) {
       <span>{children}</span>
       {aside && <span className="pf-head-aside">{aside}</span>}
     </div>
+  );
+}
+
+/**
+ * A section that folds on a phone and runs inline on the desk.
+ *
+ * The archive sections — the shelf, what you've reached, the lines you kept —
+ * are the bulk of this page and the least time-sensitive part of it. On a desk
+ * they sit in two columns and cost nothing; on a phone they are five screens
+ * stacked below the fold, so getting from your signature to your margins means
+ * scrolling past everything in between whether you wanted it or not.
+ *
+ * `<details>` rather than a hand-rolled toggle: it brings the disclosure
+ * semantics, keyboard operation and find-in-page behaviour already correct —
+ * Ctrl+F still reaches a closed section's text and opens it.
+ *
+ * A DOM swap rather than a media query, because the desk version must not
+ * change at all: its section head carries a real button ("all 69 →"), which
+ * inside a <summary> would be a click fighting the disclosure for the same tap.
+ * Swapping also means a rotate from portrait to landscape re-renders the plain
+ * section, so nothing can be stranded closed at a width with no control to
+ * open it.
+ */
+function FoldSection({ narrow, title, aside, phoneAside, defaultOpen = false, className = "", children }) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  if (!narrow) {
+    return (
+      <section className={className}>
+        <SectionHead aside={aside}>{title}</SectionHead>
+        {children}
+      </section>
+    );
+  }
+
+  return (
+    <details className={`${className} pf-fold`} open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary className="pf-head pf-fold-summary">
+        <span>{title}</span>
+        <span className="pf-fold-right">
+          {/* A closed section should still say what is inside it — otherwise
+              folding trades a long page for a page that tells you nothing. */}
+          {phoneAside && <span className="pf-head-aside">{phoneAside}</span>}
+          <span className="pf-fold-chev" aria-hidden="true">⌄</span>
+        </span>
+      </summary>
+      {children}
+    </details>
   );
 }
 
@@ -228,6 +277,7 @@ function BioEditor({ bio, onSave }) {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { entries } = useJournal();
+  const narrow = useIsNarrow();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [insight, setInsight] = useState(null);
@@ -398,11 +448,19 @@ export default function ProfilePage() {
           )}
 
           {/* 6. Reading history (range + pattern, never a tally-as-status) */}
+          {/* Open by default on a phone: this is the one archive section you
+              browse rather than consult, and a wall of covers is the pleasure
+              of the page. "all 69 →" is dropped from the phone head — it goes
+              to the same place as the sticky "back to shelf" above it. */}
           {recent.length > 0 && (
-            <section className="pf-section">
-              <SectionHead aside={<button className="pf-head-link" onClick={() => navigate("/")}>all {bookCount} →</button>}>
-                recently shelved
-              </SectionHead>
+            <FoldSection
+              narrow={narrow}
+              className="pf-section"
+              title="recently shelved"
+              aside={<button className="pf-head-link" onClick={() => navigate("/")}>all {bookCount} →</button>}
+              phoneAside={`${bookCount}`}
+              defaultOpen
+            >
               <div className="pf-shelf-grid">
                 {recentShown.map((b) => <ShelfBook key={b.entry_id} book={b} onClick={() => navigate("/")} />)}
               </div>
@@ -412,15 +470,19 @@ export default function ProfilePage() {
                 hidden={recent.length - CAP.recent}
                 label=""
               />
-            </section>
+            </FoldSection>
           )}
         </div>
 
         <div className="pf-rail">
           {/* 8. Milestones — substance only, dated, with what's still ahead. */}
           {milestones.length > 0 && (
-            <section className="pf-section pf-section--flush">
-              <SectionHead>milestones</SectionHead>
+            <FoldSection
+              narrow={narrow}
+              className="pf-section pf-section--flush"
+              title="milestones"
+              phoneAside={`${milestones.filter((m) => m.achieved !== false).length} of ${milestones.length}`}
+            >
               <ul className="pf-milestones">
                 {milestones.map((m) => {
                   // Payloads written before milestones carried state have neither
@@ -437,7 +499,7 @@ export default function ProfilePage() {
                   );
                 })}
               </ul>
-            </section>
+            </FoldSection>
           )}
 
           {/* 9. What the shelf noticed. Renders only when there is a real one. */}
@@ -461,8 +523,13 @@ export default function ProfilePage() {
           it visibly empty. Across the page they set in three, and the quotes
           clamp so one very long passage can't set the height for the rest. */}
       {margins.length > 0 && (
-        <section className="pf-section pf-margins-section">
-          <SectionHead aside="lines you kept">from your margins</SectionHead>
+        <FoldSection
+          narrow={narrow}
+          className="pf-section pf-margins-section"
+          title="from your margins"
+          aside="lines you kept"
+          phoneAside={`${margins.length} kept`}
+        >
           <div className="pf-margins">
             {marginsShown.map((m) => {
               const emo = m.dominant_emotion ? EMOTIONS[m.dominant_emotion] : null;
@@ -482,7 +549,7 @@ export default function ProfilePage() {
             hidden={margins.length - CAP.margins}
             label="from your margins"
           />
-        </section>
+        </FoldSection>
       )}
 
       <footer className="pf-footer">

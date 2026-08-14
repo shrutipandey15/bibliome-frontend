@@ -712,7 +712,251 @@
   .rt-msg-body { font-size: 16.5px; }
   .rt-compose { padding: 18px 18px 16px; }
   .rt-compose-field { font-size: 16.5px; }
+
+  /* ── The shared-emotion rows ──
+     `.rm-emo-head` is a baseline flex row: swatch, the emotion phrase, then
+     "at the same pitch" pushed right with `margin-left: auto` and
+     `white-space: nowrap`. In a 72px-cover card the text column is ~213px, and
+     the pitch string alone is ~133px of that at 10px/0.18em — so the phrase was
+     left about 54px and "I needed that cry" broke across three lines beside a
+     jammed-right caption. Given its own line it has the full column. */
+  .rm-emo-head { flex-wrap: wrap; }
+  .rm-emo-close { margin-left: 0; flex-basis: 100%; }
+
+  /* ── The letters masthead ──
+     Was ~250px of chrome before the first letter: back, a full-size cover,
+     "letters with @abc", a three-line facts block, and the close button, each
+     on its own line.
+
+     `.rt-facts` goes entirely. It reads "one letter each turn / no receipts,
+     ever" — and the dek immediately below it says "Nothing here reports back —
+     no dots, no ticks, no notice of when a letter was opened." That is the same
+     promise twice, thirty pixels apart, and the dek says it better.
+
+     What's left is one row: back on the left, close on the right, the cover
+     shrunk to a thumb beside the handle. */
+  /* Explicit grid AREAS, not flex `order`. The previous attempt reordered a
+     wrapping flex row, which put the 96px book plate on a line it was never
+     sized for and left it overlapping the handle. Named areas can't scramble:
+     each element is placed, and an absent one (there is no plate when the match
+     has no book title) just leaves its cell empty.
+
+       row 1:  ← resonance            close the letters
+       row 2:  [plate]  letters with / @abc                                  */
+  .rt-aside {
+    position: static;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "back  close"
+      "plate who";
+    align-items: center;
+    gap: 12px;
+  }
+  .rt-back  { grid-area: back; align-self: center; }
+  .rt-quiet { grid-area: close; justify-self: end; align-self: center; }
+  .rt-plate { grid-area: plate; width: 34px; }
+  .rt-plate .rm-plate { padding: 4px 3px; }
+  .rt-plate .rm-plate::before { inset: 2px; }
+  .rt-plate .rm-plate-title { font-size: 6px; -webkit-line-clamp: 3; }
+  .rt-who { grid-area: who; min-width: 0; }
+  .rt-with { font-size: 18px; margin-top: 2px; }
+  /* Says the same thing as the dek immediately below it. */
+  .rt-facts { display: none; }
+
+  /* The three promises are atmosphere on a phone, and they sit directly above
+     the rule that closes the masthead. Removed with it. */
+  .rp-promises { display: none; }
+  .rp-masthead { border-bottom: 0; padding-bottom: 8px; }
+
+  /* ── The compose footer ──
+     `space-between` between "sent once · no edits after" and the send button.
+     Together they need ~332px against ~303px of card, so both squeezed and
+     "send the letter" wrapped to two lines inside its own button. */
+  .rt-compose-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .rt-compose-foot .btn { justify-content: center; white-space: nowrap; }
+
+  /* Stacked, so a mis-tap on "not this one" can't decline a match you meant to
+     answer. A decline is silent and final to both sides. */
+  .rm-foot { flex-direction: column; align-items: stretch; gap: 12px; }
+  .rm-foot .btn { justify-content: center; }
+}
+
+@media (pointer: coarse) {
+  .rm-foot .btn, .rt-compose-foot .btn { min-height: 44px; }
+
+  /* Both of these draw their affordance with a `border-bottom` on the button
+     box and 2px of padding, so the rule sits directly under the words. Given a
+     44px min-height the box grows but the border stays at its foot — the
+     underline detaches from the text and reads as a divider. Moving it to a
+     text-decoration keeps it on the words at any box height. */
+  .rm-quiet, .rt-quiet {
+    min-height: 44px;
+    border-bottom: 0;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--rule);
+  }
 }
 
 /* Back-to-shelf and the surface toggle travel together in the masthead. */
 .rp-head-row { display: flex; align-items: center; gap: 10px; }
+
+/* ============================================================
+   OPEN LETTERS — an inbox, not a stack of cards
+   ============================================================ */
+.rp-cards-rows { gap: 0; }
+.rt-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  text-align: left;
+  cursor: pointer;
+}
+.rt-row + .rt-row { border-top: 0; }
+.rt-row:hover { border-color: var(--res-accent); }
+.rt-row:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.rt-row-cover {
+  width: 34px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 1px 2px 2px 1px;
+  box-shadow: -1px 0 0 rgba(0,0,0,.3);
+  flex: none;
+}
+.rt-row-cover--blank { background: var(--bg-sunken); display: block; }
+.rt-row-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.rt-row-who {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--res-accent);
+}
+/* One line each, ellipsised: a row whose height depends on the title length is
+   a card again. */
+.rt-row-book {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rt-row-author { color: var(--ink-faint); font-style: italic; }
+.rt-row-chev { color: var(--ink-ghost); flex: none; }
+
+/* The section cap's control. */
+.rp-more {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 9px 18px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.rp-more:hover { border-color: var(--res-accent); color: var(--ink); }
+
+/* ============================================================
+   THE THREAD — turn-taking you can see without reading
+   ============================================================
+   Your own comment on the markup rejects right-alignment: "a letter you have to
+   read at the wrong margin is a bubble". That still holds — nothing here moves
+   to the right margin, and there are no receipts, no presence, no typing state.
+   What changes is that the two sides stop being the SAME object: yours is
+   inset and sits on a different ground, theirs keeps the accent margin. Enough
+   to see whose turn it was at a glance; not enough to become a chat app. */
+.rt-msg.mine {
+  margin-left: 8%;
+  /* background-COLOR, not the shorthand: `.rt-msg` paints `--paper-grain` as a
+     background-image, and the shorthand would reset it to none — stripping the
+     grain off your own letters and leaving them the one flat surface on a page
+     made of paper. `.theirs` sets its colour the same way, just above. */
+  background-color: var(--bg-sunken);
+}
+/* `.rt-msg.theirs` already carries the accent margin at line 595 — not
+   redeclared here. */
+
+@media (pointer: coarse) {
+  .rt-row { min-height: 64px; }
+  .rp-more { min-height: 44px; }
+}
+
+@media (max-width: 640px) {
+  /* 8% of a phone is not a margin you can see; a flat inset reads. */
+  .rt-msg.mine { margin-left: 22px; }
+
+  /* ── Density ──
+     A message was: 22px padding, a 10.5px signature, 12px of padding and a
+     RULE under it, 14px before the body, the body, then 20px — about 114px of
+     furniture around "testing resonance", with a 30px gap to the next one.
+     Four short letters filled a screen and a half with almost no words in it.
+     The signature and the date are a caption; they don't need a divider
+     separating them from the two words they caption. */
+  .rt-scroll { gap: 14px; }
+  .rt-msg { padding: 13px 15px 15px; }
+  .rt-msg-head { padding-bottom: 0; border-bottom: 0; }
+  .rt-msg-body { margin-top: 7px; font-size: 16.5px; line-height: 1.6; }
+
+  .rt-compose { margin-top: 20px; padding: 15px 15px 13px; }
+  .rt-compose-field { margin-top: 8px; font-size: 16.5px; line-height: 1.6; }
+  .rt-compose-foot { margin-top: 6px; padding-top: 10px; }
+}
+
+/* ── A folded match: nothing to do, so nothing shown until asked ── */
+.rm-fold { display: block; padding: 0; }
+.rm-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+.rm-summary::-webkit-details-marker { display: none; }
+.rm-summary:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.rm-summary-cover {
+  width: 30px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 1px 2px 2px 1px;
+  flex: none;
+}
+.rm-summary-cover--blank { background: var(--bg-sunken); display: block; }
+.rm-summary-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.rm-summary-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rm-summary-note {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+.rm-summary-chev { color: var(--res-accent); flex: none; transition: transform .2s ease; }
+.rm-fold[open] .rm-summary-chev { transform: rotate(180deg); }
+/* Single column: the summary row already carries the cover. */
+.rm-fold-body { padding: 2px 16px 18px; border-top: 1px solid var(--rule-soft); margin-top: 2px; }
+.rm-fold-body .rm-body { padding-top: 14px; }

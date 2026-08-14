@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Lock } from "lucide-react";
 import Modal from "../components/Modal";
 import ThemeToggle from "../components/ThemeToggle";
+import TabBar from "../components/TabBar";
 import { useJournalKey } from "../contexts/JournalKeyContext";
 import { usePrivateJournal } from "../contexts/PrivateJournalContext";
 import JournalSetup from "../components/journal/JournalSetup";
@@ -26,6 +27,17 @@ import "../components/journal/journal.css";
  * mean prose sitting somewhere unsealed, and there is nowhere for it to sit.
  */
 export default function JournalPage() {
+  return (
+    <>
+      <JournalBody />
+      {/* Phones only — see EchoesPage. Journal is a route, not a Dashboard tab,
+          so without this the bottom bar disappeared the moment you used it. */}
+      <TabBar active="journal" barOnly />
+    </>
+  );
+}
+
+function JournalBody() {
   const { status, error } = useJournalKey();
 
   if (status === "loading") {

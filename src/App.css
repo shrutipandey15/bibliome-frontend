@@ -144,6 +144,12 @@
   position: relative;
   margin-bottom: -1px;
 }
+/* Echo and Journal pass `barOnly`. They carry their own mastheads, so the
+   folder ribbon would be a second competing header on a wide screen — but on a
+   phone they need the bottom bar like every other destination. The 640 block
+   further down re-shows it, winning on source order. */
+.rr-tabs-baronly { display: none; }
+
 .rr-tab {
   position: relative;
   padding: 8px 22px 10px;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePrivateJournal } from "../../contexts/PrivateJournalContext";
 import { EMOTIONS } from "../../services/emotions";
 import { countWords, formatLongDate } from "./BlankPage";
+import Modal from "../Modal";
 
 // The ribbon is one date: which day you last read down to. It lives in
 // localStorage so it survives the tab — and it is the only journal-related thing
@@ -39,6 +40,7 @@ export default function ContinuousRead({ onTagDay }) {
 
   // Oldest first for reading; byDate is newest-first for everything else.
   const chronological = useMemo(() => [...byDate].reverse(), [byDate]);
+  const [indexSheet, setIndexSheet] = useState(false);
 
   // Land on the ribbon once, on first paint after the pages arrive.
   useEffect(() => {
@@ -80,6 +82,48 @@ export default function ContinuousRead({ onTagDay }) {
 
   return (
     <div className="jr-read">
+      {/* Phones only (CSS-hidden above 640, where the rail below carries this).
+          The rail becomes a horizontal scroll strip under 1080, which is fine
+          for a handful of days and unusable for a journal kept for a year —
+          the same unbounded-horizontal-axis problem as the heatmap. A sheet
+          wraps and grows downward instead. */}
+      <button
+        className="jr-index-trigger"
+        onClick={() => setIndexSheet(true)}
+        aria-haspopup="dialog"
+      >
+        <span className="jr-index-trigger-label">the index</span>
+        <span className="jr-index-trigger-value">
+          {ribbon ? shortDate(ribbon) : `${chronological.length} days`} ⌄
+        </span>
+      </button>
+
+      {indexSheet && (
+        <Modal
+          onClose={() => setIndexSheet(false)}
+          ariaLabel="Jump to a day"
+          className="rr-modal-card"
+          backdropClassName="rr-modal-backdrop"
+        >
+          <div className="jr-index-sheet">
+            <div className="label rr-sheet-head">the index</div>
+            <div className="jr-index-sheet-list">
+              {chronological.map(({ date }) => (
+                <button
+                  key={date}
+                  type="button"
+                  className={`jr-index-item${date === ribbon ? " is-here" : ""}`}
+                  onClick={() => { goToDay(date); setIndexSheet(false); }}
+                >
+                  <span className="jr-index-mark" aria-hidden="true" />
+                  <span className="jr-index-label">{shortDate(date)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </Modal>
+      )}
+
       <aside className="jr-index" aria-label="The index">
         <div className="jr-aside-label">the index</div>
         {chronological.map(({ date }) => (

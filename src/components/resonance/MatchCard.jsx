@@ -85,7 +85,7 @@ const STRENGTH_LINE = {
   light: "You felt some of the same things about this book.",
 };
 
-export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenThread, busy }) {
+export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenThread, busy, foldable = false }) {
   const [composing, setComposing] = useState(false);
   const [error, setError] = useState("");
   const { status, direction } = match;
@@ -104,13 +104,27 @@ export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenT
     }
   };
 
-  return (
-    <article className={`rm rm-${status}`}>
-      <div className="rm-cover">
-        <Cover url={match.cover_url} title={title} author={match.book_author} />
-      </div>
+  // Folded when there is genuinely nothing to do.
+  //
+  // NOT simply "Waiting": that section is `status === "pending"`, which holds
+  // BOTH directions. `they_reached` means another reader wrote to you and you
+  // can answer — the most actionable card on the page — so collapsing the whole
+  // section would bury it. (The section's own note, "Sent, or arrived. Nothing
+  // to do either way", is only true of the half below.)
+  const nothingToDo = status === "pending" && direction === "you_reached";
+  // `foldable` is the caller's choice (Surfaced folds them all); `nothingToDo`
+  // folds itself regardless of who rendered it.
+  const folded = foldable || nothingToDo;
+  const shared = (match.shared_emotions || []).length;
+  // The folded row has to carry enough to decide whether to open it. For a
+  // waiting match that's its state; for a surfaced one it's the only thing the
+  // card is arguing — how much you two overlapped.
+  const summaryNote = nothingToDo
+    ? "your note is with them"
+    : `${shared} feeling${shared === 1 ? "" : "s"} in common`;
 
-      <div className="rm-body">
+  const body = (
+    <div className="rm-body">
         <div className="rm-kicker">· someone else read this ·</div>
         <h3 className="rm-title">{title}</h3>
         {match.book_author && <div className="rm-author">{match.book_author}</div>}
@@ -155,7 +169,36 @@ export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenT
             onOpenThread={onOpenThread}
           />
         )}
+    </div>
+  );
+
+  if (folded) {
+    return (
+      <details className={`rm rm-${status} rm-fold`}>
+        <summary className="rm-summary">
+          {match.cover_url
+            ? <img className="rm-summary-cover" src={match.cover_url} alt="" />
+            : <span className="rm-summary-cover rm-summary-cover--blank" aria-hidden="true" />}
+          <span className="rm-summary-body">
+            <span className="rm-summary-title">{title}</span>
+            <span className="rm-summary-note">{summaryNote}</span>
+          </span>
+          <span className="rm-summary-chev" aria-hidden="true">⌄</span>
+        </summary>
+        {/* No cover in here. The summary above already shows one, and repeating
+            it put two images of the same book about ten pixels apart, which
+            reads as a duplicate row rather than as one card opening. */}
+        <div className="rm-fold-body">{body}</div>
+      </details>
+    );
+  }
+
+  return (
+    <article className={`rm rm-${status}`}>
+      <div className="rm-cover">
+        <Cover url={match.cover_url} title={title} author={match.book_author} />
       </div>
+      {body}
     </article>
   );
 }
@@ -208,5 +251,37 @@ function MatchAction({ match, busy, onCompose, onDecline, onOpenThread }) {
       <button className="btn brass" onClick={onCompose} disabled={busy}>Leave a note</button>
       <button className="rm-quiet" onClick={onDecline} disabled={busy}>not this one</button>
     </div>
+  );
+}
+
+/**
+ * A connected match, as an inbox row rather than a card.
+ *
+ * "Open letters" is a list of conversations you are already in. The full card
+ * spends ~450px re-arguing the shared feelings that made the match — evidence
+ * for a decision both of you already said yes to. On Surfaced that evidence IS
+ * the decision; here it is a receipt. So the row carries only what you need to
+ * pick the right conversation: who, and which book.
+ *
+ * No date: `created_at` on a match is when it was MADE, not when the last letter
+ * arrived, and a timestamp in an inbox reads as recency. The API serves no
+ * last-message field, so rather than print a misleading one this prints none.
+ */
+export function ThreadRow({ match, onOpen }) {
+  const cover = match.cover_url;
+  return (
+    <button className="rt-row" onClick={onOpen}>
+      {cover
+        ? <img className="rt-row-cover" src={cover} alt="" />
+        : <span className="rt-row-cover rt-row-cover--blank" aria-hidden="true" />}
+      <span className="rt-row-body">
+        <span className="rt-row-who">@{match.handle || "your reader"}</span>
+        <span className="rt-row-book">
+          {match.book_title}
+          {match.book_author && <span className="rt-row-author"> · {match.book_author}</span>}
+        </span>
+      </span>
+      <span className="rt-row-chev" aria-hidden="true">→</span>
+    </button>
   );
 }

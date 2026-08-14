@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
-import {
-  Settings, MoreHorizontal, Sun, Moon, User, Sparkles, Plus,
-  Library, Dna, MessageCircle, NotebookPen, ChevronDown,
-} from "lucide-react";
+import { Settings, MoreHorizontal, Sun, Moon, User, Sparkles, Plus, ChevronDown } from "lucide-react";
 import { Routes, Route, useParams, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
@@ -10,6 +7,7 @@ import { JournalKeyProvider } from "./contexts/JournalKeyContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import useIsNarrow from "./hooks/useIsNarrow";
 import ThemeToggle from "./components/ThemeToggle";
+import TabBar from "./components/TabBar";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
 import { saveCardAsImage } from "./utils/cardUtils";
 import { getSharedDNA, getEmotionVocab, setReadFor } from "./services/api";
@@ -125,21 +123,7 @@ function buildDashboardStats(entries) {
   return { total, avg, topEmotion, registers };
 }
 
-function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
-  // Three tabs — Shelf · DNA · Echo. Patterns folded into DNA: both surfaced the
-  // same emotion data, so the aggregate now reads as the closing section of the
-  // DNA scroll rather than a competing tab.
-  // Icons are mobile-only (hidden by CSS above 640). A bottom bar of four
-  // text-only labels is legible but generic; the glyph is what makes a tab bar
-  // scannable without reading it.
-  const tabs = [
-    { id: "shelf",    label: "Shelf", count: entriesCount, Icon: Library },
-    { id: "dna",      label: "DNA",   Icon: Dna },
-    { id: "echoes",   label: "Echo",  Icon: MessageCircle },
-    // Deliberately unadorned: no streak, no count, no "you haven't written in
-    // 4 days". A journal that nags is a journal you start lying to.
-    { id: "journal",  label: "Journal", Icon: NotebookPen },
-  ];
+function ReadingRoomHeader({ user, tab, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
   const initial = (user?.display_name || user?.username || "R").trim().charAt(0).toUpperCase();
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -222,21 +206,7 @@ function ReadingRoomHeader({ user, tab, onTab, onAddBook, onRevealDNA, canGenera
           </button>
         </div>
       </div>
-      <div className="rr-tabs">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            className={`rr-tab ${tab === t.id ? "active" : ""}`}
-            onClick={() => onTab(t.id)}
-            aria-current={tab === t.id ? "page" : undefined}
-          >
-            <t.Icon size={19} className="rr-tab-icon" aria-hidden="true" />
-            {t.label}
-            {t.count !== undefined && <span className="rr-tab-count">{String(t.count).padStart(2, "0")}</span>}
-            {tab === t.id && <span className="rr-tab-mark">✦</span>}
-          </button>
-        ))}
-      </div>
+      <TabBar active={tab} shelfCount={entriesCount} />
 
       {/* A bottom sheet rather than a dropdown. Modal already gives us the focus
           trap, Escape, backdrop-press and focus restore, and .rr-modal-card
@@ -715,7 +685,6 @@ function Dashboard() {
       <ReadingRoomHeader
         user={user}
         tab={tab}
-        onTab={setTab}
         onAddBook={() => setModal("new")}
         onRevealDNA={handleGenerateDNA}
         canGenerate={canGenerate}

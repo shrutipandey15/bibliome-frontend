@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react";
 import {
   getThreadMessages, sendThreadMessage, blockThread, reportThread,
 } from "../../services/api";
@@ -44,6 +44,17 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   const [error, setError] = useState("");
   const [safety, setSafety] = useState(false);
 
+  // ── Scroll ──
+  // The transcript is not its own scroll container; the PAGE scrolls. So opening
+  // a thread put you at the top of it — on the oldest letter, with the whole
+  // history and the reply box below. Every messaging surface ever built opens at
+  // the newest message, and this one is a conversation whatever we style it as.
+  const endRef = useRef(null);
+  const didLandRef = useRef(false);
+  // Height of the document immediately before older letters are prepended, so
+  // the restore below can put the viewport back where the reader's eyes were.
+  const prependFromRef = useRef(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -58,8 +69,28 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
 
   useEffect(() => { load(); }, [load]);
 
+  // Land on the newest letter, once, on open. `auto` rather than `smooth`: this
+  // should read as where the thread opened, not as a journey it took you on.
+  useEffect(() => {
+    if (loading || didLandRef.current || !messages.length) return;
+    didLandRef.current = true;
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [loading, messages.length]);
+
+  // Prepending 50 letters above the viewport moves everything the reader was
+  // looking at down by the height of what arrived. Re-anchoring by the exact
+  // delta leaves the letter they were reading under their eyes, which is what
+  // "read what came before" should feel like.
+  useLayoutEffect(() => {
+    const from = prependFromRef.current;
+    if (from == null) return;
+    prependFromRef.current = null;
+    window.scrollBy(0, document.documentElement.scrollHeight - from);
+  }, [messages]);
+
   const loadEarlier = async () => {
     if (!before) return;
+    prependFromRef.current = document.documentElement.scrollHeight;
     try {
       const data = await getThreadMessages(threadId, { before });
       setMessages((prev) => [...(data.messages || []), ...prev]);
@@ -78,6 +109,8 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
       const saved = await sendThreadMessage(threadId, text);
       setMessages((prev) => [...prev, saved]);
       setBody("");
+      // Your own letter should be the thing you're looking at after you send it.
+      requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }));
     } catch (err) {
       setError(err?.message || "Couldn't send that.");
     }
@@ -107,7 +140,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
           </div>
         )}
 
-        <div>
+        <div className="rt-who">
           <div className="rt-kicker">letters with</div>
           <div className="rt-with">{handle ? `@${handle}` : "your reader"}</div>
         </div>
@@ -176,6 +209,8 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
                   <div className="rt-msg-body">{m.body}</div>
                 </article>
               ))}
+              {/* Scroll target for "open at the newest letter". */}
+              <div ref={endRef} />
             </>
           )}
         </div>

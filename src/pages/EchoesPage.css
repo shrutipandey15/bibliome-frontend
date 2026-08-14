@@ -352,3 +352,70 @@
    element would sit beneath it. Appended at the end of the file so the rule sits
    after this file's own media queries; resolves to 0 without a cutout. */
 .echoes-page { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ── The feeling trigger + sheet (phones) ──
+   Above 640 the rail carries all of this, so the trigger never generates a box
+   and the sheet is unreachable — nothing here can touch the desktop layout. */
+.ep-feel-trigger { display: none; }
+.ep-feel-sheet { min-width: min(360px, 100%); }
+.ep-feel-sheet-fam { margin-top: 18px; }
+.ep-feel-sheet-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+
+@media (max-width: 640px) {
+  /* The rail is `order: 1` from the 1080 tier, which on a tablet makes it a
+     horizontal strip above the feed. On a phone it meant ~330px of gold button,
+     friction line and an eighteen-emotion index before the words "The Echoes."
+     — you landed on a composer instead of the room. Its two jobs move to the
+     FAB and the sheet below, so the whole thing goes. (That also takes the
+     `.ep-fam { min-width: 148px }` overflow with it: what the reader saw was
+     "tendernes" and "amuseme" sliced mid-word, which reads as a broken layout
+     rather than as a scroll affordance.) */
+  .ep-rail { display: none; }
+  .ep-main { order: 0; padding: 22px 18px 0; }
+
+  .ep-scope { flex-wrap: wrap; gap: 10px; }
+  .ep-feel-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+  }
+  .ep-feel-trigger:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .ep-feel-trigger-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .ep-feel-trigger-value {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .ep-feel-trigger .swatch { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .ep-feel-trigger svg { color: var(--ink-faint); flex: none; }
+  /* The rail used to carry this; on a phone the trigger says it instead, so the
+     inline "grief ✕" pill would be the same fact twice in one row. */
+  .ep-active-filter { display: none; }
+
+  /* The bottom bar carries SHELF now, so a second way back is redundant — and
+     it was sharing a cramped row with the theme toggle. */
+  .ep-head-actions .btn.ghost { display: none; }
+
+  /* Clear the fixed bottom bar (56) and the FAB above it (72 → 128). */
+  .echoes-page {
+    padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px));
+  }
+}

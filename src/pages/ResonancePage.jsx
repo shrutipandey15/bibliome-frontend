@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getResonanceMatches, reachOut, respondToMatch } from "../services/api";
 import { markSeen } from "../components/resonance/signal";
-import MatchCard from "../components/resonance/MatchCard";
+import MatchCard, { ThreadRow } from "../components/resonance/MatchCard";
 import ResonanceThread from "../components/resonance/ResonanceThread";
 import ThemeToggle from "../components/ThemeToggle";
 import "./ResonancePage.css";
@@ -159,6 +159,7 @@ export default function ResonancePage() {
           <Section
             title="Open letters"
             note="You both said yes."
+            variant="rows"
             matches={connected}
             busyId={busyId}
             onOpenThread={setOpenThread}
@@ -175,6 +176,7 @@ export default function ResonancePage() {
             title="Surfaced"
             note="At most three at a time. There is no next page."
             matches={suggested}
+            foldable
             busyId={busyId}
             onReach={doReach}
             onDecline={doDecline}
@@ -192,8 +194,22 @@ export default function ResonancePage() {
   );
 }
 
-function Section({ title, note, matches, busyId, onReach, onAccept, onDecline, onOpenThread }) {
+// How many matches a section draws before offering the rest.
+//
+// GET /resonance/matches has no cursor — it returns every match this reader has
+// ever had, and "Open letters" and "Waiting" only ever grow. Surfaced is capped
+// at three by the feature itself, so only the other two need this. A cursor on
+// the endpoint is the real fix; this bounds the DOM in the meantime.
+const SECTION_STEP = 8;
+
+function Section({ title, note, matches, variant, foldable, busyId, onReach, onAccept, onDecline, onOpenThread }) {
+  const [shown, setShown] = useState(SECTION_STEP);
+  // Above the early return: hooks cannot run conditionally.
+  useEffect(() => { setShown(SECTION_STEP); }, [matches.length]);
+
   if (!matches.length) return null;
+  const visible = matches.slice(0, shown);
+  const remaining = matches.length - visible.length;
   return (
     <section className="rp-section">
       <div className="rp-section-head">
@@ -201,18 +217,28 @@ function Section({ title, note, matches, busyId, onReach, onAccept, onDecline, o
         <span className="rp-section-note">{note}</span>
         <span className="rp-section-rule" aria-hidden="true" />
       </div>
-      <div className="rp-cards">
-        {matches.map((m) => (
-          <MatchCard
-            key={m.match_id}
-            match={m}
-            busy={busyId === m.match_id}
-            onReach={(note) => onReach?.(m, note)}
-            onAccept={(note) => onAccept?.(m, note)}
-            onDecline={() => onDecline?.(m)}
-            onOpenThread={() => onOpenThread?.(m)}
-          />
+      <div className={`rp-cards ${variant === "rows" ? "rp-cards-rows" : ""}`}>
+        {visible.map((m) => (
+          variant === "rows" ? (
+            <ThreadRow key={m.match_id} match={m} onOpen={() => onOpenThread?.(m)} />
+          ) : (
+            <MatchCard
+              key={m.match_id}
+              match={m}
+              busy={busyId === m.match_id}
+              foldable={foldable}
+              onReach={(note) => onReach?.(m, note)}
+              onAccept={(note) => onAccept?.(m, note)}
+              onDecline={() => onDecline?.(m)}
+              onOpenThread={() => onOpenThread?.(m)}
+            />
+          )
         ))}
+        {remaining > 0 && (
+          <button className="rp-more" onClick={() => setShown((n) => n + SECTION_STEP)}>
+            show {Math.min(remaining, SECTION_STEP)} more · {visible.length} of {matches.length}
+          </button>
+        )}
       </div>
     </section>
   );

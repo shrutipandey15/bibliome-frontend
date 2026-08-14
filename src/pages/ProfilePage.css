@@ -136,6 +136,38 @@
   font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint);
 }
 
+/* ── Foldable archive sections (phones) ──
+   No media query and no `display: none` fallback: ProfilePage.jsx renders the
+   <details> ONLY below 640 and a plain <section> above it, so none of this can
+   reach the desk. See FoldSection there for why it's a DOM swap.
+
+   The <summary> IS the section head rather than a bar above one, so folding
+   costs no extra chrome — the same mono eyebrow on the same hairline rule,
+   plus a chevron. */
+.pf-fold-summary {
+  /* .pf-head is baseline-aligned for a head that only holds type. This one
+     holds a chevron too, and it needs a 44px box. */
+  align-items: center;
+  min-height: 44px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  cursor: pointer;
+  /* Both are needed to drop the native disclosure triangle — the pseudo for
+     WebKit, `list-style` for Firefox. */
+  list-style: none;
+}
+.pf-fold-summary::-webkit-details-marker { display: none; }
+.pf-fold-summary:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.pf-fold-right { display: flex; align-items: center; gap: 12px; }
+.pf-fold-chev { color: var(--brass); font-size: 17px; line-height: 1; transition: transform .2s ease; }
+.pf-fold[open] .pf-fold-chev { transform: rotate(180deg); }
+/* Closed, the head's 20px of lead-in would sit under a rule with nothing after
+   it — two closed sections in a row read as one gap rather than two headings. */
+.pf-fold:not([open]) .pf-fold-summary { margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .pf-fold-chev { transition: none; }
+}
+
 /* ── The rail folds under the desk before the desk gets narrow ── */
 @media (max-width: 1080px) {
   .pf-grid { grid-template-columns: minmax(0, 1fr); gap: 44px; }
@@ -157,7 +189,121 @@
   .pf-open-note { grid-column: 1 / -1; max-width: none; text-align: left; }
 }
 
+/* ── Phones ──
+   The study is a long room: identity, figures, what's open, the signature,
+   collections, the shelf, milestones, margins. On a desk that reads as one
+   spread; on a phone it is seven screens of scroll, and the desk's proportions
+   — a 68px name, 44px between every section, a top bar built for a 1260px
+   measure — are what make it feel like a shrunk page rather than a made one.
+   This tier re-proportions it. Nothing above 640 is touched. */
+@media (max-width: 640px) {
+  .pf-page { padding: 0 18px 48px; padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+
+  /* ── Top bar ──
+     It was laying out three items on one line in ~340px: the ghost button broke
+     to "← back to / shelf" inside its box, and `· your study ·` at 0.42em of
+     letter-spacing dropped its closing `·` onto a line of its own. The centre
+     title is atmosphere and the footer already says it, so it goes and the row
+     becomes what it needs to be — the way out on the left, edit on the right.
+
+     Sticky, because this page runs seven screens on a phone and carries no tab
+     bar: without it, "back to shelf" exists only at the very top, and the way
+     out of a room should not be something you have to scroll to find. */
+  .pf-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 -18px 26px;
+    padding: 10px 18px;
+    gap: 12px;
+    background: var(--bg-page);
+    border-bottom: 1px solid var(--rule);
+  }
+  .pf-topbar-title { display: none; }
+  .pf-topbar .btn { white-space: nowrap; font-size: 12px; padding: 8px 12px; }
+
+  /* ── Identity ──
+     40px was still sized for a name of four letters. A real display name at that
+     size breaks across two lines and swamps the disposition under it; and a
+     single long unbroken handle had nothing to break on at all. */
+  .pf-name { font-size: 32px; margin-top: 12px; overflow-wrap: anywhere; }
+  .pf-since { font-size: 10px; letter-spacing: 0.18em; }
+  .pf-idline { gap: 10px; margin-top: 12px; }
+  .pf-disposition { font-size: 18px; }
+  .pf-bio { margin-top: 16px; }
+  .pf-bio-text { font-size: 17px; }
+  /* cancel/save were two small buttons floated right under a full-width
+     textarea; they split the row instead. */
+  .pf-bio-actions .btn { flex: 1; justify-content: center; }
+
+  /* ── Rhythm ──
+     44px between sections plus 40px of gutter on each side of the upper rule
+     left ~130px of empty page between the signature's buttons and "collections"
+     — on a desk that is air, on a phone it is a screen you scroll past. */
+  .pf-grid { gap: 30px; }
+  .pf-grid--upper { padding-bottom: 26px; margin-bottom: 26px; }
+  .pf-rail { max-width: none; gap: 28px; }
+  .pf-section { margin-top: 30px; }
+  .pf-margins-section { margin-top: 30px; }
+  .pf-footer { margin-top: 44px; flex-wrap: wrap; gap: 6px 20px; }
+  .pf-head { font-size: 10px; letter-spacing: 0.2em; }
+
+  .pf-figures { margin-top: 28px; }
+  .pf-figure { padding: 14px 16px; }
+  .pf-figure-n { font-size: 23px; }
+
+  /* The rail is `max-width: none` above, so the card is now the only thing
+     holding a fixed measure in a fluid column. DNACard.css caps it at 340px,
+     which is 1px wider than a 375px screen's content box — belt and braces. */
+  .pf-signature .dna-card { max-width: 100%; }
+
+  .pf-open { padding: 16px 0; }
+  .pf-open-title { font-size: 18px; }
+  .pf-open-note { margin-top: 10px; }
+
+  .pf-empty { padding: 20px 18px; }
+  .pf-empty-lead { font-size: 17px; }
+  .pf-empty .btn { width: 100%; justify-content: center; }
+
+  .pf-margin { padding: 18px 18px 16px; }
+  .pf-margin-text { font-size: 17px; -webkit-line-clamp: 5; }
+
+  .pf-says { padding: 18px; }
+  .pf-says-text { font-size: 16.5px; }
+  .pf-milestone-label { font-size: 16px; }
+}
+
 @media (max-width: 480px) {
-  .pf-shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 14px; }
   .pf-figure { min-width: 45%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOUCH TARGETS — coarse pointers only
+   ═══════════════════════════════════════════════════════════════════
+   Almost every control on this page is a bare word: "edit", "+ add",
+   "+6 more →", "all 69 →", "read the full DNA →". At 11px of mono type
+   they are 14–16px tall, well under the 24x24 WCAG 2.5.8 floor and the
+   44px Apple and Material both ask for.
+
+   These sit on their own lines with no horizontal neighbour, so the box
+   can simply grow — there is nothing beside them whose taps it could
+   steal. `pointer: coarse` keeps the desk's typographic density intact. */
+@media (pointer: coarse) {
+  .pf-topbar-edit,
+  .pf-bio-edit,
+  .pf-more,
+  .pf-says-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  /* "all 69 →" is the exception: it sits inside `.pf-head`, which is a
+     baseline-aligned row sitting on its own rule. Growing the box would push
+     the rule 30px down and leave the eyebrow floating above it, so this one
+     takes an invisible overlay instead. Safe here — its only neighbour is the
+     eyebrow at the far end of the row. */
+  .pf-head-link { position: relative; }
+  .pf-head-link::after { content: ""; position: absolute; inset: -14px -8px; }
+  .pf-bio-input { font-size: 16px; } /* already 16 — stated so a later edit can't reintroduce iOS focus-zoom */
 }
