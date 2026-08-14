@@ -103,13 +103,17 @@ export default function AuthPage() {
               : "A slow, small ritual. Log what books did to you — not ratings, but the actual weather. We'll map the patterns into a portrait of who you've become as a reader."}
           </p>
 
-          <div className="auth-rr-echo">
-            <div className="auth-rr-echo-label">ECHO OF THE DAY</div>
-            <div className="auth-rr-echo-quote">
-              “Read this entire book on a train and missed my stop twice.”
-            </div>
-            <div className="label-sm auth-rr-echo-by">— @arun.d · Tomorrow ×3</div>
-          </div>
+          {/* An "ECHO OF THE DAY" panel used to sit here: a quote about missing
+              a train stop, credited to "@arun.d · Tomorrow ×3". Both were
+              hardcoded twenty lines up — a testimonial from a reader who does
+              not exist, presented as the day's real echo. That is the same
+              fabrication this codebase has already removed three times over
+              (the "2,841 readers shelved this week" counter, the "an actual
+              reader's shelf, anonymised" caption, and an archetype the engine
+              cannot return), and it cannot be made honest here: echoes require
+              a signed-in user, so there is no real one to show a logged-out
+              visitor. It is also what pushed the sign-in form below the fold on
+              a phone — but the reason it's gone is the first one. */}
         </div>
         <div className="auth-rr-foot">BIBLIOME · ESTD. 2024 · A PRIVATE READER'S LEDGER</div>
       </div>
@@ -124,6 +128,16 @@ export default function AuthPage() {
           <form onSubmit={submit}>
             {!isLogin && (
               <>
+                {/* On a phone a bare text input is auto-capitalised, auto-
+                    corrected and spell-checked by default. For a handle that
+                    means iOS quietly offers "Shruti" for `shruti` and underlines
+                    the whole thing in red — and the value it capitalises is the
+                    one the reader is judged against by `/^[a-zA-Z0-9_-]+$/`
+                    below, so the first submit fails for a reason nothing on
+                    screen explains. `enterKeyHint` labels the return key with
+                    what it will actually do, which is the only affordance a
+                    software keyboard has for "there is another field after
+                    this one". */}
                 <div className="auth-rr-field">
                   <div className="label-sm auth-rr-fl">username</div>
                   <input
@@ -134,6 +148,10 @@ export default function AuthPage() {
                     onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
                     required minLength={3} maxLength={50}
                     autoComplete="username"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
                   />
                 </div>
                 <div className="auth-rr-field">
@@ -145,6 +163,8 @@ export default function AuthPage() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     maxLength={100}
+                    autoComplete="nickname"
+                    enterKeyHint="next"
                   />
                 </div>
               </>
@@ -159,6 +179,15 @@ export default function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required autoComplete="email"
+                /* `type="email"` gets the @-bearing keyboard but does NOT stop
+                   iOS capitalising the first letter or autocorrecting the
+                   domain. `.toLowerCase()` on submit saves the address; it
+                   doesn't stop the field looking wrong while you type it. */
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                inputMode="email"
+                enterKeyHint="next"
               />
             </div>
 
@@ -171,6 +200,7 @@ export default function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required minLength={isLogin ? 1 : 8}
                 autoComplete={isLogin ? "current-password" : "new-password"}
+                enterKeyHint="go"
               />
               {strength && password.length > 0 && (
                 <div className="auth-rr-strength">
@@ -190,9 +220,11 @@ export default function AuthPage() {
               )}
             </div>
 
-            {error && <div className="auth-rr-error">{error}</div>}
+            {/* Announced, not merely drawn. On a phone the field that caused it
+                is often scrolled under the keyboard when this appears. */}
+            {error && <div className="auth-rr-error" role="alert">{error}</div>}
             {cooldown > 0 && (
-              <div className="auth-rr-cooldown">
+              <div className="auth-rr-cooldown" role="status">
                 Locked out. Try again in {Math.ceil(cooldown / 60)}:{String(cooldown % 60).padStart(2, "0")}
               </div>
             )}
@@ -207,9 +239,14 @@ export default function AuthPage() {
 
           <div className="auth-rr-links">
             <Link to="/reset-password" className="auth-rr-link-italic">forgot password →</Link>
-            <a
-              className="auth-rr-link-italic"
-              role="button"
+            {/* Was an `<a role="button">` with no href. An anchor without one is
+                not focusable, so the only route from sign-in to registration
+                could not be reached by keyboard at all — and `role="button"`
+                told a screen reader it was a button while it stayed untabbable.
+                A real button, which is what it always was. */}
+            <button
+              type="button"
+              className="auth-rr-link-italic auth-rr-switch"
               onClick={() => {
                 setMode(isLogin ? "register" : "login");
                 setError("");
@@ -217,7 +254,7 @@ export default function AuthPage() {
               }}
             >
               {isLogin ? "new here? create account →" : "have an account? sign in →"}
-            </a>
+            </button>
           </div>
 
           <div className="auth-rr-trust">

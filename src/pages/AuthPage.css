@@ -45,25 +45,8 @@
   max-width: 480px;
 }
 
-.auth-rr-echo {
-  margin-top: 36px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(245, 236, 210, 0.2);
-}
-.auth-rr-echo-label {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.25em;
-  color: #d2a14a;
-  margin-bottom: 10px;
-}
-.auth-rr-echo-quote {
-  font-family: var(--font-hand);
-  font-size: 28px;
-  line-height: 1.2;
-  color: #f5ecd2;
-}
-.auth-rr-echo-by { color: #d2a14a !important; margin-top: 10px; }
+/* `.auth-rr-echo*` lived here — see AuthPage.jsx for why the panel it styled
+   is gone. */
 
 .auth-rr-foot {
   font-family: var(--font-mono);
@@ -185,17 +168,77 @@
   color: var(--ink-soft);
 }
 
+/* The mode switch is a <button> now (it was an unfocusable <a>), so it needs
+   the appearance a bare anchor had for free. */
+.auth-rr-switch {
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+}
+
 /* responsive */
 @media (max-width: 900px) {
   .auth-rr { grid-template-columns: 1fr; }
-  .auth-rr-left { min-height: auto; padding: 32px 28px; }
+  /* `justify-content: space-between` distributes nothing once the panel is
+     content-height, so the wordmark sat flush against the headline with no
+     gap at all. Below the fold-point the spacing has to be declared. */
+  .auth-rr-left { min-height: auto; padding: 32px 28px; gap: 22px; }
   .auth-rr-h1 { font-size: 40px; }
   .auth-rr-right { padding: 36px 28px; }
 }
-@media (max-width: 480px) {
-  .auth-rr-h1 { font-size: 32px; }
-  .auth-rr-h2 { font-size: 30px; }
-  .auth-rr-echo-quote { font-size: 22px; }
+
+/* ── Phones ──
+   The task on this screen is one form, so everything here serves getting to it
+   and filling it in. The walnut panel stays — it is the whole atmosphere of the
+   place, and a sign-in page that looks like a bare form could be anyone's — but
+   it is trimmed to what earns its height above the first field. */
+@media (max-width: 640px) {
+  .auth-rr-left { padding: 22px 18px 26px; gap: 16px; }
+  .auth-rr-brand { font-size: 22px; }
+  .auth-rr-h1 { font-size: 31px; margin-bottom: 14px; }
+  .auth-rr-dek { font-size: 17px; }
+  /* "BIBLIOME · ESTD. 2024 · A PRIVATE READER'S LEDGER" is a colophon. On a desk
+     it anchors the foot of a full-height panel; on a phone it is a third line of
+     mono caps between the reader and the email field. */
+  .auth-rr-foot { display: none; }
+
+  .auth-rr-right {
+    padding: 26px 18px 34px;
+    padding-bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+  }
+  .auth-rr-h2 { font-size: 28px; margin-bottom: 20px; }
+  .auth-rr-field { margin-bottom: 14px; }
+
+  /* The two links shared a `space-between` row, which put "forgot password →"
+     and "new here? create account →" at opposite edges of a 340px screen — two
+     14px targets a thumb's width apart, one of which is the only route to
+     registration. Stacked, they each get a line and a full-width hit box. */
+  .auth-rr-links { flex-direction: column; align-items: stretch; gap: 4px; margin-top: 14px; }
+
+  .auth-rr-trust { margin-top: 26px; padding-top: 18px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOUCH TARGETS — coarse pointers only
+   ═══════════════════════════════════════════════════════════════════
+   The inputs are already 17px, which is what keeps iOS from zooming
+   the page on focus; what the page lacked was height on everything
+   that isn't an input. The two footer links are 14px italic text at
+   ~18px tall, and the password reveal is a 24px square sitting inside
+   a field you cannot submit without.
+
+   The links are stacked by the tier above before this grows them, so
+   there is no horizontal neighbour whose taps a taller box could take. */
+@media (pointer: coarse) {
+  .auth-rr-input { min-height: 46px; }
+  .auth-rr-submit { min-height: 48px; }
+  .auth-rr-link-italic {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .auth-rr-right .pwf-toggle { min-width: 44px; min-height: 44px; right: 2px; }
 }
 
 /* index.html sets viewport-fit=cover, so the layout viewport now runs under the

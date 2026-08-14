@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Shelf, { ShelfDecoration } from "../components/Shelf";
 import ThemeToggle from "../components/ThemeToggle";
@@ -83,6 +84,45 @@ function Wordmark({ size = 28 }) {
 }
 
 export default function LandingPage({ onGetStarted }) {
+  // ── The phone's persistent CTA ──
+  // This page is ten screens on a phone and the only way to act on it sits at
+  // the very top and the very bottom. A reader convinced somewhere in the
+  // middle — at the archetypes, usually — has to scroll to one end to do
+  // anything about it. So a bar carries the offer with them.
+  //
+  // It is deliberately conditional rather than always-on: it appears only once
+  // the hero's own CTA has left the screen, and disappears again as the final
+  // one arrives. Two live copies of the same button on screen at once is the
+  // thing that makes these bars feel like an ad rather than a convenience.
+  // CSS-hidden above 640 — the observer costs nothing there, and gating it on a
+  // width read in JS would need re-running on resize to stay honest.
+  const [showCta, setShowCta] = useState(false);
+  const heroCtaRef = useRef(null);
+  const finalCtaRef = useRef(null);
+
+  useEffect(() => {
+    const targets = [heroCtaRef.current, finalCtaRef.current].filter(Boolean);
+    // jsdom implements neither, and an old browser simply keeps the two
+    // in-page CTAs it already had.
+    if (typeof IntersectionObserver !== "function" || targets.length === 0) return;
+
+    const onScreen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) onScreen.add(e.target);
+          else onScreen.delete(e.target);
+        }
+        setShowCta(onScreen.size === 0);
+      },
+      // A CTA half off the bottom edge still counts as present — the bar must
+      // not flash in for the moment it takes to scroll past one.
+      { rootMargin: "-15% 0px -15% 0px" },
+    );
+    targets.forEach((t) => io.observe(t));
+    return () => io.disconnect();
+  }, []);
+
   return (
     <div className="landing-rr">
       {/* ============== HERO ============== */}
@@ -116,7 +156,7 @@ export default function LandingPage({ onGetStarted }) {
               which feelings it pulled, how hard, and how it left you. After {MIN_BOOKS} books,
               your shelf starts describing you back.
             </p>
-            <div className="lrr-cta-row">
+            <div className="lrr-cta-row" ref={heroCtaRef}>
               <button className="btn brass" onClick={onGetStarted} style={{ fontSize: 14, padding: "12px 22px" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 17 }}>Discover</span>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.18em" }}>YOUR DNA</span>
@@ -173,8 +213,14 @@ export default function LandingPage({ onGetStarted }) {
           </div>
         </div>
         <div className="lrr-how-grid">
-          {STEPS.map((s, i) => (
-            <div key={s.n} className="lrr-step" style={{ borderLeft: i === 0 ? "none" : "1px solid var(--rule)" }}>
+          {/* The dividing rule used to be an inline `borderLeft` on every step
+              but the first. Inline styles outrank any stylesheet, so when the
+              grid folds to one column on a phone the vertical rule came with
+              it — a hairline down the left of steps 2–4, dividing nothing. It
+              lives in CSS now, where the mobile tier can turn it into the
+              horizontal rule the stacked layout actually wants. */}
+          {STEPS.map((s) => (
+            <div key={s.n} className="lrr-step">
               <div className="lrr-step-num">{s.n} — STEP</div>
               <h3 className="lrr-step-t">{s.t}</h3>
               <p className="lrr-step-d">{s.d}</p>
@@ -289,7 +335,7 @@ export default function LandingPage({ onGetStarted }) {
         <p className="lrr-final-dek">
           {MIN_BOOKS} books is all it takes to start. Begin with the one you'd lend out reluctantly.
         </p>
-        <button className="btn brass" onClick={onGetStarted} style={{ fontSize: 15, padding: "14px 28px" }}>
+        <button ref={finalCtaRef} className="btn brass lrr-final-btn" onClick={onGetStarted} style={{ fontSize: 15, padding: "14px 28px" }}>
           <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 18 }}>Begin</span>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em" }}>YOUR DNA</span>
         </button>
@@ -310,6 +356,19 @@ export default function LandingPage({ onGetStarted }) {
           </span>
         </footer>
       </section>
+
+      {/* Last in the DOM so it is last in the tab order too — a fixed bar that
+          intercepts the first Tab into the page is worse than no bar. Its
+          hidden state is `visibility: hidden` rather than opacity alone, which
+          is what takes it out of the tab order and away from screen readers
+          instead of leaving an invisible button over the footer. */}
+      <div className={`lrr-stickycta ${showCta ? "is-shown" : ""}`}>
+        <span className="lrr-stickycta-copy">{MIN_BOOKS} books to begin</span>
+        <button className="btn brass lrr-stickycta-btn" onClick={onGetStarted}>
+          <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 16 }}>Begin</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em" }}>YOUR DNA</span>
+        </button>
+      </div>
     </div>
   );
 }

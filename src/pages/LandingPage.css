@@ -106,8 +106,8 @@
   max-width: 360px;
 }
 .lrr-how-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
-.lrr-step { padding: 24px 28px; }
-.lrr-step:first-child { padding-left: 0; }
+.lrr-step { padding: 24px 28px; border-left: 1px solid var(--rule); }
+.lrr-step:first-child { padding-left: 0; border-left: none; }
 .lrr-step-num {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -302,9 +302,14 @@
 .lrr-footer a:hover { color: var(--oxblood); }
 .lrr-sep { margin: 0 6px; }
 
+/* ----- THE PHONE'S PERSISTENT CTA -----
+   Hidden by default and turned on only by the 640 tier — see LandingPage.jsx
+   for when it shows itself and why it hides again at the final CTA. */
+.lrr-stickycta { display: none; }
+
 /* responsive */
 @media (max-width: 1080px) {
-  .lrr-hero, .lrr-how, .lrr-arch, .lrr-manifesto, .lrr-final { padding-left: 28px; padding-right: 28px; }
+  .lrr-hero, .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-final { padding-left: 28px; padding-right: 28px; }
   .lrr-hero-grid { grid-template-columns: 1fr; gap: 50px; }
   .lrr-h1 { font-size: 64px; }
   .lrr-how-grid { grid-template-columns: repeat(2, 1fr); }
@@ -315,15 +320,167 @@
   .lrr-h2-large { font-size: 44px; }
   .lrr-nav-links a { display: none; }
 }
+
+/* ── Section heads stop being two columns ──
+   `.lrr-how-head` and `.lrr-arch-head` are `justify-content: space-between`
+   rows that no tier ever unwound, so on a phone a 32px heading and its
+   standfirst each got half of ~340px. "Which kind of reader are you?" came out
+   one word per line down a 90px column beside an equally starved paragraph.
+   Stacked here rather than at 640 because they are already tight at tablet
+   widths, where the heading is 40px. */
+@media (max-width: 900px) {
+  .lrr-how-head, .lrr-arch-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 34px;
+  }
+  .lrr-how-dek, .lrr-arch-dek { max-width: 54ch; }
+}
+
 @media (max-width: 640px) {
-  .lrr-hero, .lrr-how, .lrr-arch, .lrr-manifesto, .lrr-final { padding-left: 18px; padding-right: 18px; }
-  .lrr-h1 { font-size: 44px; }
-  .lrr-h2 { font-size: 32px; }
-  .lrr-h2-large { font-size: 32px; }
+  .lrr-hero, .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-final { padding-left: 18px; padding-right: 18px; }
+
+  /* ── Vertical rhythm ──
+     90px of air above and below every section is what makes the desk version
+     feel like a printed spread. Six of them on a phone is six extra screens of
+     scrolling between arguments, and the reader pays for it in thumb-miles. */
+  .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto { padding-top: 56px; padding-bottom: 56px; }
+  .lrr-hero { padding-top: 20px; padding-bottom: 48px; }
+  .lrr-final { padding-top: 56px; padding-bottom: 40px; }
+
+  /* ── Hero ──
+     90px between the wordmark and the eyebrow pushed the headline — the one
+     thing that has to land before a thumb moves — most of the way down the
+     first screen. */
+  .lrr-nav { margin-bottom: 40px; gap: 10px; }
+  .lrr-nav-links { gap: 8px; }
+
+  /* The 40px rule and the label sat on one flex line, so the label wrapped to
+     two and the rule floated at the vertical centre of a block it was meant to
+     introduce. Above it instead, where a printed eyebrow rule belongs. */
+  .lrr-hero-eyebrow { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 22px; }
+
+  .lrr-h1 { font-size: 40px; letter-spacing: -0.02em; margin-bottom: 22px; }
+  .lrr-dek { font-size: 18px; margin-bottom: 26px; }
+
+  /* One decision per row. The gold button and "see how it works ↓" shared a
+     line, which made the primary action about half the width it should be and
+     put a 16px italic link inside a thumb's width of it. */
+  .lrr-cta-row { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 28px; }
+  .lrr-cta-row .btn { width: 100%; justify-content: center; }
+  .lrr-link-italic { text-align: center; }
+
+  /* Two mono strings and a divider on one flex line wrapped into six ragged
+     fragments — "free · no ads · no / followers · no / rankings" beside "18
+     emotions · 8 / archetypes · 5 books to / begin". Two stacked lines, each
+     allowed to be a line. */
+  .lrr-trust-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .lrr-trust-sep { display: none; }
+
+  /* The caption and "fig. 1" met in the middle with no space between them and
+     read as one broken word. */
+  .lrr-hero-fig { flex-direction: column; align-items: flex-start; gap: 6px; font-size: 13px; }
+
+  /* ── How it works ── */
+  .lrr-h2 { font-size: 31px; }
   .lrr-how-grid { grid-template-columns: 1fr; }
-  .lrr-step { padding: 18px 0; border-top: 1px solid var(--rule); }
-  .lrr-step:first-child { border-top: none; }
-  .lrr-footer { flex-direction: column; gap: 12px; align-items: flex-start; }
+  /* The rule turns 90°: it divides steps stacked in a column now, not columns. */
+  .lrr-step { padding: 20px 0; border-left: none; border-top: 1px solid var(--rule); }
+  .lrr-step:first-child { border-top: none; padding-top: 0; }
+  .lrr-step-t { font-size: 22px; }
+
+  /* ── Body copy ──
+     15px is a desk size. On a phone held at arm's length it is the size that
+     makes people zoom, and iOS zooms the whole page rather than reflowing. */
+  .lrr-step-d, .lrr-arch-blurb, .lrr-res-d { font-size: 16px; }
+
+  /* ── Archetypes ── */
+  .lrr-arch-card { padding: 22px 20px; }
+  .lrr-arch-name { font-size: 24px; }
+  .lrr-arch-grid { gap: 16px; }
+  .lrr-arch-foot { margin-top: 22px; }
+
+  /* ── Resonance / manifesto ── */
+  .lrr-res-dek { font-size: 17px; }
+  /* A 60px column to hold one glyph took a sixth of the readable width and
+     left the titles marooned from their marks. */
+  .lrr-manifesto-row { grid-template-columns: 30px 1fr; gap: 12px; padding: 18px 0; }
+  .lrr-manifesto-mark { font-size: 22px; }
+  .lrr-manifesto-t { font-size: 21px; }
+
+  /* ── Final ── */
+  .lrr-h2-large { font-size: 32px; }
+  .lrr-final-dek { font-size: 17px; margin-bottom: 26px; }
+  .lrr-final-btn { width: 100%; justify-content: center; }
+  /* `.lrr-final` is centred, and the footer inherited it while being told to
+     align left — the © line centred itself inside a left-aligned column. */
+  .lrr-footer { flex-direction: column; gap: 14px; align-items: center; text-align: center; margin-top: 52px; }
+  .lrr-footer > span:last-child { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; }
+
+  /* ── The persistent CTA ──
+     Measured like the app's own fixed furniture: the bar sits on the safe-area
+     inset rather than guessing at it, since index.html sets viewport-fit=cover
+     and the layout viewport runs under the home indicator. */
+  .lrr-stickycta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    position: fixed;
+    inset: auto 0 0 0;
+    /* Below the modal backdrop (200) and the toast (300), above ordinary
+       content — the same scale App.css uses for the tab bar. */
+    z-index: 100;
+    padding: 12px 18px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--bg-card);
+    border-top: 1px solid var(--rule);
+    box-shadow: 0 -8px 24px -18px var(--shelf-shadow, rgba(0,0,0,0.5));
+    /* `visibility` rides along so a hidden bar is genuinely gone rather than an
+       invisible strip over the footer. The 0s delay flips it in instantly and
+       out only after the slide, so the transition still plays. */
+    transform: translateY(calc(100% + 8px));
+    opacity: 0;
+    visibility: hidden;
+    transition: transform .26s ease, opacity .26s ease, visibility 0s linear .26s;
+  }
+  .lrr-stickycta.is-shown {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transition: transform .26s ease, opacity .26s ease, visibility 0s;
+  }
+  .lrr-stickycta-copy {
+    min-width: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-quiet);
+  }
+  .lrr-stickycta-btn { flex: none; min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lrr-stickycta { transition: opacity .01s, visibility 0s; transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOUCH TARGETS — coarse pointers only
+   ═══════════════════════════════════════════════════════════════════
+   The nav's two buttons carry an inline `fontSize: 12` and so land near
+   34px; "see how it works ↓" and the four footer links are bare text at
+   11–16px. Apple HIG and Material both ask for 44px, and WCAG 2.5.8
+   sets 24x24 as the floor — which the footer row sat under.
+
+   The footer links are the one place here with close horizontal
+   neighbours, so they get real height rather than an overlay: expanded
+   hitboxes on `github · privacy · terms` would overlap each other and
+   hand taps to the wrong page. */
+@media (pointer: coarse) {
+  .lrr-nav .btn { min-height: 44px; }
+  .lrr-link-italic { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; }
+  .lrr-footer a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; }
 }
 
 /* index.html sets viewport-fit=cover, so the layout viewport now runs under the
