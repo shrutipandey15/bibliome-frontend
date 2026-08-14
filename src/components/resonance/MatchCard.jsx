@@ -224,10 +224,16 @@ function MatchAction({ match, busy, onCompose, onDecline, onOpenThread }) {
       <div className="rm-waiting" role="status">
         <span className="rm-waiting-glyph" aria-hidden="true">◷</span>
         <div>
-          <div className="rm-waiting-line">Your note is with them.</div>
+          {/* This used to read "Your note is with them." — the exact sentence
+              the fold's own summary carries. A <details> renders its body while
+              closed and shows both once opened, so the card said the same thing
+              twice about 40px apart, which reads as a rendering fault rather
+              than as emphasis. The summary states WHERE the note is; this states
+              what happens next, which is the half you can only see by opening. */}
+          <div className="rm-waiting-line">They'll read it if they answer.</div>
           {/* No deadline, no "they've seen it", no nudge button. If nothing comes
               back the card simply stops being here one day. */}
-          <div className="rm-waiting-sub">They'll read it if they answer. Nothing else to do.</div>
+          <div className="rm-waiting-sub">Nothing else to do.</div>
         </div>
       </div>
     );
@@ -270,7 +276,11 @@ function MatchAction({ match, busy, onCompose, onDecline, onOpenThread }) {
 export function ThreadRow({ match, onOpen }) {
   const cover = match.cover_url;
   return (
-    <button className="rt-row" onClick={onOpen}>
+    // Without a label the accessible name is a run-on of everything inside —
+    // "@quiet_reader The Remains of the Day · Kazuo Ishiguro" — which names the
+    // row's contents but never says what pressing it does. The action is the
+    // name; the contents stay as visible text for everyone else.
+    <button className="rt-row" onClick={onOpen} aria-label={`Open the letters with @${match.handle || "your reader"}`}>
       {cover
         ? <img className="rt-row-cover" src={cover} alt="" />
         : <span className="rt-row-cover rt-row-cover--blank" aria-hidden="true" />}

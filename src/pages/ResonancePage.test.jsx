@@ -75,7 +75,11 @@ describe("ResonancePage — anonymity", () => {
       list([{ ...suggested, status: "connected", handle: "quiet_reader", thread_id: "t1" }])
     );
     render(<ResonancePage />);
-    await waitFor(() => expect(screen.getByText(/with @quiet_reader/)).toBeInTheDocument());
+    // Asserted as the handle itself rather than the old card's "with @handle"
+    // phrasing: a connected match is an inbox row now, not a full card, and the
+    // invariant being guarded is that the handle appears at all — which the
+    // first test in this block pins to NOT happening while merely suggested.
+    await waitFor(() => expect(screen.getByText("@quiet_reader")).toBeInTheDocument());
   });
 });
 

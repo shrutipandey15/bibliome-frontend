@@ -27,6 +27,23 @@ const REPORT_CATEGORIES = [
   { id: "other", label: "something else" },
 ];
 
+/**
+ * Scroll the transcript's tail into view, if the environment can.
+ *
+ * `endRef.current?.scrollIntoView(...)` guarded the ref but not the METHOD, and
+ * jsdom implements no scrolling at all — so the effect below threw on mount,
+ * React unmounted the tree, and the whole thread rendered as an empty div. It
+ * failed as "the letters didn't appear", which points at the fetch rather than
+ * at a scroll nicety three lines away.
+ *
+ * Landing on the newest letter is a courtesy, not a requirement: where it isn't
+ * available the transcript simply opens at the top, which is what it did before
+ * the courtesy existed.
+ */
+function scrollToEnd(el, opts) {
+  el?.scrollIntoView?.(opts);
+}
+
 function letterDate(iso) {
   try {
     return new Date(iso).toLocaleDateString(undefined, { month: "long", day: "numeric" });
@@ -74,7 +91,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   useEffect(() => {
     if (loading || didLandRef.current || !messages.length) return;
     didLandRef.current = true;
-    endRef.current?.scrollIntoView({ block: "end" });
+    scrollToEnd(endRef.current, { block: "end" });
   }, [loading, messages.length]);
 
   // Prepending 50 letters above the viewport moves everything the reader was
@@ -110,7 +127,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
       setMessages((prev) => [...prev, saved]);
       setBody("");
       // Your own letter should be the thing you're looking at after you send it.
-      requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }));
+      requestAnimationFrame(() => scrollToEnd(endRef.current, { behavior: "smooth", block: "end" }));
     } catch (err) {
       setError(err?.message || "Couldn't send that.");
     }
