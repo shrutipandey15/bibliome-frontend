@@ -84,8 +84,14 @@
 
 /* The header's two halves. Everything foldable carries .rr-wide-only; the `⋯`
    that replaces them carries .rr-more-btn. They are exact complements, so the
-   header can never show both sets or neither. */
-.rr-more-btn { display: none; }
+   header can never show both sets or neither.
+
+   Scoped to .rr-actions for the same specificity reason as .rr-wide-only below:
+   the `⋯` also carries .rr-theme-toggle, whose `display: inline-flex` is a later
+   rule in this very file at equal (0,1,0) weight, so a bare `.rr-more-btn` lost
+   the tie and the button showed on desktop. (0,2,0) settles it, and the mobile
+   rule is scoped the same way so it can still win inside the media query. */
+.rr-actions .rr-more-btn { display: none; }
 
 /* ---------- Overflow sheet ---------- */
 .rr-sheet { min-width: min(360px, 100%); padding: 4px 0; }
@@ -639,7 +645,7 @@
      file above this block, hid correctly. Two selectors (0,2,0) beat `.btn`
      outright and stop depending on import order. */
   .rr-actions .rr-wide-only { display: none; }
-  .rr-more-btn { display: inline-flex; }
+  .rr-actions .rr-more-btn { display: inline-flex; }
   /* The header `+` is gone below 640 (it carries .rr-wide-only) and the .rr-fab
      takes over, so the glyph-swap and the background patch that used to make it
      match its neighbours are both gone with it. */

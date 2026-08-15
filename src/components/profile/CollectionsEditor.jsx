@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "../Modal";
 import { EMOTIONS } from "../../services/emotions";
 import {
@@ -79,6 +79,132 @@ function CollectionCard({ collection, onOpen }) {
   );
 }
 
+/**
+ * The add-a-book picker: a listbox with its own search field INSIDE the popup.
+ *
+ * A native `<select>` cannot hold a text input, and a shelf of any size turns it
+ * into a scroll-and-squint exercise — which is the whole reason this is hand-
+ * built rather than the one-liner it replaces. A filter box sitting outside the
+ * control was the wrong shape: you type in one place and hunt in another, and
+ * the closed select still says nothing about what you narrowed it to.
+ *
+ * So: trigger button → popup containing the search field and the filtered list.
+ * The field takes focus on open, which makes typing the default action; the
+ * arrow keys and Enter work from inside it, so the list never needs focus of its
+ * own. Matching is over title AND author — "yarros" is as likely a way to look
+ * for a book as its title is.
+ */
+function BookPicker({ options, value, onChange, disabled }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [active, setActive] = useState(0);
+  const rootRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const q = query.trim().toLowerCase();
+  const matches = q
+    ? options.filter((e) => `${e.title || ""} ${e.author || ""}`.toLowerCase().includes(q))
+    : options;
+  const selected = options.find((e) => String(e.id) === String(value)) || null;
+  const empty = options.length === 0;
+
+  // Pointerdown, not click: a mousedown inside the drawer that ends elsewhere
+  // should still count as "went somewhere else". Capture phase so a stray
+  // stopPropagation in between cannot leave the popup stuck open.
+  useEffect(() => {
+    if (!open) return;
+    const away = (e) => { if (!rootRef.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener("pointerdown", away, true);
+    return () => document.removeEventListener("pointerdown", away, true);
+  }, [open]);
+
+  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
+
+  const choose = (book) => {
+    onChange(String(book.id));
+    setOpen(false);
+    setQuery("");
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (matches.length === 0) return;
+      const step = e.key === "ArrowDown" ? 1 : -1;
+      setActive((i) => (i + step + matches.length) % matches.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (matches[active]) choose(matches[active]);
+    } else if (e.key === "Escape") {
+      // The drawer is a Modal and Escape closes it. Closing the popup is the
+      // narrower, more recent thing the reader opened, so it eats the key.
+      e.stopPropagation();
+      setOpen(false);
+    }
+  };
+
+  const label = empty
+    ? "every book is already here"
+    : selected
+      ? `${selected.title}${selected.author ? ` — ${selected.author}` : ""}`
+      : "choose a book from your shelf…";
+
+  return (
+    <div className="col-picker" ref={rootRef}>
+      <button
+        type="button"
+        className={`col-picker-trigger ${selected ? "" : "is-empty"}`}
+        onClick={() => { setActive(0); setOpen((v) => !v); }}
+        disabled={disabled || empty}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Choose a book from your shelf"
+      >
+        <span className="col-picker-label">{label}</span>
+        <span className="col-picker-caret" aria-hidden="true">▾</span>
+      </button>
+
+      {open && (
+        <div className="col-picker-pop">
+          <input
+            ref={inputRef}
+            type="text"
+            className="col-picker-search"
+            placeholder="search by title or author…"
+            aria-label="Search your shelf by title or author"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setActive(0); }}
+            onKeyDown={onKeyDown}
+          />
+          {matches.length === 0 ? (
+            <p className="col-picker-none">nothing matches “{query.trim()}”</p>
+          ) : (
+            <ul className="col-picker-list" role="listbox" aria-label="Books on your shelf">
+              {matches.map((e, i) => (
+                <li key={e.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={String(e.id) === String(value)}
+                    className={`col-picker-opt ${i === active ? "is-active" : ""}`}
+                    // Mouse over should move the highlight the keyboard uses,
+                    // or the two disagree about what Enter would pick.
+                    onMouseEnter={() => setActive(i)}
+                    onClick={() => choose(e)}
+                  >
+                    <span className="col-picker-opt-title">{e.title}</span>
+                    {e.author && <span className="col-picker-opt-author">{e.author}</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** The working view. Everything that changes a collection lives in here. */
 function CollectionDrawer({ collection, shelf, onChanged, onClose }) {
   const [busy, setBusy] = useState(false);
@@ -134,10 +260,12 @@ function CollectionDrawer({ collection, shelf, onChanged, onClose }) {
       )}
 
       <div className="col-add">
-        <select className="col-add-select" value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Choose a book from your shelf" disabled={addable.length === 0}>
-          <option value="">{addable.length === 0 ? "every book is already here" : "choose a book from your shelf…"}</option>
-          {addable.map((e) => <option key={e.id} value={e.id}>{e.title}{e.author ? ` — ${e.author}` : ""}</option>)}
-        </select>
+        <BookPicker
+          options={addable}
+          value={pick}
+          onChange={setPick}
+          disabled={busy}
+        />
         <button className="btn brass" disabled={busy || !pick} onClick={addBook}>add</button>
       </div>
 

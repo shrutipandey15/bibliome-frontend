@@ -123,8 +123,28 @@ function buildDashboardStats(entries) {
   return { total, avg, topEmotion, registers };
 }
 
+/**
+ * The letter in the avatar. Every reader used to get an "R" — the fallback was
+ * a hardcoded letter, so the moment `display_name` was blank rather than absent
+ * (`""` is falsy but so is `undefined`, and either way the chain fell through)
+ * or the user had not loaded yet, the avatar showed someone else's initial with
+ * total confidence. A letter is a claim about who you are, so it now comes from
+ * a real field or not at all: name → username → the local part of the email,
+ * and the first LETTER OR DIGIT in it, skipping the quotes, emoji and leading
+ * punctuation that display names collect. With nothing to go on we render "·",
+ * which reads as "not known yet" rather than as a stranger's initial.
+ */
+function avatarInitial(user) {
+  const source = [user?.display_name, user?.username, user?.email?.split("@")[0]]
+    .map((s) => (typeof s === "string" ? s.trim() : ""))
+    .find(Boolean);
+  if (!source) return "·";
+  const letter = [...source].find((ch) => /\p{L}|\p{N}/u.test(ch));
+  return letter ? letter.toUpperCase() : "·";
+}
+
 function ReadingRoomHeader({ user, tab, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
-  const initial = (user?.display_name || user?.username || "R").trim().charAt(0).toUpperCase();
+  const initial = avatarInitial(user);
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const showDNA = canGenerate && tab !== "dna";

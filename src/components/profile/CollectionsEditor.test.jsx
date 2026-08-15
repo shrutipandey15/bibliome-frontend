@@ -48,10 +48,49 @@ describe("CollectionsEditor [F2.8]", () => {
     render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} />);
 
     await userEvent.click(screen.getByRole("button", { name: /Comfort reads/i }));
-    await userEvent.selectOptions(screen.getByLabelText(/choose a book from your shelf/i), "e1");
+    await userEvent.click(screen.getByLabelText(/choose a book from your shelf/i));
+    await userEvent.click(screen.getByRole("option", { name: /Piranesi/i }));
     await userEvent.click(screen.getByRole("button", { name: /^add$/i }));
 
     expect(addCollectionItem).toHaveBeenCalledWith("c1", "e1");
+  });
+
+  it("searches the shelf from inside the picker, by title or author", async () => {
+    addCollectionItem.mockResolvedValue();
+    const onChanged = vi.fn().mockResolvedValue();
+    const collections = [{ id: "c1", title: "Comfort reads", visibility: "private", position: 0, books: [] }];
+    render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Comfort reads/i }));
+    await userEvent.click(screen.getByLabelText(/choose a book from your shelf/i));
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+
+    // Author, not title — the field matches both.
+    await userEvent.type(screen.getByLabelText(/search your shelf/i), "ravn");
+    const only = screen.getAllByRole("option");
+    expect(only).toHaveLength(1);
+    expect(only[0]).toHaveAccessibleName(/The Employees/i);
+
+    // Enter takes the highlighted match without touching the mouse, and the
+    // choice shows on the closed trigger.
+    await userEvent.keyboard("{Enter}");
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/choose a book from your shelf/i)).toHaveTextContent(/The Employees/i);
+
+    await userEvent.click(screen.getByRole("button", { name: /^add$/i }));
+    expect(addCollectionItem).toHaveBeenCalledWith("c1", "e2");
+  });
+
+  it("says so when nothing matches, rather than showing an empty list", async () => {
+    const collections = [{ id: "c1", title: "Comfort reads", visibility: "private", position: 0, books: [] }];
+    render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={vi.fn()} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Comfort reads/i }));
+    await userEvent.click(screen.getByLabelText(/choose a book from your shelf/i));
+    await userEvent.type(screen.getByLabelText(/search your shelf/i), "zzzz");
+
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
+    expect(screen.getByText(/nothing matches/i)).toBeInTheDocument();
   });
 
   it("reorders books with keyboard-operable up/down (not drag-only) [a11y]", async () => {

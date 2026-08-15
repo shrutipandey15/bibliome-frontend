@@ -64,10 +64,58 @@
 
 .col-empty { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-quiet); margin: 0; }
 .col-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
-.col-add-select { flex: 1; min-width: 180px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-vellum); font-family: var(--font-display); font-size: 14px; color: var(--ink); }
+/* ── The book picker: a searchable listbox standing in for a <select> ── */
+.col-picker { position: relative; flex: 1; min-width: 180px; }
+.col-picker-trigger {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; cursor: pointer; text-align: left;
+  border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-vellum);
+  font-family: var(--font-display); font-size: 14px; color: var(--ink);
+}
+.col-picker-trigger.is-empty { color: var(--ink-quiet); }
+.col-picker-trigger:hover:not(:disabled) { border-color: var(--brass); }
+.col-picker-trigger:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+.col-picker-trigger:disabled { cursor: default; color: var(--ink-faint); }
+.col-picker-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-picker-caret { flex: none; color: var(--ink-faint); font-size: 11px; }
+
+/* Absolute, so opening it does not shove the delete/done row down the drawer.
+   It opens DOWNWARD and the drawer scrolls; anchoring upward would put the list
+   over the books you are choosing between. */
+.col-picker-pop {
+  position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; right: 0;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--brass); border-radius: 2px; background: var(--bg-card);
+  box-shadow: var(--shadow-md, 0 10px 30px rgba(0, 0, 0, 0.45));
+  overflow: hidden;
+}
+.col-picker-search {
+  /* Sticky rather than scrolled away with the list: the term you typed has to
+     stay visible, or a filtered list looks like a shelf that lost its books. */
+  flex: none; padding: 9px 11px;
+  border: none; border-bottom: 1px solid var(--rule);
+  background: var(--bg-vellum);
+  font-family: var(--font-display); font-size: 14px; color: var(--ink);
+}
+.col-picker-search:focus { outline: none; border-bottom-color: var(--brass); }
+.col-picker-search::placeholder { color: var(--ink-faint); }
+
+.col-picker-list { list-style: none; margin: 0; padding: 4px 0; max-height: 240px; overflow-y: auto; }
+.col-picker-opt {
+  display: flex; align-items: baseline; gap: 8px; width: 100%;
+  padding: 8px 11px; border: none; background: none; cursor: pointer; text-align: left;
+  font-family: var(--font-display); font-size: 14px; color: var(--ink);
+}
+.col-picker-opt.is-active { background: var(--bg-vellum); color: var(--oxblood); }
+.col-picker-opt[aria-selected="true"] .col-picker-opt-title { color: var(--brass); }
+.col-picker-opt-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-picker-opt-author { flex: none; font-size: 12px; color: var(--ink-quiet); }
+.col-picker-none { margin: 0; padding: 12px 11px; font-family: var(--font-display); font-style: italic; font-size: 13.5px; color: var(--ink-quiet); }
+
 /* iOS focus zoom — see the note in App.css on .rr-sort-select. */
 @media (pointer: coarse) {
-  .col-add-select { font-size: 16px; }
+  .col-picker-trigger, .col-picker-search { font-size: 16px; }
+  .col-picker-opt { min-height: 44px; }
 }
 
 .col-drawer-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--rule-soft); }
