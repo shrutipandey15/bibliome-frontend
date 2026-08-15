@@ -87,18 +87,20 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
     expect(screen.queryByText(/the mirror starts to see you/i)).toBeNull();
   });
 
-  it("passes the margin, runner-up and basis through to the card [P2-8]", async () => {
+  it("passes the runner-up and basis through to the card, but not the margin [P2-8]", async () => {
     const spy = vi.fn();
     await renderView({
       profile: { ...fullProfile, margin: 0.04, runner_up: "The Soft Masochist", basis: { counts: [] } },
       username: "alice",
       onSave: spy,
     });
-    // The stub records what it was handed; before this the backend computed all
-    // three and the card never saw them.
+    // The stub records what it was handed; before this the backend computed these
+    // and the card never saw them. `margin` is deliberately NOT forwarded — the
+    // card decides the hedge from `runner_up`'s presence, so the number would be a
+    // dead prop and an invitation to re-derive the threshold a second time.
     const card = screen.getByTestId("dna-card");
     expect(card).toBeInTheDocument();
-    expect(cardProps.margin).toBe(0.04);
+    expect(cardProps.margin).toBeUndefined();
     expect(cardProps.runner_up).toBe("The Soft Masochist");
     expect(cardProps.basis).toEqual({ counts: [] });
     expect(cardProps.archetype.id).toBe("grief-romantic");

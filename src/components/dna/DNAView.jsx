@@ -155,10 +155,9 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
     book_count: count,
     emotion_counts: stats?.emotion_counts || null,
     archetype_share: profile.archetype_share,
-    // How decisive the label was, what it was nearly instead, and the counts that
-    // earn it. The backend computes all three; before this they were computed and
-    // then rendered nowhere.
-    margin: profile.margin,
+    // What the label was nearly instead, and the counts that earn it. `margin` is
+    // not passed: the card reads the hedge off `runner_up`'s presence rather than
+    // re-deriving it from the number, so handing it over would be a dead prop.
     runner_up: profile.runner_up,
     basis: profile.basis,
     top_emotions: vectorRows(profile.profiles?.current, 5)

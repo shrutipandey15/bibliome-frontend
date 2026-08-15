@@ -306,13 +306,25 @@ export async function deleteEntry(id) {
 //   Above the gate:  {
 //     enough: true,
 //     book_count, tagged_count,
-//     // DEMOTED — and NULLABLE. The engine abstains when the tally has no clear
-//     // favourite, so `enough: true` with `archetype: null` is a valid payload
+//     // DEMOTED — and NULLABLE. The engine abstains when the reader's vector
+//     // carries no archetype-anchoring emotion at all (they've tagged only what
+//     // bored them), so `enough: true` with `archetype: null` is a valid payload
 //     // and every consumer must handle it. Do NOT use it as a proxy for `enough`.
+//     // A close race is NOT an abstention — it still names a leader and hedges.
 //     archetype: { id, name, description, color, glyph, blind_spots, comfort_tropes } | null,
-//     archetype_scores: { type_id: number },                  // all 8, for the margin
-//     margin: number,          // how far the leader cleared the runner-up, 0..1 of its own score
-//     runner_up: string | null,// the name it was nearly instead; only sent when margin < 0.10
+//     // All 8, SIGNED: centered on the population baseline, so 0.0 is "the average
+//     // reader" and a negative score is a real, ordinary result. Not rendered.
+//     archetype_scores: { type_id: number },
+//     // The leader's ABSOLUTE lead over second place, in frequency-vector units.
+//     // NOT a fraction of the leader's own score — that reading is meaningless now
+//     // that scores are signed. Same key and type as the old fraction, different
+//     // meaning; do not compare it against any threshold you find in old code.
+//     margin: number,
+//     // The name it was nearly instead. The backend sends this exactly when it
+//     // decided to hedge (its own `HEDGE_ARCHETYPE_GAP`, currently 0.05 and being
+//     // retuned). Treat its PRESENCE as the decision — never re-derive the hedge
+//     // from `margin`, or the threshold lives in two places and drifts apart.
+//     runner_up: string | null,
 //     basis: { counts: [{ emotion, books, of }], top_rated_emotions: string[] } | null,
 //     insights: [{ category, variant, text, n, surprise }],  // ranked by surprise; basis = n [F7.2]
 //     locked:   [{ category, unlocks_at, reason }],           // "not yet", real reason [F7.4]
@@ -393,6 +405,12 @@ export async function revokeShareTokens() {
 // card can lag a just-added book until the owner's DNA is recomputed.
 //   { handle, share_token, archetype, archetype_scores, margin, basis, book_count,
 //     top_emotions: [{ emotion_id, weight }] }   // weight is a 0..1 SHARE, not a count
+// NOTE: no `runner_up`. This payload (backend `card_payload`, also the `signature`
+// on your profile and a public profile) carries `margin` but not the name the
+// backend picked to go with it, so a surface rendering this shape CANNOT show the
+// hedge — and must not reconstruct it from `margin`. DNACard keys the hedge off
+// `runner_up` alone and so simply asserts the name here. If the hedge is wanted on
+// public surfaces, the fix is the backend adding `runner_up` to this payload.
 // 404 → null: the token is dead, OR the reader has no DNA yet (the card refuses to
 // exist for a reader the app itself is telling to keep reading). The old
 // `personality` / `stats` keys are gone.

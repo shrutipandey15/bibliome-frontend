@@ -110,19 +110,30 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
 
   // ── The label stops overstating itself ──
 
-  it("hedges the name and names the runner-up when the margin is thin", () => {
+  // The hedge is the BACKEND's call, carried by the presence of `runner_up`. These
+  // tests deliberately say nothing about `margin`: pinning them to a threshold is
+  // what let the card and the engine drift apart in the first place.
+
+  it("hedges the name and names the runner-up when the backend sent one", () => {
     render(
-      <DNACard
-        profile={{ ...profile, margin: 0.04, runner_up: "The Soft Masochist" }}
-        username="alice"
-      />
+      <DNACard profile={{ ...profile, runner_up: "The Soft Masochist" }} username="alice" />
     );
     expect(screen.getByText(/closest to/i)).toBeInTheDocument();
     expect(screen.getByText(/shading toward The Soft Masochist/)).toBeInTheDocument();
   });
 
-  it("asserts the name plainly when the margin is decisive", () => {
-    render(<DNACard profile={{ ...profile, margin: 0.42, runner_up: null }} username="alice" />);
+  it("asserts the name plainly when the backend sent no runner-up", () => {
+    render(<DNACard profile={{ ...profile, runner_up: null }} username="alice" />);
+    expect(screen.queryByText(/closest to/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/shading toward/i)).not.toBeInTheDocument();
+  });
+
+  // The regression. `card_payload` — the share link, your profile, a public
+  // profile — ships `margin` and NO `runner_up`. The card used to read the number,
+  // so a thin margin drew "closest to" over the name with nothing underneath it.
+  // Neither half of the hedge may appear without the other.
+  it("never orphans the hedge on a payload carrying margin but no runner-up", () => {
+    render(<DNACard profile={{ ...profile, margin: 0.04 }} username="alice" />);
     expect(screen.queryByText(/closest to/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/shading toward/i)).not.toBeInTheDocument();
   });

@@ -102,13 +102,23 @@ const DNACard = forwardRef(function DNACard(
   const [first, ...rest] = (p.name || "").split(" ");
   const second = rest.join(" ");
 
-  // How far the leading archetype cleared the runner-up, as a fraction of its own
-  // score. Under 10% the label is close to a coin flip, and the card says so
-  // instead of asserting it — a hedge the reader can check against the runner-up
-  // named underneath.
-  const margin = profile.margin;
-  const close = margin != null && margin < 0.10;
+  // Whether the label was close enough to a coin flip that the card hedges rather
+  // than asserts. That call belongs to the BACKEND: `runner_up` is present exactly
+  // when it decided to hedge, and absent when it didn't. So the presence of the
+  // name IS the condition — the card never re-derives it from `margin`.
+  //
+  // It used to, with a hardcoded `margin < 0.10`, and that disagreed with the
+  // engine two ways at once. The scorer was recalibrated: `margin` is now the
+  // absolute lead over second place, not a fraction of the leader's score, and the
+  // hedge threshold moved to the backend's own `HEDGE_ARCHETYPE_GAP` — so the
+  // number here was both the wrong scale and the wrong value. Separately, every
+  // surface fed by the backend's `card_payload` (the share link, your profile, a
+  // public profile) ships `margin` with NO `runner_up` at all. Either way the card
+  // drew "closest to" over the name with nothing underneath it to shade toward.
+  // Tying both lines to one value means the hedge is whole or absent, and the
+  // threshold stays somewhere this file can't get it wrong.
   const runnerUp = profile.runner_up;
+  const close = runnerUp != null;
   // Counts only, straight off the reader's own shelf. Null until the backend
   // computes it; nothing is invented to fill the line.
   const basis = profile.basis;
@@ -136,7 +146,7 @@ const DNACard = forwardRef(function DNACard(
         <h2 className="dna-name">
           {first}{second && <><br /><em>{second}</em></>}
         </h2>
-        {close && runnerUp && (
+        {close && (
           <div className="dna-hedge dna-hedge--after">shading toward {runnerUp}</div>
         )}
         {/* The receipt. The name is a headline for a number the reader can go and
