@@ -244,6 +244,24 @@ export async function createEntry(data) {
   return res.json();
 }
 
+// One-tap shelving from search [B2.2]. Idempotent server-side: tapping a book
+// already on the shelf returns that entry with created:false and never touches
+// its status, so this can be fired without checking the shelf first.
+// Identity fields only — a TBR book has no reading to describe.
+export async function addToTbr(book) {
+  const res = await apiFetch("/entries/tbr", {
+    method: "POST",
+    body: JSON.stringify({
+      title: book.title,
+      author: book.author || null,
+      cover_url: book.cover_url || null,
+      isbn: book.isbn || null,
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to add to reading list");
+  return res.json();
+}
+
 export async function updateEntry(id, data) {
   const res = await apiFetch(`/entries/${id}`, {
     method: "PUT",

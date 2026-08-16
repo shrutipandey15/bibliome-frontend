@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect, useContext, createContext } from "react";
 import {
   getAllEntries, getDNAProfile, getPatterns, generateDNA,
-  createEntry, updateEntry, deleteEntry, generateShareToken, finishEntry
+  createEntry, updateEntry, deleteEntry, generateShareToken, finishEntry, addToTbr
 } from "../services/api";
 import { getCachedEntries, setCachedEntries } from "../services/offline";
 
-const JournalContext = createContext(null);
+// Exported so component tests can provide a journal without standing up the
+// whole provider (and its network calls).
+export const JournalContext = createContext(null);
 
 export function useJournal() {
   const ctx = useContext(JournalContext);
@@ -129,6 +131,21 @@ export function JournalProvider({ children }) {
     }
   };
 
+  // Shelve a book as want_to_read in one tap [B2.2]. No optimistic insert: the
+  // server decides whether this is a new entry or one already on the shelf, and
+  // guessing wrong would flash a duplicate card. It stays fast because the call
+  // is small and the UI confirms on the row, not by re-rendering the shelf.
+  //
+  // Nothing is marked stale — a want_to_read is excluded from every DNA claim
+  // server-side, so there is no heatmap, stat, or profile to refresh.
+  const shelveBook = async (book) => {
+    const { entry, created } = await addToTbr(book);
+    if (created) {
+      setEntries(prev => { const next = [entry, ...prev]; setCachedEntries(next); return next; });
+    }
+    return created;
+  };
+
   const editEntry = async (id, data) => {
     const prevEntries = [...entries];
     setEntries(prev => { const next = prev.map(e => e.id === id ? { ...e, ...data } : e); setCachedEntries(next); return next; });
@@ -197,7 +214,7 @@ export function JournalProvider({ children }) {
       entries, analytics, stale, shareToken,
       loading, generating, entriesError,
       addEntry, editEntry, removeEntry, finishBook, generate, createToken,
-      ensureFresh, loadEntries,
+      ensureFresh, loadEntries, shelveBook,
     }}>
       {children}
     </JournalContext.Provider>

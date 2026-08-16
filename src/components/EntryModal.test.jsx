@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 // Book search is network — stub it so the modal renders offline.
 vi.mock("../services/api", () => ({ searchBooks: vi.fn().mockResolvedValue([]) }));
 
-import EntryModal from "./EntryModal";
+import EntryModal, { DNF_OPTIONS, STATUS_OPTIONS, DNF_STATUSES, PROGRESS_STATUSES } from "./EntryModal";
 
 describe("EntryModal full entry fields [F2.1 / B2.4]", () => {
   it("saves status, dates, and private notes in the payload", async () => {
@@ -231,5 +231,53 @@ describe("EntryModal — already on your shelf", () => {
     );
     expect(screen.queryByText(/already on your shelf/i)).toBeNull();
     expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
+  });
+});
+
+// ── DNF reasons: fixed vocabulary, not free text [B2.3 / #3] ──
+
+describe("DNF reason vocabulary", () => {
+  it("matches the backend's DnfReason literal exactly", () => {
+    // Re-typed on this side, so it can drift. The backend has the mirror of this
+    // assertion (test_dnf_reason_vocabulary_matches_the_client); if you change
+    // one list, both tests fail and point at each other.
+    expect(DNF_OPTIONS.map((o) => o.value)).toEqual([
+      "bored", "too_much", "badly_written", "wrong_time", "lost_me", "drifted",
+    ]);
+  });
+
+  it("offers every reason as a tap, with no free-text way in", () => {
+    // The whole point of the axis: a fixed vocabulary is countable, so
+    // abandonment() can say "5 bored you, 1 scared you". Free text cannot be
+    // counted, and one stray "boring" would silently drop out of the tally.
+    DNF_OPTIONS.forEach((o) => {
+      expect(o.label).toBeTruthy();
+      expect(o.value).toMatch(/^[a-z_]+$/);
+    });
+  });
+});
+
+// ── Reading status: the UI must offer every status the API accepts ──
+
+describe("reading status vocabulary", () => {
+  it("offers all six statuses, not the original three", () => {
+    // The API has stored six since migration 022 while this list offered three,
+    // so a reader could not say a book was abandoned — which in turn meant the
+    // DNF reason axis and every abandonment insight were unreachable from the UI.
+    expect(STATUS_OPTIONS.map((o) => o.value)).toEqual([
+      "want_to_read", "reading", "paused", "abandoned", "finished", "reread",
+    ]);
+  });
+
+  it("asks why on both ways of stopping", () => {
+    // The backend's DNF tally counts `paused` as put-down, so asking only on
+    // `abandoned` would leave half the pile permanently unexplained.
+    expect(DNF_STATUSES).toEqual(["abandoned", "paused"]);
+  });
+
+  it("only asks how-far-in on a book that is still open", () => {
+    expect(PROGRESS_STATUSES).toEqual(["reading", "paused"]);
+    expect(PROGRESS_STATUSES).not.toContain("finished");
+    expect(PROGRESS_STATUSES).not.toContain("abandoned");
   });
 });

@@ -16,6 +16,7 @@ import BookCard from "./components/BookCard";
 import EmptyShelf from "./components/EmptyShelf";
 import ShelfError from "./components/ShelfError";
 import EntryModal from "./components/EntryModal";
+import TbrQuickAdd from "./components/TbrQuickAdd";
 import Modal from "./components/Modal";
 import FinishFlow from "./components/FinishFlow";
 import CheckinPanel from "./components/CheckinPanel";
@@ -28,7 +29,7 @@ import DNACard from "./components/DNACard";
 import { cardArchetype } from "./services/dnaCard";
 import DNAView from "./components/dna/DNAView";
 import ReadForQuestion from "./components/dna/ReadForQuestion";
-import { MIN_BOOKS } from "./components/dna/constants";
+import { MIN_BOOKS, openedBooks } from "./components/dna/constants";
 import LandingPage from "./pages/LandingPage";
 import { Patterns } from "./components/Panels";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -143,7 +144,7 @@ function avatarInitial(user) {
   return letter ? letter.toUpperCase() : "·";
 }
 
-function ReadingRoomHeader({ user, tab, onAddBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
+function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
   const initial = avatarInitial(user);
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -173,6 +174,11 @@ function ReadingRoomHeader({ user, tab, onAddBook, onRevealDNA, canGenerate, gen
               with an empty shelf. */}
           <button className="btn ghost rr-add-btn rr-wide-only" onClick={onAddBook}>
             <span className="rr-add-btn-label">+ ADD BOOK</span>
+          </button>
+          {/* Shelving is a different act from logging a reading, so it gets its
+              own control rather than a mode inside the add-book modal [B2.2]. */}
+          <button className="btn ghost rr-add-btn rr-wide-only" onClick={onShelveBook}>
+            <span className="rr-add-btn-label">+ TO READ</span>
           </button>
           {showDNA && (
             <button className="btn brass rr-dna-btn rr-wide-only" onClick={onRevealDNA} disabled={generating}>
@@ -476,27 +482,86 @@ function ReadingRoomFilterBar({ entries, filter, onFilter, sort, onSort, view, o
 // ends on a ragged row.
 const STACK_STEP = 48;
 
-function ReadingRoomStacks({ entries, view, onBookClick, totalCount }) {
+// One stack, two lists, a toggle between them [B2.2]. Not two columns side by
+// side: the shelf is the thing you came to look at, and permanently giving a
+// third of it to books nobody has read yet is the wrong trade. The pile is one
+// click away instead.
+//
+// The lists are DERIVED FROM STATUS, never stored separately, so a book crosses
+// over the moment its status changes — filling in a to-read book in EntryModal
+// is what moves it out of To Read and into The Stacks, with nothing to sync.
+const STACK_COPY = {
+  read: {
+    title: "The Stacks",
+    unit: "on display",
+    // Reachable with a shelf of nothing but to-read books: different from an
+    // empty shelf, and it shouldn't read as one.
+    empty: "Nothing read yet. Open To Read and fill one in.",
+  },
+  pile: {
+    title: "To Read",
+    unit: "waiting",
+    empty: "Nothing waiting. Add one with “+ TO READ”.",
+  },
+};
+
+function ReadingRoomStacks({ readEntries, pileEntries, view, onBookClick, totalCount, pileTotal }) {
+  const [tab, setTab] = useState("read");
   const [shown, setShown] = useState(STACK_STEP);
+
+  const entries = tab === "pile" ? pileEntries : readEntries;
+  const copy = STACK_COPY[tab];
 
   // `entries` here is the filtered/sorted memo, so its identity changes exactly
   // when the visible set does. Without this reset a cap raised to 96 on the
-  // unfiltered shelf would carry into a filter that matches 3 books.
+  // unfiltered shelf would carry into a filter that matches 3 books — or into
+  // the other tab, which is usually much shorter.
   useEffect(() => { setShown(STACK_STEP); }, [entries]);
+
+  // A reader who empties their pile shouldn't be left staring at an empty tab.
+  useEffect(() => {
+    if (tab === "pile" && pileTotal === 0) setTab("read");
+  }, [tab, pileTotal]);
 
   const visible = entries.slice(0, shown);
   const remaining = entries.length - visible.length;
 
   return (
-    <div className="rr-stacks">
-      <div className="rr-stacks-head">
-        <h2>
-          The Stacks
-          <em>· {visible.length} on display</em>
+    <div className={`rr-stacks rr-stacks-${tab}`}>
+      {/* The heading IS the switch: two titles with a slash between them, the
+          inactive one dimmed. No separate control to notice and no chrome —
+          the reader is choosing which shelf they are looking at, which is what
+          a title says anyway. The count moves below the books, where it reports
+          on what is already on screen instead of competing with the switch. */}
+      <div className="rr-stacks-head" role="tablist" aria-label="Which books to show">
+        <h2 className="rr-stacks-title">
+          <button
+            role="tab"
+            aria-selected={tab === "read"}
+            className={`rr-stacks-title-opt ${tab === "read" ? "active" : ""}`}
+            onClick={() => setTab("read")}
+          >
+            The Stacks
+          </button>
+          <span className="rr-stacks-title-sep" aria-hidden="true">/</span>
+          <button
+            role="tab"
+            aria-selected={tab === "pile"}
+            className={`rr-stacks-title-opt ${tab === "pile" ? "active" : ""}`}
+            onClick={() => setTab("pile")}
+          >
+            TBR{pileTotal > 0 && <span className="rr-stacks-title-n">{pileTotal}</span>}
+          </button>
         </h2>
-        <div className="label">selecting from {totalCount}</div>
       </div>
-      {view === "spine" ? (
+      {tab === "pile" && pileEntries.length > 0 && (
+        <p className="rr-stacks-note">
+          Not counted in your DNA until you’ve read them. Tap one to fill it in.
+        </p>
+      )}
+      {visible.length === 0 ? (
+        <p className="rr-stacks-note">{copy.empty}</p>
+      ) : view === "spine" ? (
         <Shelf entries={visible} bookend onBookClick={onBookClick} />
       ) : (
         <div className="rr-cover-grid">
@@ -507,6 +572,15 @@ function ReadingRoomStacks({ entries, view, onBookClick, totalCount }) {
             // Identical to the old behaviour for the first 48.
             <BookCard key={entry.id} entry={entry} index={i % STACK_STEP} width={150} onClick={() => onBookClick(entry)} />
           ))}
+        </div>
+      )}
+      {/* Below the books: it describes what you just looked at. */}
+      {visible.length > 0 && (
+        <div className="rr-stacks-count">
+          · {visible.length} {copy.unit}
+          {(tab === "pile" ? pileTotal : totalCount) > visible.length && (
+            <span className="rr-stacks-count-of"> of {tab === "pile" ? pileTotal : totalCount}</span>
+          )}
         </div>
       )}
       {remaining > 0 && (
@@ -553,6 +627,7 @@ function Dashboard() {
   const [finishTarget, setFinishTarget] = useState(null);
   const [checkinTarget, setCheckinTarget] = useState(null);
   const [showImport, setShowImport] = useState(false);
+  const [showTbr, setShowTbr] = useState(false);
   // First-run welcome: shown once (localStorage-gated), only to a brand-new user
   // with an empty shelf. [F2.10]
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -650,6 +725,20 @@ function Dashboard() {
     return result;
   }, [entries, filterEmotion, searchQuery, sortBy]);
 
+  // The shelf is two stacks: books that carry a reading, and the pile that does
+  // not. Same filter/sort applies to both, so searching finds a book wherever
+  // it sits. `openedBooks` is the same rule the DNA gate uses, so the two
+  // surfaces can never disagree about which books count.
+  const readEntries = useMemo(() => openedBooks(filteredEntries), [filteredEntries]);
+  const pileEntries = useMemo(
+    () => filteredEntries.filter((e) => e.status === "want_to_read"),
+    [filteredEntries],
+  );
+  const pileTotal = useMemo(
+    () => entries.filter((e) => e.status === "want_to_read").length,
+    [entries],
+  );
+
   const handleSaveEntry = async (data, existingId) => {
     try {
       if (existingId && !String(existingId).startsWith("temp-")) await editEntry(existingId, data);
@@ -698,7 +787,11 @@ function Dashboard() {
 
   if (loading) return <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Loading library...</div></div>;
 
-  const canGenerate = entries.length >= MIN_BOOKS;
+  // The DNA gate counts books the reader opened, not rows on the shelf. A
+  // want_to_read is excluded from DNA server-side, so counting it here would
+  // offer "Read DNA" on a shelf the backend will refuse to profile [B2.2].
+  const openedCount = openedBooks(entries).length;
+  const canGenerate = openedCount >= MIN_BOOKS;
 
   return (
     <div className="app">
@@ -706,6 +799,7 @@ function Dashboard() {
         user={user}
         tab={tab}
         onAddBook={() => setModal("new")}
+        onShelveBook={() => setShowTbr(true)}
         onRevealDNA={handleGenerateDNA}
         canGenerate={canGenerate}
         generating={generating}
@@ -736,10 +830,10 @@ function Dashboard() {
                 {!canGenerate && (
                   <div className="progress-wrap">
                     <div className="progress-info">
-                      DNA progress<span className="progress-count">{entries.length} / {MIN_BOOKS}</span>
+                      DNA progress<span className="progress-count">{openedCount} / {MIN_BOOKS}</span>
                     </div>
                     <div className="progress-track">
-                      <div className="progress-fill" style={{ width: `${Math.min(100, (entries.length / MIN_BOOKS) * 100)}%` }} />
+                      <div className="progress-fill" style={{ width: `${Math.min(100, (openedCount / MIN_BOOKS) * 100)}%` }} />
                     </div>
                   </div>
                 )}
@@ -755,10 +849,12 @@ function Dashboard() {
                   onSearch={setSearchQuery}
                 />
                 <ReadingRoomStacks
-                  entries={filteredEntries}
+                  readEntries={readEntries}
+                  pileEntries={pileEntries}
                   view={view}
                   onBookClick={(b) => setModal(b)}
-                  totalCount={entries.length}
+                  totalCount={openedCount}
+                  pileTotal={pileTotal}
                 />
                 <div className="rr-footer">
                   <span>Bibliome · personal edition · printed for one</span>
@@ -871,6 +967,17 @@ function Dashboard() {
           backdropClassName="rr-modal-backdrop"
         >
           <ImportModal onClose={() => setShowImport(false)} onImported={loadEntries} />
+        </Modal>
+      )}
+
+      {showTbr && (
+        <Modal
+          onClose={() => setShowTbr(false)}
+          ariaLabel="Add to reading list"
+          className="rr-modal-card"
+          backdropClassName="rr-modal-backdrop"
+        >
+          <TbrQuickAdd onClose={() => setShowTbr(false)} />
         </Modal>
       )}
 

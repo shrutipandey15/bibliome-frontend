@@ -1,0 +1,122 @@
+/* TBR fast-add [B2.2] — a search bar and rows, nothing else.
+   Visually quieter than EntryModal on purpose: shelving is a passing gesture,
+   not the deliberate act of logging a reading. */
+
+.tbr-quick {
+  background: var(--bg-card);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: var(--shadow-lg);
+  padding: 18px;
+  width: 560px;
+  max-width: 100%;
+}
+
+.tbr-quick-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tbr-quick-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 8px 2px;
+  font-size: 1.05rem;
+  font-family: inherit;
+  color: inherit;
+}
+.tbr-quick-input:focus {
+  outline: none;
+  border-bottom-color: currentColor;
+}
+
+.tbr-quick-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  padding: 0 4px;
+}
+.tbr-quick-close:hover { opacity: 1; }
+
+.tbr-quick-hint {
+  margin: 14px 2px 4px;
+  font-size: 0.86rem;
+  opacity: 0.65;
+}
+
+.tbr-quick-results {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.tbr-quick-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.tbr-quick-row:hover:not(:disabled) { background: rgba(0, 0, 0, 0.04); }
+.tbr-quick-row:disabled { cursor: default; opacity: 0.72; }
+
+.tbr-quick-cover {
+  width: 34px;
+  height: 50px;
+  object-fit: cover;
+  flex: none;
+  border: 1px solid var(--rule);
+}
+.tbr-quick-cover-blank { background: rgba(0, 0, 0, 0.06); display: block; }
+
+.tbr-quick-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tbr-quick-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tbr-quick-author {
+  font-size: 0.84rem;
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tbr-quick-state {
+  flex: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.tbr-quick-row.is-added .tbr-quick-state,
+.tbr-quick-row.is-already .tbr-quick-state { opacity: 0.55; }
+.tbr-quick-row.is-error .tbr-quick-state { color: var(--danger, #b3261e); opacity: 1; }
+
+@media (max-width: 600px) {
+  .tbr-quick { width: 100%; padding: 14px; }
+}

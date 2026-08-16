@@ -431,6 +431,80 @@
   margin-top: 40px;
 }
 
+/* ---------- The Stacks / TBR — the heading is the switch [B2.2] ----------
+   Two titles with a slash between them; the one you are not looking at is
+   dimmed. No separate control, because choosing which shelf you are looking at
+   is what a title already says. The count moves below the books. */
+.rr-stacks-head { display: block; margin-bottom: 26px; }
+
+.rr-stacks-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 14px;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.rr-stacks-title-opt {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  /* Dimmed rather than hidden: the other shelf stays legible so the reader can
+     see it is there and read its count without clicking. */
+  color: var(--ink-faint);
+  opacity: 0.55;
+  transition: color 120ms ease, opacity 120ms ease;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.rr-stacks-title-opt:hover { opacity: 0.85; color: var(--ink); }
+.rr-stacks-title-opt.active { color: var(--ink); opacity: 1; }
+.rr-stacks-title-opt:focus-visible {
+  outline: 1px solid var(--ink-faint);
+  outline-offset: 4px;
+}
+.rr-stacks-title-sep {
+  color: var(--ink-faint);
+  opacity: 0.35;
+  font-weight: 300;
+}
+/* TBR's count rides on its title — the only way to know the pile has anything
+   in it without switching to it. */
+.rr-stacks-title-n {
+  font-size: 15px;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* Under the books, reporting on what is on screen. */
+.rr-stacks-count {
+  margin-top: 26px;
+  font-size: 18px;
+  font-style: italic;
+  color: var(--ink-faint);
+}
+.rr-stacks-count-of { opacity: 0.7; font-style: normal; font-size: 15px; }
+
+.rr-stacks-note {
+  margin: -12px 0 22px;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--ink-faint);
+  max-width: 52ch;
+}
+
+@media (max-width: 560px) {
+  .rr-stacks-title { font-size: 26px; gap: 0 10px; }
+  /* Touch targets: the words are the control, so they need the height. */
+  .rr-stacks-title-opt { padding: 6px 0; }
+}
+
 /* ---------- Side rail ---------- */
 .rr-siderail {
   padding: 36px 56px 56px;

@@ -14,11 +14,27 @@ const INTENSITY_LABELS = [
 // adjust only when it matters. [Part B]
 const DEFAULT_STRENGTH = 6;
 
-const STATUS_OPTIONS = [
+// Mirrors `EntryStatus` in the backend's app/schemas/entry.py. All six have been
+// storable since migration 022, but this list offered three, so the reader had
+// no way to say a book was abandoned — which also meant the DNF reason axis and
+// the abandonment insights could never fire from the UI.
+//
+// Order is the reading arc: not started → in progress → the three ways it ends →
+// read again. Exported so a test can pin it against the backend vocabulary.
+export const STATUS_OPTIONS = [
   { value: "want_to_read", label: "want to read" },
   { value: "reading",      label: "reading" },
+  { value: "paused",       label: "paused" },
+  { value: "abandoned",    label: "gave up" },
   { value: "finished",     label: "finished" },
+  { value: "reread",       label: "reread" },
 ];
+
+// The two ways a reader stops. Both count as put-down in the backend's DNF
+// tally, so both are asked why.
+export const DNF_STATUSES = ["abandoned", "paused"];
+// Only an open book has a "how far in"; the backend stores progress for these.
+export const PROGRESS_STATUSES = ["reading", "paused"];
 
 // "Would you read it again?" — a disambiguating axis, optional, never gates save.
 const VERDICT_OPTIONS = [
@@ -27,8 +43,11 @@ const VERDICT_OPTIONS = [
   { value: "not_sure", label: "not sure" },
 ];
 
-// Why a book was put down — only meaningful (and only shown) when abandoned.
-const DNF_OPTIONS = [
+// Why a book was put down — shown for both DNF_STATUSES.
+// Mirrors `DnfReason` in the backend's app/schemas/entry.py. The API validates
+// against that Literal, so a value offered here but missing there is a 422 the
+// reader can do nothing about. Exported so a test can pin the two lists together.
+export const DNF_OPTIONS = [
   { value: "bored",         label: "bored" },
   { value: "too_much",      label: "too much" },
   { value: "badly_written", label: "badly written" },
@@ -79,6 +98,8 @@ function describeShelved(e) {
   else if (e.status === "reading") parts.push(started ? `reading since ${started}` : "currently reading");
   else if (e.status === "want_to_read") parts.push("on your want-to-read");
   else if (e.status === "abandoned") parts.push("put down");
+  else if (e.status === "paused") parts.push(started ? `paused since ${started}` : "paused");
+  else if (e.status === "reread") parts.push(finished ? `reread, first finished ${finished}` : "reread");
   const emo = e.emotions?.[0] && EMOTIONS[e.emotions[0].emotion_id];
   if (emo) parts.push(`tagged ${emo.name.toLowerCase()}`);
   return parts.join(" · ");
@@ -220,10 +241,13 @@ export default function EntryModal({
       finished_at: finishedAt || null,
       notes: notes.trim() || null,
       verdict: verdict || null,
-      // DNF reason only means anything on an abandoned book.
-      dnf_reason: status === "abandoned" ? (dnfReason || null) : null,
+      // A DNF reason means something on both ways of stopping. The backend's
+      // own tally counts `paused` as put-down (dna_signals._DNF_STATUSES), so
+      // asking only on `abandoned` left half the pile unexplained.
+      dnf_reason: DNF_STATUSES.includes(status) ? (dnfReason || null) : null,
       // A closed book has no "how far in" — its status is the answer.
-      progress: status === "reading" && progress !== "" ? Number(progress) : null,
+      progress: PROGRESS_STATUSES.includes(status) && progress !== ""
+        ? Number(progress) : null,
     }, entry?.id || null);
   };
   const handleDelete = () => { if (entry?.id) onDelete(entry.id); };
@@ -401,7 +425,7 @@ export default function EntryModal({
                   onChange={(e) => setStartedAt(e.target.value)}
                 />
               </label>
-              {status === "finished" && (
+              {(status === "finished" || status === "reread") && (
                 <label className="em-date">
                   <span className="label-sm em-field-label">finished</span>
                   <input
@@ -419,7 +443,7 @@ export default function EntryModal({
           {/* Roughly how far in — asked only of an open book, and only ever
               optional. A page number would mean asking which printing you hold;
               a rough share is the question a reader can actually answer. */}
-          {status === "reading" && (
+          {PROGRESS_STATUSES.includes(status) && (
             <div className="em-progress">
               <label className="em-progress-label" htmlFor="em-progress-input">
                 <span className="label-sm em-field-label">roughly how far in</span>
@@ -531,7 +555,7 @@ export default function EntryModal({
         {/* DNF reason — only surfaces when the book was abandoned, so it stays
             in the main flow: it is already conditional, and folding a field
             that only appears when it is relevant hides it twice. [Part C] */}
-        {status === "abandoned" && (
+        {DNF_STATUSES.includes(status) && (
           <OneTap
             label="why did you put it down?"
             options={DNF_OPTIONS}
