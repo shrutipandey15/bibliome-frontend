@@ -38,6 +38,7 @@ import { ShelfDecoration } from "./components/Shelf";
 import { EMO_LIST, EMOTIONS, getPrimaryEmotion, hydrateEmotions } from "./services/emotions";
 import { clearCache } from "./services/offline";
 import { findDuplicateEntry } from "./utils/findDuplicate";
+import { takeInvite } from "./services/pendingInvite";
 import "./App.css";
 
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -49,6 +50,7 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const JournalPage = lazy(() => import("./pages/JournalPage"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
+const JoinCollectionPage = lazy(() => import("./pages/JoinCollectionPage"));
 
 
 function SharedProfile() {
@@ -1031,6 +1033,15 @@ function Dashboard() {
 
 function AuthedLayout() {
   const { authed } = useAuth();
+  const navigate = useNavigate();
+
+  // Signing in from an invite link returns you to the invitation. [#5]
+  useEffect(() => {
+    if (!authed) return;
+    const token = takeInvite();
+    if (token) navigate(`/collections/join/${token}`, { replace: true });
+  }, [authed, navigate]);
+
   if (!authed) return <Navigate to="/login" replace />;
   return (
     <JournalProvider>
@@ -1078,6 +1089,11 @@ export default function App() {
         <Route path="/privacy" element={<LegalPage />} />
         <Route path="/terms" element={<LegalPage />} />
         <Route path="/login" element={authed ? <Navigate to="/" replace /> : <AuthPage />} />
+        {/* Top-level, like the other capability links: an invite has to open for
+            a signed-out reader too, so it can name the collection and then send
+            them to sign in — rather than bouncing them to a login page that
+            explains nothing. [#5] */}
+        <Route path="/collections/join/:token" element={<JoinCollectionPage />} />
 
         <Route
           path="/"

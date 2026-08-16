@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Modal from "../Modal";
+import CollectionSharing from "./CollectionSharing";
 import { EMOTIONS } from "../../services/emotions";
 import {
   createCollection, deleteCollection, addCollectionItem, removeCollectionItem, reorderCollection,
@@ -268,6 +269,14 @@ function CollectionDrawer({ collection, shelf, onChanged, onClose }) {
         />
         <button className="btn brass" disabled={busy || !pick} onClick={addBook}>add</button>
       </div>
+
+      {/* Who's in it and the link that lets more people in [#5]. Sits below the
+          books because the books are what the collection IS; sharing is what you
+          do with it. */}
+      <CollectionSharing
+        collection={collection}
+        onLeft={() => { onChanged(); onClose(); }}
+      />
 
       <div className="col-drawer-foot">
         {confirmDelete ? (

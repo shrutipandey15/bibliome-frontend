@@ -556,6 +556,84 @@ export async function reorderCollection(id, entryIds) {
   if (!res.ok) throw new Error("Couldn't reorder");
 }
 
+// ── Shared collections [#5] ──
+//
+// Books in a shared collection are addressed by CANONICAL book_id, not entry_id:
+// an entry is one reader's private copy, and a member adding a book must not be
+// attaching a row the others cannot read.
+
+export async function addCollectionBook(id, bookId) {
+  const res = await apiFetch(`/collections/${id}/books`, {
+    method: "POST", body: JSON.stringify({ book_id: bookId }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.detail || "Couldn't add book");
+  }
+}
+
+export async function removeCollectionBook(id, bookId) {
+  const res = await apiFetch(`/collections/${id}/books/${bookId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    // 403 here means "you didn't add this one" — a real answer, not a failure.
+    throw new Error(d.detail || "Couldn't remove book");
+  }
+}
+
+// The raw token comes back ONCE and is never readable again — only its hash is
+// stored. Show it immediately or it is gone.
+export async function createCollectionInvite(id, { expiresAt = null, maxUses = null } = {}) {
+  const res = await apiFetch(`/collections/${id}/invites`, {
+    method: "POST",
+    body: JSON.stringify({ expires_at: expiresAt, max_uses: maxUses }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.detail || "Couldn't create an invite link");
+  }
+  return res.json();
+}
+
+export async function revokeCollectionInvite(id, inviteId) {
+  const res = await apiFetch(`/collections/${id}/invites/${inviteId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Couldn't revoke that link");
+}
+
+// What a link points at, without joining — so nobody accepts a blind invitation.
+export async function peekCollectionInvite(token) {
+  const res = await apiFetch(`/collections/invites/${encodeURIComponent(token)}`);
+  if (!res.ok) return null;   // expired or revoked; the caller says so plainly
+  return res.json();
+}
+
+// Returns { collection_id, title, joined }. `joined: false` means "already a
+// member" — clicking a link twice is not an error.
+export async function joinCollection(token) {
+  const res = await apiFetch(`/collections/invites/${encodeURIComponent(token)}/join`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.detail || "This invite has expired or been revoked");
+  }
+  return res.json();
+}
+
+export async function getCollectionMembers(id) {
+  const res = await apiFetch(`/collections/${id}/members`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function leaveCollection(id, userId) {
+  const res = await apiFetch(`/collections/${id}/members/${userId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.detail || "Couldn't leave");
+  }
+}
+
 // ── Mirror: insights + resurfaced memories [F2.5 / B2.6] ──
 // Both return null-able content — a genuine "not enough yet", never fabricated.
 export async function getInsight() {

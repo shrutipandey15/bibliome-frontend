@@ -1,0 +1,103 @@
+/* Sharing controls inside the collection drawer [#5]. */
+
+.col-share {
+  border-top: 1px solid var(--rule);
+  margin-top: 22px;
+  padding-top: 18px;
+}
+
+.col-share-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+.col-share-count {
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.col-share-members { list-style: none; margin: 0 0 16px; padding: 0; }
+.col-share-member {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.9rem;
+}
+.col-share-handle em { font-style: italic; opacity: 0.6; }
+.col-share-role {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 1px 8px;
+  opacity: 0.7;
+}
+
+.col-share-invite { margin-top: 6px; }
+
+.col-share-label {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+
+.col-share-linkrow { display: flex; gap: 8px; align-items: center; }
+.col-share-url {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: inherit;
+}
+
+.col-share-linkfoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin-top: 10px;
+}
+.col-share-hint {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+  opacity: 0.8;
+}
+
+.col-share-plain {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.col-share-plain:hover { color: var(--ink); }
+
+.col-share-error {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: var(--danger, #c2705f);
+}
+
+@media (max-width: 560px) {
+  .col-share-linkrow { flex-direction: column; align-items: stretch; }
+}
