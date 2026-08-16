@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import Modal from "../Modal";
 import CollectionSharing from "./CollectionSharing";
-import CollectionChat from "./CollectionChat";
+import { Link } from "react-router-dom";
 import { EMOTIONS } from "../../services/emotions";
 import {
   createCollection, deleteCollection, addCollectionItem, removeCollectionItem, reorderCollection,
+  addCollectionBook, removeCollectionBook,
 } from "../../services/api";
 import "./CollectionsEditor.css";
 
@@ -63,7 +64,7 @@ function CollectionCard({ collection, onOpen }) {
       <span className="col-spines" aria-hidden="true">
         {spines.length > 0 ? spines.map((b, i) => (
           <span
-            key={b.entry_id}
+            key={b.entry_id || b.book_id}
             className="col-spine"
             style={{ background: emoColor(b.dominant_emotion), height: `${72 + ((i * 37) % 29)}%` }}
           />
@@ -214,20 +215,37 @@ function CollectionDrawer({ collection, shelf, onChanged, onClose }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const books = collection.books || [];
-  const inIds = new Set(books.map((b) => b.entry_id));
-  const addable = shelf.filter((e) => !inIds.has(e.id) && !inIds.has(String(e.id)));
+  // A card added by a member has no entry_id here, so identity is "whichever id
+  // it has". Without this the same book could be offered for adding twice.
+  const inIds = new Set(books.flatMap((b) => [b.entry_id, b.book_id].filter(Boolean)));
+  const addable = shelf.filter(
+    (e) => !inIds.has(e.id) && !inIds.has(String(e.id)) && !inIds.has(e.book_id),
+  );
 
   const run = async (fn) => { setBusy(true); try { await fn(); await onChanged(); } finally { setBusy(false); } };
 
   const addBook = async () => {
     if (!pick) return;
-    await run(() => addCollectionItem(collection.id, pick));
+    // Add by CANONICAL book id when the entry resolved to one (#5). An item
+    // keyed only by entry_id belongs to one reader's library: members can't see
+    // it, and it never appears in the collection's discussion, because that is
+    // anchored to books. Entries that never matched the catalog (book_id null)
+    // still take the legacy path — it is the only identity they have.
+    const entry = shelf.find((e) => String(e.id) === String(pick));
+    await run(() => (entry?.book_id
+      ? addCollectionBook(collection.id, entry.book_id)
+      : addCollectionItem(collection.id, pick)));
     setPick("");
   };
 
   const reorder = (from, to) => {
     if (to < 0 || to >= books.length) return;
-    run(() => reorderCollection(collection.id, move(books.map((b) => b.entry_id), from, to)));
+    // Reorder is still entry-keyed server-side; member-added books have no
+    // entry to name, so they hold their position rather than being dropped.
+    const ids = books.map((b) => b.entry_id).filter(Boolean);
+    if (ids.length === books.length) {
+      run(() => reorderCollection(collection.id, move(ids, from, to)));
+    }
   };
 
   const remove = async () => {
@@ -245,14 +263,18 @@ function CollectionDrawer({ collection, shelf, onChanged, onClose }) {
       {books.length > 0 ? (
         <ul className="col-books">
           {books.map((b, i) => (
-            <li key={b.entry_id} className="col-book">
+            <li key={b.entry_id || b.book_id} className="col-book">
               <span className="col-book-dot" style={{ background: emoColor(b.dominant_emotion) }} />
               <span className="col-book-title">{b.title}</span>
               {b.author && <span className="col-book-author">{b.author}</span>}
               <span className="col-book-actions">
                 <button disabled={busy || i === 0} onClick={() => reorder(i, i - 1)} aria-label={`Move ${b.title} up`}>↑</button>
                 <button disabled={busy || i === books.length - 1} onClick={() => reorder(i, i + 1)} aria-label={`Move ${b.title} down`}>↓</button>
-                <button disabled={busy} onClick={() => run(() => removeCollectionItem(collection.id, b.entry_id))} aria-label={`Remove ${b.title}`}>remove</button>
+                {/* Mirror of the add path: remove by book when the item has
+                    one, by entry for legacy rows. */}
+                <button disabled={busy} onClick={() => run(() => (b.book_id
+                  ? removeCollectionBook(collection.id, b.book_id)
+                  : removeCollectionItem(collection.id, b.entry_id)))} aria-label={`Remove ${b.title}`}>remove</button>
               </span>
             </li>
           ))}
@@ -271,14 +293,20 @@ function CollectionDrawer({ collection, shelf, onChanged, onClose }) {
         <button className="btn brass" disabled={busy || !pick} onClick={addBook}>add</button>
       </div>
 
-      {/* Talk, then sharing — both below the books, because the books are what
-          the collection IS. Folded away by default: a collection is a shelf
-          first, and an always-open chat panel would make it a chat room with
-          books in it. [#6] */}
-      <details className="col-chat-fold">
-        <summary className="col-chat-summary">Discussion</summary>
-        <CollectionChat collection={collection} />
-      </details>
+      {/* A LINK, not the conversation itself [#6]. Chats grow; this drawer is a
+          fold inside a modal on the profile page, and hosting a long thread in
+          it meant a message list boxed into a few hundred pixels. The room gets
+          its own page, which scrolls like any other page of text. */}
+      <div className="col-chat-link-row">
+        <Link
+          className="col-chat-link"
+          to={`/collections/${collection.id}/discussion`}
+          state={{ title: collection.title }}
+        >
+          Discussion →
+        </Link>
+        <span className="col-chat-link-hint">Talk about these books with the others here.</span>
+      </div>
 
       {/* Who's in it and the link that lets more people in [#5]. */}
       <CollectionSharing

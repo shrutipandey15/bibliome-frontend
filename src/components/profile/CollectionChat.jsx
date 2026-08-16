@@ -41,7 +41,7 @@ export default function CollectionChat({ collection }) {
   return <ConversationList collection={collection} onOpen={setOpenBook} />;
 }
 
-function ConversationList({ collection, onOpen }) {
+export function ConversationList({ collection, onOpen }) {
   const [rows, setRows] = useState(null);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ function ConversationList({ collection, onOpen }) {
   );
 }
 
-function ChatRoom({ collection, book, onBack }) {
+export function ChatRoom({ collection, book, onBack }) {
   const [messages, setMessages] = useState([]);
   const [cursor, setCursor] = useState(null);   // { before, beforeId } | null
   const [loading, setLoading] = useState(true);

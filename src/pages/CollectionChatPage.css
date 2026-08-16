@@ -1,0 +1,39 @@
+/* The discussion as a page [#6]. The PAGE scrolls — the message list must not
+   carry its own max-height here, or a long conversation is stuck in a small box
+   on a mostly-empty screen. */
+.ccp {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+.ccp-head { margin-bottom: 20px; }
+.ccp-back {
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ccp-back:hover { color: var(--ink); }
+.ccp-title {
+  margin: 8px 0 0;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Release the in-drawer cap: on a page there is nothing to contain. */
+.ccp .cc-messages { max-height: none; overflow-y: visible; }
+
+/* Keep the composer reachable without scrolling to the bottom of a long thread. */
+.ccp .cc-compose {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg-page);
+  box-shadow: 0 -12px 16px -12px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 560px) {
+  .ccp { padding: 20px 14px 40px; }
+  .ccp-title { font-size: 24px; }
+}

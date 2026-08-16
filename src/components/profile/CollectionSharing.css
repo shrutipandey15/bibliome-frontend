@@ -102,23 +102,24 @@
   .col-share-linkrow { flex-direction: column; align-items: stretch; }
 }
 
-/* The discussion fold [#6]. A collection is a shelf first — the room is one
-   click in, not the thing you land on. */
-.col-chat-fold {
+/* The way OUT to the discussion [#6] — the conversation lives on its own page,
+   not in this drawer. */
+.col-chat-link-row {
   border-top: 1px solid var(--rule);
   margin-top: 22px;
-  padding-top: 14px;
+  padding-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
 }
-.col-chat-summary {
-  cursor: pointer;
+.col-chat-link {
   font-size: 0.78rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-faint);
-  list-style: none;
-  margin-bottom: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
 }
-.col-chat-summary::-webkit-details-marker { display: none; }
-.col-chat-summary::after { content: " ⌄"; opacity: 0.6; }
-.col-chat-fold[open] .col-chat-summary::after { content: " ⌃"; }
-.col-chat-summary:hover { color: var(--ink); }
+.col-chat-link:hover { border-bottom-color: currentColor; }
+.col-chat-link-hint { font-size: 0.78rem; color: var(--ink-faint); }

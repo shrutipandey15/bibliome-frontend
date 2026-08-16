@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+// The drawer links out to the discussion page [#6], so <Link> needs a router.
+import { MemoryRouter } from "react-router-dom";
 
 vi.mock("../../services/api", () => ({
   createCollection: vi.fn(), deleteCollection: vi.fn(),
@@ -41,7 +43,7 @@ describe("CollectionsEditor [F2.8]", () => {
   it("creates a new collection", async () => {
     createCollection.mockResolvedValue({ id: "c1" });
     const onChanged = vi.fn().mockResolvedValue();
-    render(<CollectionsEditor collections={[]} shelf={shelf} onChanged={onChanged} />);
+    render(<MemoryRouter><CollectionsEditor collections={[]} shelf={shelf} onChanged={onChanged} /></MemoryRouter>);
 
     await userEvent.click(screen.getByRole("button", { name: /start a shelf/i }));
     await userEvent.type(screen.getByLabelText(/collection name/i), "books that ruined me");
@@ -57,7 +59,7 @@ describe("CollectionsEditor [F2.8]", () => {
     addCollectionItem.mockResolvedValue();
     const onChanged = vi.fn().mockResolvedValue();
     const collections = [{ id: "c1", title: "Comfort reads", visibility: "private", position: 0, books: [] }];
-    render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} />);
+    render(<MemoryRouter><CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} /></MemoryRouter>);
 
     await userEvent.click(screen.getByRole("button", { name: /Comfort reads/i }));
     await userEvent.click(screen.getByLabelText(/choose a book from your shelf/i));
@@ -71,7 +73,7 @@ describe("CollectionsEditor [F2.8]", () => {
     addCollectionItem.mockResolvedValue();
     const onChanged = vi.fn().mockResolvedValue();
     const collections = [{ id: "c1", title: "Comfort reads", visibility: "private", position: 0, books: [] }];
-    render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} />);
+    render(<MemoryRouter><CollectionsEditor collections={collections} shelf={shelf} onChanged={onChanged} /></MemoryRouter>);
 
     await userEvent.click(screen.getByRole("button", { name: /Comfort reads/i }));
     await userEvent.click(screen.getByLabelText(/choose a book from your shelf/i));
@@ -95,7 +97,7 @@ describe("CollectionsEditor [F2.8]", () => {
 
   it("says so when nothing matches, rather than showing an empty list", async () => {
     const collections = [{ id: "c1", title: "Comfort reads", visibility: "private", position: 0, books: [] }];
-    render(<CollectionsEditor collections={collections} shelf={shelf} onChanged={vi.fn()} />);
+    render(<MemoryRouter><CollectionsEditor collections={collections} shelf={shelf} onChanged={vi.fn()} /></MemoryRouter>);
 
     await userEvent.click(screen.getByRole("button", { name: /Comfort reads/i }));
     await userEvent.click(screen.getByLabelText(/choose a book from your shelf/i));
@@ -108,7 +110,7 @@ describe("CollectionsEditor [F2.8]", () => {
   it("reorders books with keyboard-operable up/down (not drag-only) [a11y]", async () => {
     reorderCollection.mockResolvedValue();
     const onChanged = vi.fn().mockResolvedValue();
-    render(<CollectionsEditor collections={ordered} shelf={shelf} onChanged={onChanged} />);
+    render(<MemoryRouter><CollectionsEditor collections={ordered} shelf={shelf} onChanged={onChanged} /></MemoryRouter>);
 
     await userEvent.click(screen.getByRole("button", { name: /Ordered/i }));
     await userEvent.click(screen.getByRole("button", { name: /move Second up/i }));
@@ -116,7 +118,7 @@ describe("CollectionsEditor [F2.8]", () => {
   });
 
   it("the card is a single control — the grid has no nested buttons", async () => {
-    render(<CollectionsEditor collections={ordered} shelf={shelf} onChanged={vi.fn()} />);
+    render(<MemoryRouter><CollectionsEditor collections={ordered} shelf={shelf} onChanged={vi.fn()} /></MemoryRouter>);
     const card = screen.getByRole("button", { name: /Ordered/i });
     expect(card.querySelector("button")).toBeNull();
     // The count and who-can-see-it are on the card, not hidden in the drawer.
@@ -126,7 +128,7 @@ describe("CollectionsEditor [F2.8]", () => {
   it("asks before deleting a collection", async () => {
     deleteCollection.mockResolvedValue();
     const onChanged = vi.fn().mockResolvedValue();
-    render(<CollectionsEditor collections={ordered} shelf={shelf} onChanged={onChanged} />);
+    render(<MemoryRouter><CollectionsEditor collections={ordered} shelf={shelf} onChanged={onChanged} /></MemoryRouter>);
 
     await userEvent.click(screen.getByRole("button", { name: /Ordered/i }));
     await userEvent.click(screen.getByRole("button", { name: /delete collection/i }));
@@ -140,7 +142,7 @@ describe("CollectionsEditor [F2.8]", () => {
     const many = Array.from({ length: 9 }, (_, i) => ({
       id: `c${i}`, title: `Shelf ${i}`, visibility: "private", position: i, books: [],
     }));
-    render(<CollectionsEditor collections={many} shelf={shelf} onChanged={vi.fn()} />);
+    render(<MemoryRouter><CollectionsEditor collections={many} shelf={shelf} onChanged={vi.fn()} /></MemoryRouter>);
 
     expect(screen.queryByRole("button", { name: /Shelf 7/i })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /all 9 collections/i }));

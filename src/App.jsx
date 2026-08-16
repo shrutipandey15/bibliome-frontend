@@ -51,6 +51,7 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const JournalPage = lazy(() => import("./pages/JournalPage"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const JoinCollectionPage = lazy(() => import("./pages/JoinCollectionPage"));
+const CollectionChatPage = lazy(() => import("./pages/CollectionChatPage"));
 
 
 function SharedProfile() {
@@ -1115,6 +1116,11 @@ export default function App() {
           <Route path="resonance" element={<ResonancePage />} />
           <Route path="journal" element={<JournalPage />} />
           <Route path="me" element={<ProfilePage />} />
+          {/* The discussion is a PAGE, not a panel inside the collection
+              drawer: a conversation grows, and the drawer is a fold in a modal
+              on the profile page. [#6] */}
+          <Route path="collections/:collectionId/discussion" element={<CollectionChatPage />} />
+          <Route path="collections/:collectionId/discussion/:bookId" element={<CollectionChatPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="admin" element={<AdminPage />} />
         </Route>
