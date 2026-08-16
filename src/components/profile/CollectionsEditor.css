@@ -46,7 +46,11 @@
 .cols-more:hover { text-decoration: underline; }
 
 /* ── The drawer: everything that changes a collection ── */
-.col-drawer { max-width: 560px; width: 100%; }
+/* Padding is the card's job here, following the other dialogs (.nc, .rr-sheet,
+   .em-card each carry their own). It never needed any while this rendered as a
+   block in the page flow, inheriting the section's margins — now that it is a
+   real overlay, its text would otherwise sit flush against the screen edge. */
+.col-drawer { max-width: 560px; width: 100%; padding: 24px; }
 .col-drawer-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .col-drawer-desc { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-quiet); }
 

@@ -590,15 +590,26 @@
 .back-btn:hover { border-color: var(--ink); }
 
 /* ---------- Modal (page-turn) ---------- */
-.rr-modal-backdrop {
+/* Keyed on the BASE class, which <Modal> always applies. It used to be keyed on
+   `.rr-modal-backdrop`, an opt-in each caller had to remember — eight of the ten
+   did, and the two that didn't (the collections drawer and "start a shelf") got
+   no overlay at all: `position: static`, no z-index, no centring. They rendered
+   as a plain block in the middle of the Profile page's flow, which on a phone
+   put the "dialog" ~650px down a 3500px page. Tapping a collection looked like
+   it did nothing.
+   A dialog is an overlay whether or not the caller passes a prop. */
+.modal-backdrop {
   position: fixed; inset: 0;
   background: rgba(20, 8, 0, 0.62);
   backdrop-filter: blur(4px);
   z-index: 200;
   display: flex; align-items: center; justify-content: center;
   padding: 40px;
+  /* Belt to the scroll-lock's braces (see Modal.jsx): stops a scroll that runs
+     off the end of the dialog from chaining out to the page behind it. */
+  overscroll-behavior: contain;
 }
-.rr-modal-card {
+.modal-card {
   /* Size to the CONTENT, capped — not to 1100px regardless of what's inside.
      This shell is shared by nine dialogs and only ONE of them is 1100px wide
      (.em-card, which says so itself). The rest cap themselves far narrower:
@@ -611,6 +622,7 @@
   max-width: min(1100px, 100%);
   max-height: 92vh;
   overflow: auto;
+  overscroll-behavior: contain;
   transform-origin: left center;
 }
 
@@ -904,15 +916,33 @@
   .rr-filter-label { display: none; }
   .rr-chiprow { display: none; }
   .rr-filter-trigger { display: flex; }
-  .rr-filter-sort { margin-left: 0; justify-content: space-between; }
+  /* Keep the row clear of the FAB's column. The FAB is fixed at right:18px and
+     56px wide, so anything flush to the right edge passes under it — and the
+     cover/spine toggle sat exactly there, 55 of its 75px covered by the button
+     and effectively untappable.
+     `wrap` is doing real work, not decoration: the row's three items plus the
+     reserved 86px come to 416px, wider than a 390px phone, and an overflowing
+     row makes the browser widen the layout viewport (measured: 390 → 434) which
+     silently shrinks the whole page. Wrapping lets the toggle drop to its own
+     line instead, so nothing overflows and nothing hides under the FAB. */
+  .rr-filter-sort {
+    margin-left: 0;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding-right: 86px;
+  }
 
   /* Modals become bottom sheets on mobile — docked to the bottom, full-width,
-     thumb-reachable, slide-up. [F2.9 / P5-9] */
-  .rr-modal-backdrop {
+     thumb-reachable, slide-up. [F2.9 / P5-9]
+     Keyed on the BASE classes, not `.rr-*`: the sheet shape is what a dialog
+     looks like on a phone, so it can't be something each caller opts into and
+     the collections drawer forgets. (The `.rr-*` variants still exist and still
+     match — they're the same element.) */
+  .modal-backdrop {
     padding: 0;
     align-items: flex-end;
   }
-  .modal-card.rr-modal-card {
+  .modal-card {
     max-width: 100%;
     width: 100%;
     max-height: 92vh;

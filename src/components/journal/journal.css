@@ -595,7 +595,12 @@
   background: var(--bg-field);
   color: var(--ink);
   user-select: all;
-  word-break: break-all;
+  /* `break-all` split the code mid-group on a phone — "…-062" / "J-JCKD" — on
+     the one screen where mis-transcribing costs you the journal permanently.
+     Normal breaking still wraps, but only after a hyphen, so a group never
+     splits across two lines. */
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 .jr-code-actions { display: flex; gap: 0.6rem; }
 .jr-confirm { display: flex; flex-direction: column; gap: 0.4rem; }
