@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { ConversationList, ChatRoom } from "../components/profile/CollectionChat";
+import PushPrompt from "../components/PushPrompt";
 import "./CollectionChatPage.css";
 
 /**
@@ -51,6 +52,10 @@ export default function CollectionChatPage() {
         <Link to="/me" className="ccp-back">← your study</Link>
         <h1 className="ccp-title">{collection.title || "Discussion"}</h1>
       </div>
+
+      {/* The one place the ask makes sense: standing in a conversation with
+          other people in it. Asked once, then never again. */}
+      <PushPrompt />
 
       {book
         ? <ChatRoom collection={collection} book={book} onBack={back} />

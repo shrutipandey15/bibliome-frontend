@@ -39,6 +39,7 @@ import { EMO_LIST, EMOTIONS, getPrimaryEmotion, hydrateEmotions } from "./servic
 import { clearCache } from "./services/offline";
 import { findDuplicateEntry } from "./utils/findDuplicate";
 import { takeInvite } from "./services/pendingInvite";
+import { autoSubscribeIfGranted } from "./services/push";
 import "./App.css";
 
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -1042,6 +1043,13 @@ function Dashboard() {
 function AuthedLayout() {
   const { authed } = useAuth();
   const navigate = useNavigate();
+
+  // Push stays on once it has been allowed: re-register silently on every load
+  // so a cleared cache, a reinstall, or a pruned server row doesn't quietly
+  // leave someone unsubscribed. Never prompts — see autoSubscribeIfGranted.
+  useEffect(() => {
+    if (authed) autoSubscribeIfGranted();
+  }, [authed]);
 
   // Signing in from an invite link returns you to the invitation. [#5]
   useEffect(() => {

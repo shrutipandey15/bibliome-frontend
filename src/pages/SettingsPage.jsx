@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Modal from "../components/Modal";
 import PasswordField from "../components/PasswordField";
+import PushToggle from "../components/PushToggle";
 import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor } from "../services/api";
 import { useJournalKey } from "../contexts/JournalKeyContext";
 import ReadForQuestion from "../components/dna/ReadForQuestion";
@@ -448,6 +449,11 @@ export default function SettingsPage() {
                 digest is a summary you can switch off, and security alerts always come
                 through. Quiet hours hold everything but security until they end.
               </p>
+
+              {/* Push rides on exactly these rules — same prefs, same quiet
+                  hours, same batching. It is a second delivery channel, not a
+                  second set of decisions. [add-on to #6] */}
+              <PushToggle />
 
               {!prefs ? (
                 <div className="set-card-d">loading…</div>
