@@ -85,6 +85,15 @@
         document.documentElement.setAttribute("data-theme", t);
       })();
     </script>
+    <!-- Installable [add-on to #6]. On iOS this is not cosmetic: Safari only
+         permits Web Push for an app added to the home screen, so without a
+         manifest the push toggle can never succeed there. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0c0805" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Bibliome" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
   </head>
   <body>
     <div id="root"></div>

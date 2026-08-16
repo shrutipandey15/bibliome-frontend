@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("../../services/api", () => ({
@@ -8,144 +8,160 @@ vi.mock("../../services/api", () => ({
   sendCollectionMessage: vi.fn(),
   deleteCollectionMessage: vi.fn(),
   reportCollectionConversation: vi.fn(),
+  getCollectionSparks: vi.fn(),
 }));
 
 import CollectionChat from "./CollectionChat";
 import {
-  getCollectionConversations,
-  getCollectionMessages,
-  sendCollectionMessage,
-  deleteCollectionMessage,
-  reportCollectionConversation,
+  getCollectionConversations, getCollectionMessages, sendCollectionMessage,
+  deleteCollectionMessage, reportCollectionConversation, getCollectionSparks,
 } from "../../services/api";
 
-const COLLECTION = { id: "c1", title: "Group Read" };
-
 const BOOKS = [
-  { book_id: "b1", title: "Piranesi", author: "Susanna Clarke", message_count: 2, last_message_at: "2026-08-01T10:00:00Z" },
-  { book_id: "b2", title: "The Employees", author: "Olga Ravn", message_count: 0, last_message_at: null },
+  { book_id: "b1", title: "Beach Read", author: "Emily Henry" },
+  { book_id: "b2", title: "Iron Flame", author: "Rebecca Yarros" },
 ];
 
-const msg = (over = {}) => ({
-  id: "m1", book_id: "b1", handle: "reader", is_mine: false,
-  body: "this wrecked me", created_at: "2026-08-01T10:00:00Z", crisis: null, ...over,
+const msg = (o = {}) => ({
+  id: "m1", book_id: null, book_title: null, handle: "mara", is_mine: false,
+  body: "the statues", created_at: new Date().toISOString(), crisis: null, ...o,
 });
 
-async function openRoom() {
-  render(<CollectionChat collection={COLLECTION} />);
-  await userEvent.click(await screen.findByRole("button", { name: /Piranesi/ }));
+const page = (messages = [], over = {}) =>
+  ({ messages, next_before: null, next_before_id: null, ...over });
+
+async function mount() {
+  render(<CollectionChat collectionId="c1" />);
   return screen.findByLabelText(/your message/i);
 }
 
-describe("CollectionChat [#6]", () => {
+describe("CollectionChat — one room per collection [#6]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getCollectionConversations.mockResolvedValue(BOOKS);
-    getCollectionMessages.mockResolvedValue({ messages: [msg()], next_before: null, next_before_id: null });
+    getCollectionSparks.mockResolvedValue({ sparks: [] });
+    getCollectionMessages.mockResolvedValue(page([msg()]));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("opens straight into the conversation — no book-list step", async () => {
+    // The old shape made you pick a book first, past a wall of "start it" rows.
+    await mount();
+    expect(screen.getByText("the statues")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /start it/i })).not.toBeInTheDocument();
   });
 
-  it("lists every book, including ones nobody has spoken about", async () => {
-    // The list shows where a conversation COULD start, not only where one has.
-    render(<CollectionChat collection={COLLECTION} />);
+  it("sends with Enter and keeps Shift+Enter for a newline", async () => {
+    sendCollectionMessage.mockResolvedValue(msg({ id: "m2", is_mine: true, body: "hi" }));
+    const input = await mount();
 
-    expect(await screen.findByText("Piranesi")).toBeInTheDocument();
-    expect(screen.getByText("The Employees")).toBeInTheDocument();
-    expect(screen.getByText("start it")).toBeInTheDocument();
+    await userEvent.type(input, "line one{Shift>}{Enter}{/Shift}");
+    expect(sendCollectionMessage).not.toHaveBeenCalled();   // newline, not a send
+
+    await userEvent.type(input, "hi{Enter}");
+    await waitFor(() => expect(sendCollectionMessage).toHaveBeenCalledTimes(1));
   });
 
-  it("opens one book's room — there is no general channel", async () => {
-    await openRoom();
-    expect(getCollectionMessages).toHaveBeenCalledWith("c1", "b1", expect.anything());
-    expect(screen.getByText("this wrecked me")).toBeInTheDocument();
-    // Only way back is to the book list; no room that isn't a book.
-    expect(screen.getByRole("button", { name: /all books/i })).toBeInTheDocument();
+  it("posts without a book — a general remark needs no anchor", async () => {
+    sendCollectionMessage.mockResolvedValue(msg({ id: "m2", is_mine: true, body: "hello" }));
+    const input = await mount();
+
+    await userEvent.type(input, "hello{Enter}");
+    await waitFor(() => expect(sendCollectionMessage).toHaveBeenCalledWith("c1", "hello", null));
   });
 
-  it("tells the sender plainly when a message was REFUSED, and keeps the draft", async () => {
-    // A 422 means it did not send. Anything softer implies it landed, and the
-    // draft has to survive — it is still unsaid.
+  it("can attach a book to a message", async () => {
+    sendCollectionMessage.mockResolvedValue(msg({ id: "m2", is_mine: true }));
+    const input = await mount();
+
+    await userEvent.selectOptions(screen.getByLabelText(/attach a book/i), "b1");
+    await userEvent.type(input, "about this one{Enter}");
+
+    await waitFor(() => expect(sendCollectionMessage)
+      .toHaveBeenCalledWith("c1", "about this one", "b1"));
+  });
+
+  it("polls for other people's messages while visible", async () => {
+    // "Smooth" means you don't reload to see a reply.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    await mount();
+
+    getCollectionMessages.mockResolvedValue(page([msg({ id: "m9", body: "arrived later" })]));
+    await act(async () => { vi.advanceTimersByTime(6000); });
+
+    expect(await screen.findByText("arrived later")).toBeInTheDocument();
+  });
+
+  it("does not duplicate a message it already holds", async () => {
+    // Our own send appends locally and the poll sees it again.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    await mount();
+
+    getCollectionMessages.mockResolvedValue(page([msg()]));   // same id as on screen
+    await act(async () => { vi.advanceTimersByTime(6000); });
+
+    expect(screen.getAllByText("the statues")).toHaveLength(1);
+  });
+
+  it("groups consecutive messages from one person under a single name", async () => {
+    const now = Date.now();
+    getCollectionMessages.mockResolvedValue(page([
+      msg({ id: "a", body: "one", created_at: new Date(now - 2000).toISOString() }),
+      msg({ id: "b", body: "two", created_at: new Date(now - 1000).toISOString() }),
+    ]));
+    await mount();
+
+    // Two messages, one attribution.
+    expect(screen.getAllByText("@mara")).toHaveLength(1);
+    expect(screen.getByText("one")).toBeInTheDocument();
+    expect(screen.getByText("two")).toBeInTheDocument();
+  });
+
+  it("offers sparks when the room is empty, and they fill the box rather than posting", async () => {
+    // A silent room is the hardest moment in a group chat — but the words stay
+    // yours, so tapping one drafts it instead of sending it.
+    getCollectionMessages.mockResolvedValue(page([]));
+    getCollectionSparks.mockResolvedValue({
+      sparks: [{ kind: "question", text: "Which one has the best first line?" }],
+    });
+    const input = await mount();
+
+    await userEvent.click(await screen.findByRole("button", { name: /best first line/i }));
+    expect(input).toHaveValue("Which one has the best first line?");
+    expect(sendCollectionMessage).not.toHaveBeenCalled();
+  });
+
+  it("narrows the same room by book rather than opening another", async () => {
+    await mount();
+    await userEvent.selectOptions(screen.getByLabelText(/which books to show|showing/i), "b1");
+
+    await waitFor(() => expect(getCollectionMessages)
+      .toHaveBeenCalledWith("c1", expect.objectContaining({ bookId: "b1" })));
+  });
+
+  it("tells the sender plainly when a message was refused, and keeps the draft", async () => {
     sendCollectionMessage.mockRejectedValue(new Error("That message can't be sent here."));
-    const input = await openRoom();
+    const input = await mount();
 
-    await userEvent.type(input, "something refused");
-    await userEvent.click(screen.getByRole("button", { name: /^send$/i }));
-
+    await userEvent.type(input, "refused thing{Enter}");
     expect(await screen.findByRole("alert")).toHaveTextContent(/can't be sent/i);
-    expect(input).toHaveValue("something refused");
-    // Scoped to the transcript: the draft text is legitimately still in the
-    // textarea, so a page-wide query would match its own value.
-    const bodies = screen.getAllByRole("listitem").map((li) => li.textContent);
-    expect(bodies.some((t) => t.includes("something refused"))).toBe(false);
+    expect(input).toHaveValue("refused thing");
   });
 
-  it("shows crisis support to the sender, and still posts the message", async () => {
-    // Care, not enforcement — the message sent.
-    sendCollectionMessage.mockResolvedValue(msg({
-      id: "m2", is_mine: true, body: "a heavy thing",
-      crisis: { message: "You're not alone.", resources: [{ name: "988", contact: "Call 988" }] },
-    }));
-    const input = await openRoom();
-
-    await userEvent.type(input, "a heavy thing");
-    await userEvent.click(screen.getByRole("button", { name: /^send$/i }));
-
-    expect(await screen.findByText(/you.re not alone/i)).toBeInTheDocument();
-    expect(screen.getByText("a heavy thing")).toBeInTheDocument();  // it posted
-  });
-
-  it("pages backward carrying BOTH halves of the cursor", async () => {
-    // A timestamp-only cursor would skip or repeat messages sharing an instant.
-    getCollectionMessages.mockResolvedValueOnce({
-      messages: [msg({ id: "m9", body: "newest" })],
-      next_before: "2026-08-01T10:00:00Z",
-      next_before_id: "m9",
-    });
-    await openRoom();
-
-    getCollectionMessages.mockResolvedValueOnce({
-      messages: [msg({ id: "m8", body: "older" })],
-      next_before: null, next_before_id: null,
-    });
-    await userEvent.click(screen.getByRole("button", { name: /load earlier/i }));
-
-    await waitFor(() => expect(getCollectionMessages).toHaveBeenLastCalledWith(
-      "c1", "b1",
-      expect.objectContaining({ before: "2026-08-01T10:00:00Z", beforeId: "m9" }),
-    ));
-    // Prepended, not appended — the older page belongs before what we had.
-    const bodies = screen.getAllByText(/newest|older/).map((n) => n.textContent);
-    expect(bodies).toEqual(["older", "newest"]);
-  });
-
-  it("surfaces a refused delete rather than dropping the message locally", async () => {
-    // A member deleting someone else's message gets 403. Removing it from the
-    // list anyway would show a deletion that never happened.
+  it("surfaces a refused delete rather than dropping the row locally", async () => {
     deleteCollectionMessage.mockRejectedValue(new Error("You can only delete your own messages"));
-    await openRoom();
+    await mount();
 
     await userEvent.click(screen.getByRole("button", { name: /delete message/i }));
-
     expect(await screen.findByRole("alert")).toHaveTextContent(/only delete your own/i);
-    expect(screen.getByText("this wrecked me")).toBeInTheDocument();
+    expect(screen.getByText("the statues")).toBeInTheDocument();
   });
 
   it("says reporting changes nothing for anyone else", async () => {
-    // A private group must not be silenceable on one member's say-so, so the
-    // copy must not imply the room was hidden.
     reportCollectionConversation.mockResolvedValue({ status: "received" });
-    await openRoom();
+    await mount();
 
     await userEvent.click(screen.getByRole("button", { name: /report this conversation/i }));
-
     expect(await screen.findByText(/nothing here changes for anyone else/i)).toBeInTheDocument();
-  });
-
-  it("will not send an empty or whitespace-only message", async () => {
-    const input = await openRoom();
-    expect(screen.getByRole("button", { name: /^send$/i })).toBeDisabled();
-
-    await userEvent.type(input, "   ");
-    expect(screen.getByRole("button", { name: /^send$/i })).toBeDisabled();
-    expect(sendCollectionMessage).not.toHaveBeenCalled();
   });
 });

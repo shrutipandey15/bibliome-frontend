@@ -7,6 +7,7 @@ import { getMyProfile, updateMyProfile, getInsight } from "../services/api";
 import DNACard from "../components/DNACard";
 import { cardArchetype } from "../services/dnaCard";
 import CollectionsEditor from "../components/profile/CollectionsEditor";
+import JoinedCollections from "../components/profile/JoinedCollections";
 import { MIN_BOOKS } from "../components/dna/constants";
 import { romanYear } from "../utils/roman";
 import useIsNarrow from "../hooks/useIsNarrow";
@@ -436,6 +437,14 @@ export default function ProfilePage() {
         <div className="pf-col">
           {/* 5. Collections — curated, editable for self. A shelf you can't put
               a book on isn't worth offering, so this waits for the first entry. */}
+          {/* Collections OTHER people own that you joined. Outside the `!empty`
+              guard on purpose: a reader with no books of their own can still
+              have been invited into someone else's, and hiding this until they
+              log a book would leave them with no way back to it. [#5/#6] */}
+          <section className="pf-section">
+            <JoinedCollections />
+          </section>
+
           {!empty && (
             <section className="pf-section">
               <SectionHead>collections</SectionHead>

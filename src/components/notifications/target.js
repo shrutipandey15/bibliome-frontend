@@ -9,6 +9,7 @@
  *   resonance_reach     app/routers/resonance.py  → { match_id }
  *   resonance_connected app/routers/resonance.py  → { match_id, thread_id }
  *   resonance_message   app/routers/threads.py    → { thread_id }
+ *   collection_message  app/routers/profile.py    → { collection_id, book_id }
  *   dna_shifted         app/services/dna_service  → { old, new }
  *   weekly_digest       app/services/digest_svc   → { period, books_this_week, memory }
  *   tier 0 (security)   app/routers/auth.py       → { message }
@@ -40,6 +41,15 @@ export function notificationTarget(n) {
     case "resonance_connected":
     case "resonance_message":
       return "/resonance";
+    case "collection_message":
+      // Straight into the book's room. Both ids are in the payload, and the
+      // route is membership-gated server-side, so a stale link 404s rather than
+      // leaking anything.
+      if (p.collection_id && p.book_id) {
+        return `/collections/${p.collection_id}/discussion/${p.book_id}`;
+      }
+      // Batched payloads can merge several books; fall back to the book list.
+      return p.collection_id ? `/collections/${p.collection_id}/discussion` : null;
     case "dna_shifted":
       return "/?view=dna";
     case "weekly_digest":

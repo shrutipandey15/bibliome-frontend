@@ -1,72 +1,85 @@
-/* Collection chat [#6] — a book's room, inside the collection drawer. */
+/* Collection chat [#6] — one room per collection.
+ *
+ * Two hosts, one stylesheet: the standalone page (.ccp, a full-height app shell)
+ * and any bounded container. The room is a flex column either way; only the
+ * height comes from outside.
+ */
+
+.cc-room {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;          /* see .ccp — flex children must be allowed to shrink */
+}
 
 .cc-quiet {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.6;
   color: var(--ink-faint);
   margin: 12px 0;
 }
 
-/* ── The book list ── */
-.cc-list { list-style: none; margin: 0; padding: 0; }
-.cc-list-row {
+/* ── Filter bar ── */
+.cc-filter {
+  flex: none;
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 4px;
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--rule);
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
 }
-.cc-list-row:hover { background: rgba(0, 0, 0, 0.04); }
-.cc-list-title { font-weight: 600; }
-.cc-list-author { font-size: 0.84rem; opacity: 0.65; flex: 1; }
-.cc-list-state {
-  margin-left: auto;
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
+.cc-filter-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-
-/* ── One book's room ── */
-.cc-room-head {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 12px;
+.cc-select {
+  background: var(--bg-sunken, rgba(0, 0, 0, 0.22));
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font: inherit;
+  /* 16px: below this, iOS Safari zooms the page when a control is focused. */
+  font-size: 16px;
+  color: inherit;
+  max-width: 100%;
+  min-height: 40px;
 }
-.cc-room-title { font-size: 1.02rem; font-weight: 600; }
+.cc-select:focus { outline: none; border-color: var(--brass); }
 
-.cc-back, .cc-plain, .cc-older {
+.cc-older {
+  flex: none;
+  display: block;
+  margin: 0 auto 8px;
   background: none;
   border: none;
-  padding: 0;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--ink-faint);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+  min-height: 36px;
 }
-.cc-back:hover, .cc-plain:hover, .cc-older:hover { color: var(--ink); }
-.cc-older { display: block; margin: 0 auto 12px; }
+.cc-older:hover { color: var(--ink); }
 
+/* ── The transcript: the one scrolling region ── */
 .cc-messages {
-  list-style: none;
-  margin: 0 0 14px;
-  padding: 0 2px;
-  max-height: 46vh;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  /* Stops a flick at the end of the list from scrolling the page behind it —
+     the thing that makes an embedded chat feel broken on a phone. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0 8px;
 }
 
-.cc-msg { padding: 8px 0; border-bottom: 1px solid var(--rule); }
-.cc-msg:last-of-type { border-bottom: none; }
+.cc-list-msgs { list-style: none; margin: 0; padding: 0; }
+
+.cc-msg { padding: 7px 0 8px; }
+/* A grouped message drops its name row and tucks under the one above — the
+   difference between a conversation and a list of stamped records. */
+.cc-msg.is-grouped { padding-top: 0; }
 
 .cc-msg-meta {
   display: flex;
@@ -75,19 +88,56 @@
   margin-bottom: 3px;
 }
 .cc-msg-who {
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-.cc-msg.is-mine .cc-msg-who { color: var(--ink); opacity: 0.9; }
-.cc-msg-when { font-size: 0.74rem; color: var(--ink-faint); opacity: 0.7; }
+.cc-msg.is-mine .cc-msg-who { color: var(--brass); }
+.cc-msg-when { font-size: 0.72rem; color: var(--ink-faint); opacity: 0.65; }
+
+.cc-msg-book {
+  display: inline-block;
+  margin-bottom: 5px;
+  padding: 2px 9px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+/* The body sits in a bubble so a wall of messages has edges to read against.
+   Mine is tinted; everyone else's is the sunken surface. */
+.cc-msg-line { display: flex; align-items: flex-start; gap: 6px; }
+.cc-msg-body {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 9px 13px;
+  border-radius: 12px;
+  border-top-left-radius: 3px;
+  background: var(--bg-sunken, rgba(0, 0, 0, 0.22));
+  font-size: 0.95rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;   /* a pasted URL must not widen the page */
+}
+.cc-msg.is-mine .cc-msg-body {
+  background: rgba(184, 148, 90, 0.13);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 3px;
+}
+.cc-msg.is-grouped .cc-msg-body {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
 
 .cc-msg-del {
-  margin-left: auto;
+  flex: none;
   background: none;
   border: none;
-  padding: 0 4px;
+  padding: 4px 6px;
   font-size: 1rem;
   line-height: 1;
   color: var(--ink-faint);
@@ -95,47 +145,100 @@
   cursor: pointer;
 }
 .cc-msg:hover .cc-msg-del,
-.cc-msg-del:focus-visible { opacity: 0.7; }
+.cc-msg-del:focus-visible { opacity: 0.75; }
 .cc-msg-del:hover { opacity: 1; }
 
-.cc-msg-body {
-  margin: 0;
-  font-size: 0.94rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-/* ── Composer ── */
-.cc-compose { display: flex; gap: 8px; align-items: flex-end; }
-.cc-compose-input {
-  flex: 1;
-  min-width: 0;
-  resize: vertical;
-  background: rgba(0, 0, 0, 0.14);
+/* ── The empty room ── */
+.cc-empty { padding: 6px 0; }
+.cc-sparks { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.cc-spark {
+  width: 100%;
+  text-align: left;
+  background: var(--bg-sunken, rgba(0, 0, 0, 0.18));
   border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 11px 14px;
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+}
+.cc-spark:hover { border-color: var(--brass); }
+/* A fact is countable against this collection; a question is plainly a question.
+   They read differently so nobody mistakes one for the other. */
+.cc-spark.is-fact { font-style: italic; color: var(--ink-faint); }
+
+/* ── Composer: welded to the bottom ── */
+.cc-compose {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--rule);
+  background: var(--bg-page);
+}
+.cc-compose-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 46px;
+  max-height: 30vh;
+  background: var(--bg-sunken, rgba(0, 0, 0, 0.22));
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 16px;         /* see .cc-select — prevents the iOS focus zoom */
   line-height: 1.5;
   color: inherit;
 }
-.cc-compose-input:focus { outline: none; border-color: currentColor; }
+.cc-compose-input:focus { outline: none; border-color: var(--brass); }
 
-/* A refused message is not a network hiccup — it reads as a statement. */
+.cc-compose-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cc-attach { flex: 0 1 auto; min-width: 0; }
+.cc-hint {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  opacity: 0.7;
+}
+.cc-send { flex: none; min-height: 40px; }
+
 .cc-refusal {
-  margin: 10px 0 0;
+  flex: none;
+  margin: 0 0 8px;
   font-size: 0.84rem;
   line-height: 1.55;
   color: var(--danger, #c2705f);
 }
 
-.cc-room-foot { margin-top: 14px; }
+.cc-room-foot { flex: none; padding: 0 0 10px; }
+.cc-plain {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.cc-plain:hover { color: var(--ink); }
 
 @media (max-width: 560px) {
-  .cc-messages { max-height: 40vh; }
-  .cc-compose { flex-direction: column; align-items: stretch; }
-  /* No hover on touch — the delete control has to be permanently visible. */
-  .cc-msg-del { opacity: 0.6; }
+  .cc-msg-body { font-size: 0.92rem; padding: 9px 12px; }
+  /* No hover on touch, so the delete control has to be permanently visible. */
+  .cc-msg-del { opacity: 0.5; padding: 6px 8px; }
+  /* "Enter to send" is a keyboard fact; on a phone the key is Return/newline. */
+  .cc-hint { display: none; }
+  .cc-send { min-height: 44px; padding-left: 20px; padding-right: 20px; }
+  .cc-filter { padding: 8px 0; }
 }

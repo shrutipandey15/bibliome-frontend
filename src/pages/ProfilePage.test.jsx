@@ -11,6 +11,12 @@ vi.mock("../services/api", () => ({
   getInsight: vi.fn().mockResolvedValue(null),
   createCollection: vi.fn(), deleteCollection: vi.fn(),
   addCollectionItem: vi.fn(), removeCollectionItem: vi.fn(), reorderCollection: vi.fn(),
+  addCollectionBook: vi.fn(), removeCollectionBook: vi.fn(),
+  // The page now also lists collections you JOINED [#5/#6], and the collection
+  // drawer carries sharing + a discussion link. All read on mount.
+  getJoinedCollections: vi.fn().mockResolvedValue([]),
+  getCollectionMembers: vi.fn().mockResolvedValue([]),
+  createCollectionInvite: vi.fn(), revokeCollectionInvite: vi.fn(), leaveCollection: vi.fn(),
 }));
 
 import ProfilePage from "./ProfilePage";

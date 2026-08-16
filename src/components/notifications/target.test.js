@@ -42,3 +42,27 @@ describe("notificationTarget — every notice lands somewhere real", () => {
     expect(notificationTarget(n("echo_reply", { echo_id: "a b&c" }))).toBe("/echoes?echo=a%20b%26c");
   });
 });
+
+// ── Collection chat [#6] ──
+describe("collection_message", () => {
+  it("deep-links into the book's room", () => {
+    // It rendered as dead text before this case existed: no target meant the
+    // row was not a button at all, so a notification about a conversation
+    // could not open the conversation.
+    expect(notificationTarget({
+      kind: "collection_message",
+      payload: { collection_id: "c1", book_id: "b1" },
+    })).toBe("/collections/c1/discussion/b1");
+  });
+
+  it("falls back to the book list when a batch merged several books", () => {
+    expect(notificationTarget({
+      kind: "collection_message",
+      payload: { collection_id: "c1" },
+    })).toBe("/collections/c1/discussion");
+  });
+
+  it("stays unclickable rather than pointing nowhere", () => {
+    expect(notificationTarget({ kind: "collection_message", payload: {} })).toBeNull();
+  });
+});

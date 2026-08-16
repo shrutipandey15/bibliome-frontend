@@ -71,6 +71,9 @@ function itemText(n) {
   if (n.kind === "resonance_reach") return <>Someone who read a book the way you did left you a note.</>;
   if (n.kind === "resonance_connected") return <>You and another reader both said yes. Your letters are open.</>;
   if (n.kind === "resonance_message") return <>A letter arrived.</>;
+  // Deliberately does not quote the message: the notification list is read in
+  // public as often as the app is, and the room is where the words belong.
+  if (n.kind === "collection_message") return <>Someone wrote in a collection you're in.</>;
   if (p.message) return p.message; // security + generic
   return n.kind.replace(/_/g, " ");
 }
