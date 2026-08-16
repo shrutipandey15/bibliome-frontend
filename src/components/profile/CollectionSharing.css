@@ -101,3 +101,24 @@
 @media (max-width: 560px) {
   .col-share-linkrow { flex-direction: column; align-items: stretch; }
 }
+
+/* The discussion fold [#6]. A collection is a shelf first — the room is one
+   click in, not the thing you land on. */
+.col-chat-fold {
+  border-top: 1px solid var(--rule);
+  margin-top: 22px;
+  padding-top: 14px;
+}
+.col-chat-summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  list-style: none;
+  margin-bottom: 10px;
+}
+.col-chat-summary::-webkit-details-marker { display: none; }
+.col-chat-summary::after { content: " ⌄"; opacity: 0.6; }
+.col-chat-fold[open] .col-chat-summary::after { content: " ⌃"; }
+.col-chat-summary:hover { color: var(--ink); }

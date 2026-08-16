@@ -1,0 +1,141 @@
+/* Collection chat [#6] — a book's room, inside the collection drawer. */
+
+.cc-quiet {
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--ink-faint);
+  margin: 12px 0;
+}
+
+/* ── The book list ── */
+.cc-list { list-style: none; margin: 0; padding: 0; }
+.cc-list-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.cc-list-row:hover { background: rgba(0, 0, 0, 0.04); }
+.cc-list-title { font-weight: 600; }
+.cc-list-author { font-size: 0.84rem; opacity: 0.65; flex: 1; }
+.cc-list-state {
+  margin-left: auto;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ── One book's room ── */
+.cc-room-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cc-room-title { font-size: 1.02rem; font-weight: 600; }
+
+.cc-back, .cc-plain, .cc-older {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.cc-back:hover, .cc-plain:hover, .cc-older:hover { color: var(--ink); }
+.cc-older { display: block; margin: 0 auto 12px; }
+
+.cc-messages {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0 2px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.cc-msg { padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.cc-msg:last-of-type { border-bottom: none; }
+
+.cc-msg-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.cc-msg-who {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.cc-msg.is-mine .cc-msg-who { color: var(--ink); opacity: 0.9; }
+.cc-msg-when { font-size: 0.74rem; color: var(--ink-faint); opacity: 0.7; }
+
+.cc-msg-del {
+  margin-left: auto;
+  background: none;
+  border: none;
+  padding: 0 4px;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--ink-faint);
+  opacity: 0;
+  cursor: pointer;
+}
+.cc-msg:hover .cc-msg-del,
+.cc-msg-del:focus-visible { opacity: 0.7; }
+.cc-msg-del:hover { opacity: 1; }
+
+.cc-msg-body {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ── Composer ── */
+.cc-compose { display: flex; gap: 8px; align-items: flex-end; }
+.cc-compose-input {
+  flex: 1;
+  min-width: 0;
+  resize: vertical;
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: inherit;
+}
+.cc-compose-input:focus { outline: none; border-color: currentColor; }
+
+/* A refused message is not a network hiccup — it reads as a statement. */
+.cc-refusal {
+  margin: 10px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--danger, #c2705f);
+}
+
+.cc-room-foot { margin-top: 14px; }
+
+@media (max-width: 560px) {
+  .cc-messages { max-height: 40vh; }
+  .cc-compose { flex-direction: column; align-items: stretch; }
+  /* No hover on touch — the delete control has to be permanently visible. */
+  .cc-msg-del { opacity: 0.6; }
+}

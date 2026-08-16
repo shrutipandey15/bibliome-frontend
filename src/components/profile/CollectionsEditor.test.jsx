@@ -5,10 +5,14 @@ import userEvent from "@testing-library/user-event";
 vi.mock("../../services/api", () => ({
   createCollection: vi.fn(), deleteCollection: vi.fn(),
   addCollectionItem: vi.fn(), removeCollectionItem: vi.fn(), reorderCollection: vi.fn(),
-  // The drawer now carries the sharing panel [#5], which reads members and the
-  // viewer. Stubbed to an empty list so these tests stay about the editor.
+  // The drawer now carries the sharing panel [#5] and the discussion fold [#6].
+  // Both read on mount; stubbed empty so these tests stay about the editor.
   getCollectionMembers: vi.fn().mockResolvedValue([]),
   createCollectionInvite: vi.fn(), revokeCollectionInvite: vi.fn(), leaveCollection: vi.fn(),
+  getCollectionConversations: vi.fn().mockResolvedValue([]),
+  getCollectionMessages: vi.fn().mockResolvedValue({ messages: [], next_before: null, next_before_id: null }),
+  sendCollectionMessage: vi.fn(), deleteCollectionMessage: vi.fn(),
+  reportCollectionConversation: vi.fn(),
 }));
 
 vi.mock("../../contexts/AuthContext", () => ({

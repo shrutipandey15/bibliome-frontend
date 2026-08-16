@@ -257,6 +257,13 @@ function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, ca
                 <span>{generating ? "Reading your DNA…" : "Read your DNA"}</span>
               </button>
             )}
+            {/* The FAB below is add-book, the one control that must never be
+                buried. Shelving is the quieter sibling of it, so it lives here
+                rather than fighting for a second FAB. [B2.2] */}
+            <button className="rr-sheet-item" onClick={fromSheet(onShelveBook)}>
+              <Plus size={18} />
+              <span>Add to reading list</span>
+            </button>
             <button className="rr-sheet-item" onClick={fromSheet(() => navigate("/me"))}>
               <User size={18} />
               <span>Your study</span>

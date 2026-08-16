@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Modal from "../Modal";
 import CollectionSharing from "./CollectionSharing";
+import CollectionChat from "./CollectionChat";
 import { EMOTIONS } from "../../services/emotions";
 import {
   createCollection, deleteCollection, addCollectionItem, removeCollectionItem, reorderCollection,
@@ -270,9 +271,16 @@ function CollectionDrawer({ collection, shelf, onChanged, onClose }) {
         <button className="btn brass" disabled={busy || !pick} onClick={addBook}>add</button>
       </div>
 
-      {/* Who's in it and the link that lets more people in [#5]. Sits below the
-          books because the books are what the collection IS; sharing is what you
-          do with it. */}
+      {/* Talk, then sharing — both below the books, because the books are what
+          the collection IS. Folded away by default: a collection is a shelf
+          first, and an always-open chat panel would make it a chat room with
+          books in it. [#6] */}
+      <details className="col-chat-fold">
+        <summary className="col-chat-summary">Discussion</summary>
+        <CollectionChat collection={collection} />
+      </details>
+
+      {/* Who's in it and the link that lets more people in [#5]. */}
       <CollectionSharing
         collection={collection}
         onLeft={() => { onChanged(); onClose(); }}

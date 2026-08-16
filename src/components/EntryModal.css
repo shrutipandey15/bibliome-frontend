@@ -403,6 +403,14 @@
      .em-left is gone. */
   .em-card { overflow: visible; }
 
+  /* ── Dates ──
+     Side by side, two date fields on a phone are each ~45% of a 360px screen.
+     A date input has a large intrinsic width (the format text plus the calendar
+     button), so at that size the button is clipped off the end and there is no
+     way to open the picker at all. Stacked, each gets the full width. */
+  .em-dates { flex-direction: column; gap: 12px; }
+  .em-date { width: 100%; }
+
   /* ── The optional tail ── */
   .em-more { border-top: 1px solid var(--rule-soft); margin-top: 4px; }
   .em-more-summary {
@@ -454,8 +462,32 @@
   .em-date .em-input { min-height: 44px; }
 }
 
+/* The optional-tail fold is a PHONE affordance: above 640 the fields are always
+   open (see `moreOpen` in EntryModal.jsx), so the summary is not a control there.
+   It has to be hidden explicitly — a <summary> with no rule still renders, with
+   the browser's default ▼ marker attached, which is exactly what appeared on
+   desktop.
+   Scoped to a min-width query rather than written bare: bare, it would sit
+   later in the file than the max-width:640 block that shows it, tie on
+   specificity, win on source order, and hide the fold on phones too — where it
+   is the only way to reach those fields. */
+@media (min-width: 641px) {
+  .em-more-summary { display: none; }
+}
+
 /* ── Reading status + dates [F2.1 / B2.4] ── */
-.em-status { display: inline-flex; border: 1px solid var(--rule, rgba(0,0,0,0.15)); border-radius: 2px; overflow: hidden; }
+/* Wraps rather than scrolling the card. `inline-flex` with six segments is
+   wider than a phone, and .em-card's column sizes to its content — so this one
+   row is enough to make the entire modal scroll sideways. `max-width: 100%`
+   caps it, and wrapping lets it become two rows instead of one long one. */
+.em-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  border: 1px solid var(--rule, rgba(0,0,0,0.15));
+  border-radius: 2px;
+  overflow: hidden;
+}
 .em-status-opt {
   padding: 8px 14px;
   font-family: var(--font-mono);
@@ -465,18 +497,40 @@
   color: var(--ink-quiet);
   background: var(--bg-vellum);
   border: none;
-  border-right: 1px solid var(--rule, rgba(0,0,0,0.15));
+  /* Separators on the LEADING edge, not the trailing one: once the control
+     wraps, "no border on the last child" would leave a hanging edge at the end
+     of every row but the last, and a missing one at the start of each new row. */
+  border-left: 1px solid var(--rule, rgba(0,0,0,0.15));
+  border-top: 1px solid var(--rule, rgba(0,0,0,0.15));
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.em-status-opt:last-child { border-right: none; }
+.em-status-opt:first-child { border-left: none; }
+/* The first row sits against the container's own border. */
+.em-status-opt { margin-top: -1px; }
+.em-status { padding-top: 1px; }
 .em-status-opt:hover { color: var(--ink); }
 .em-status-opt.active { background: var(--brass); color: #fff; }
 .em-status-opt:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
-.em-dates { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
-.em-date { display: flex; flex-direction: column; gap: 4px; }
+.em-dates { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; min-width: 0; }
+/* min-width:0 on both the field and the input. A flex item defaults to
+   min-width:auto, i.e. it refuses to shrink below its content — and a date
+   input's content (date text + calendar button) is wide. That default is what
+   makes a narrow screen scroll horizontally instead of the field getting
+   narrower. */
+.em-date { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.em-date .em-input { min-width: 0; }
 .em-date .em-input { padding: 8px 10px; }
+/* The native calendar button is drawn INSIDE the input's content box and is the
+   only way into the picker on touch. It needs to be visible — nothing more.
+   Do NOT give it padding or margin: that enlarges the input's MIN-CONTENT width,
+   and a flex item cannot shrink below min-content, so the dates row grows past
+   the card and the whole modal scrolls sideways. Visibility only. */
+.em-date .em-input::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+}
 
 /* How far in — optional, and visibly optional: until it's touched the readout
    says "not said" rather than 0%. */
@@ -486,3 +540,27 @@
 .em-progress-value { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-quiet); min-width: 62px; }
 .em-progress-clear { border: none; background: none; cursor: pointer; padding: 0; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.12em; color: var(--ink-faint); }
 .em-progress-clear:hover { color: var(--oxblood); }
+
+/* ── Phone: the status control must wrap, not widen the card ──
+   MUST live at the end of the file. The base `.em-status` rule below the media
+   queries has the same specificity, so a copy of this placed earlier loses on
+   source order — `display:grid` silently stayed `inline-flex` and the override
+   did nothing.
+
+   Six statuses will not sit on one phone row. An even 3-column grid reads as a
+   control rather than a ragged wrap, and because each column is a fraction of
+   the container, no amount of label text can push the card wider. */
+@media (max-width: 640px) {
+  .em-status {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+  }
+  .em-status-opt {
+    min-width: 0;                 /* a grid item defaults to min-content — the
+                                     thing that makes long labels overflow */
+    padding: 10px 4px;
+    text-align: center;
+    overflow-wrap: anywhere;      /* "want to read" wraps instead of pushing out */
+  }
+}

@@ -634,6 +634,68 @@ export async function leaveCollection(id, userId) {
   }
 }
 
+// ── Collection chat [#6] ──
+//
+// A conversation is a BOOK inside a collection — there is no thread id and no
+// general channel. The pair (collection, book) is the address.
+
+// Every book in the collection, with when it was last spoken about. Books with
+// nothing said yet are included: this shows where a conversation could start.
+export async function getCollectionConversations(collectionId) {
+  return apiGet(`/collections/${collectionId}/conversations`);
+}
+
+// A page of one book's room, oldest-first within the page.
+// `before` + `beforeId` page BACKWARD. Both halves are required together: two
+// messages can share a timestamp, and a timestamp-only cursor would skip or
+// repeat them at the boundary. Always pass the pair the server handed back.
+export async function getCollectionMessages(
+  collectionId, bookId, { before = null, beforeId = null, limit = 50 } = {}
+) {
+  const params = new URLSearchParams();
+  if (before) params.set("before", before);
+  if (beforeId) params.set("before_id", beforeId);
+  params.set("limit", String(limit));
+  return apiGet(`/collections/${collectionId}/books/${bookId}/messages?${params.toString()}`);
+}
+
+// 422 here means the message was REFUSED (a threat), not that the request was
+// malformed. The detail is written to be shown to the sender as-is — they need
+// to know it did not send.
+export async function sendCollectionMessage(collectionId, bookId, body) {
+  const res = await apiFetch(`/collections/${collectionId}/books/${bookId}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ body }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that");
+  }
+  return res.json();
+}
+
+// Authors may delete their own; the collection's owner, any. 403 = not yours.
+export async function deleteCollectionMessage(collectionId, messageId) {
+  const res = await apiFetch(`/collections/${collectionId}/messages/${messageId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't delete that");
+  }
+}
+
+// Reports the whole conversation, not one line — what is wrong is usually a
+// pattern. Does NOT hide the room: a private group can't be silenced on one
+// member's say-so. Blocking is the remedy the reporter holds themselves.
+export async function reportCollectionConversation(collectionId, bookId) {
+  const res = await apiFetch(`/collections/${collectionId}/books/${bookId}/report`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't file that report");
+  return res.json().catch(() => ({ status: "received" }));
+}
+
 // ── Mirror: insights + resurfaced memories [F2.5 / B2.6] ──
 // Both return null-able content — a genuine "not enough yet", never fabricated.
 export async function getInsight() {
