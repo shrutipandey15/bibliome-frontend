@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { PRIVACY, TERMS, OPERATOR } from "./legalContent";
+import { useHead } from "../hooks/useHead";
 import "./LegalPage.css";
 
 /**
@@ -13,7 +14,19 @@ import "./LegalPage.css";
  */
 export default function LegalPage() {
   const { pathname } = useLocation();
-  const doc = pathname.startsWith("/terms") ? TERMS : PRIVACY;
+  const isTerms = pathname.startsWith("/terms");
+  const doc = isTerms ? TERMS : PRIVACY;
+
+  // Both URLs render this one component, so without an explicit canonical each
+  // of them inherited index.html's "/" and pointed search engines at the
+  // landing page instead of at itself. [#2]
+  useHead({
+    title: `${doc.title} — Bibliome`,
+    canonical: isTerms ? "/terms" : "/privacy",
+    description: isTerms
+      ? "The terms of using Bibliome: what the service does, what you keep, and how either side can end it. Plain language, no boilerplate."
+      : "What Bibliome stores, what it never sees, and what you can take with you. The journal is end-to-end encrypted; exports and deletion are self-service.",
+  });
 
   return (
     <div className="legal-page">

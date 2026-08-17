@@ -29,7 +29,7 @@
     <meta property="og:image:alt" content="Bibliome — the emotional fingerprint of your reading life" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Bibliome — What Kind of Reader Are You?" />
-    <meta name="twitter:description" content="Map the emotional fingerprint of your reading life. Discover if you're a Grief Romantic, a Chaos Cartographer, or something else entirely." />
+    <meta name="twitter:description" content="Map the emotional fingerprint of your reading life. Discover if you're a Grief Romantic, a Midnight Arsonist, or something else entirely." />
     <meta name="twitter:image" content="https://bibliome.app/og-image.png" />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -97,15 +97,21 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Mirrors what LandingPage.jsx actually renders. It had drifted into a
+         second, louder pitch that promised archetypes ("Chaos Cartographer",
+         "Soft Masochist") the engine has never produced. If the hero copy
+         changes, change this with it — a crawler that doesn't run JS reads this
+         and nothing else. -->
     <noscript>
-      <h1>Bibliome - The Emotional Fingerprint of Your Reading Life</h1>
-      <p>Every book you've ever loved changed you in ways you can't articulate. Bibliome maps those changes.</p>
-      <p>Track the emotions your books triggered. Discover patterns you didn't know you had. Generate your unique reading personality — are you a Grief Romantic? A Chaos Cartographer? A Soft Masochist who keeps picking up books that destroy you?</p>
-      <h2>How It Works</h2>
-      <p>Log what books did to you — not ratings, but the raw emotional truth. Tag from 18 emotions like Devastation, Tenderness, Rage, Longing, Awe, and Catharsis. After 5 books, our engine maps your emotional patterns into a unique DNA personality profile.</p>
-      <h2>Features</h2>
-      <p>Emotional book journaling with 18 emotions. Reading personality profiles. Visual emotion heatmaps. Shareable personality cards. Smart book search. Monthly reading recaps.</p>
-      <p>Free forever. No ads. No data selling. Just books and feelings.</p>
+      <h1>The emotional fingerprint of your reading life.</h1>
+      <p>A private journal for readers who feel too much.</p>
+      <p>Instead of giving a book stars, you record what it did to you — which feelings it pulled, how hard, and how it left you. After 5 books, your shelf starts describing you back.</p>
+      <h2>How Bibliome works</h2>
+      <p>Log what a book did to you, not how many stars it earned. Tag from 18 emotions. After 5 books the engine reads your patterns back to you as an archetype — worked out from what you actually recorded, never a quiz, and never something you pick for yourself.</p>
+      <h2>Which kind of reader are you?</h2>
+      <p>The Grief Romantic. The Midnight Arsonist. The Comfort Architect. One of many, and the one you get is the one your reading earned.</p>
+      <h2>What it isn't</h2>
+      <p>Free. No ads. No data selling. The journal is end-to-end encrypted, so we can't read it either.</p>
     </noscript>
 
     <script type="module" src="/src/main.jsx"></script>

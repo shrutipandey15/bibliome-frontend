@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import PasswordField from "../components/PasswordField";
+import { useHead } from "../hooks/useHead";
 import "./AuthPage.css";
 
 function passwordStrength(pw) {
@@ -26,6 +27,16 @@ function passwordStrength(pw) {
 export default function AuthPage() {
   const { login, register } = useAuth();
   const [mode, setMode] = useState("login");
+
+  // /login is a real entry point people are sent to, so it stays indexable —
+  // it just needs to describe itself instead of inheriting the landing copy. [#2]
+  useHead({
+    title: "Sign in — Bibliome",
+    canonical: "/login",
+    description:
+      "Sign in to Bibliome, or make an account. Free, no ads, and the journal is encrypted so we can't read it.",
+  });
+
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

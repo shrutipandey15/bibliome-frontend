@@ -3,9 +3,15 @@ Allow: /
 Disallow: /api/
 Disallow: /admin
 Disallow: /settings
+# Reader surfaces, not marketing. /s/ is a share token — indexing one would
+# turn a link meant for a few people into a public page. /u/ needs a signed-in
+# viewer to resolve blocks and visibility, so a crawler only ever sees 404.
+Disallow: /s/
+Disallow: /u/
 
-# Answer engines are a growth channel, not a threat — the product is a private
-# journal whose only public surface is Echo. Let them read the marketing pages.
+# Answer engines are a growth channel, not a threat. There is no public reader
+# data to protect here: Echo is authed-only, and the genuinely public surface is
+# just the landing page and the legal pages. Let them read those.
 User-agent: GPTBot
 Allow: /
 

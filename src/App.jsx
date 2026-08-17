@@ -6,6 +6,7 @@ import { useJournal, JournalProvider } from "./contexts/JournalContext";
 import { JournalKeyProvider } from "./contexts/JournalKeyContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import useIsNarrow from "./hooks/useIsNarrow";
+import { useHead } from "./hooks/useHead";
 import ThemeToggle from "./components/ThemeToggle";
 import TabBar from "./components/TabBar";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
@@ -60,6 +61,12 @@ function SharedProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user: currentUser } = useAuth();
+
+  // A share token is meant for the handful of people it was sent to, not for
+  // search. robots.txt already disallows /s/, but a disallowed URL that gets
+  // linked publicly can still be indexed URL-only — noindex is what actually
+  // keeps it out, for any crawler that fetches the page anyway. [#4]
+  useHead({ robots: "noindex, nofollow", title: "A reader's DNA — Bibliome" });
 
   useEffect(() => {
     setLoading(true);
@@ -1098,7 +1105,6 @@ export default function App() {
     <Suspense fallback={<RouteLoader />}>
       <Routes>
         <Route path="/s/:token" element={<SharedProfile />} />
-        <Route path="/u/:username" element={<PublicProfile />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Top-level, not under the authed layout: someone deciding whether to
             sign up is exactly who needs to read these. */}
@@ -1124,6 +1130,11 @@ export default function App() {
           <Route path="resonance" element={<ResonancePage />} />
           <Route path="journal" element={<JournalPage />} />
           <Route path="me" element={<ProfilePage />} />
+          {/* Authed, not top-level: /profile/{handle} requires a signed-in
+              viewer to resolve blocks and visibility, so a signed-out visit
+              could only ever render "not found". The public, shareable surface
+              is /s/:token — this one is for readers who are already here. */}
+          <Route path="u/:username" element={<PublicProfile />} />
           {/* The discussion is a PAGE, not a panel inside the collection
               drawer: a conversation grows, and the drawer is a fold in a modal
               on the profile page. [#6] */}
