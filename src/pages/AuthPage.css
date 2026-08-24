@@ -25,6 +25,7 @@
   color: #f5ecd2;
 }
 .auth-rr-brand em { color: #e9c97a; font-style: italic; }
+.auth-rr-tagline { display: none; }
 
 .auth-rr-h1 {
   font-family: var(--font-display);
@@ -128,16 +129,25 @@
 .auth-rr-submit {
   width: 100%;
   justify-content: center;
-  padding: 12px 18px;
-  font-size: 14px;
+  padding: 14px 18px;
   margin-top: 6px;
+  background: var(--walnut-mid);
+  border-color: var(--walnut-edge);
+  color: #f5ecd2;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  border-radius: 3px;
 }
+.auth-rr-submit:hover:not(:disabled) { background: var(--walnut); }
 .auth-rr-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
 .auth-rr-links {
   display: flex; justify-content: space-between; margin-top: 20px;
   flex-wrap: wrap; gap: 8px;
 }
+.auth-rr-links .auth-rr-link-italic { font-style: normal; }
 .auth-rr-link-italic {
   font-family: var(--font-display);
   font-style: italic;
@@ -188,35 +198,83 @@
   .auth-rr-right { padding: 36px 28px; }
 }
 
-/* ── Phones ──
-   The task on this screen is one form, so everything here serves getting to it
-   and filling it in. The walnut panel stays — it is the whole atmosphere of the
-   place, and a sign-in page that looks like a bare form could be anyone's — but
-   it is trimmed to what earns its height above the first field. */
+
 @media (max-width: 640px) {
-  .auth-rr-left { padding: 22px 18px 26px; gap: 16px; }
-  .auth-rr-brand { font-size: 22px; }
-  .auth-rr-h1 { font-size: 31px; margin-bottom: 14px; }
-  .auth-rr-dek { font-size: 17px; }
-  /* "BIBLIOME · ESTD. 2024 · A PRIVATE READER'S LEDGER" is a colophon. On a desk
-     it anchors the foot of a full-height panel; on a phone it is a third line of
-     mono caps between the reader and the email field. */
-  .auth-rr-foot { display: none; }
+  .auth-rr {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-page);
+  }
+
+  .auth-rr-left {
+    background: none;
+    color: var(--ink);
+    min-height: auto;
+    display: block;
+    padding: 40px 22px 0;
+  }
+  .auth-rr-brand { font-size: 34px; color: var(--ink); }
+  .auth-rr-brand em { color: var(--ink); }
+  .auth-rr-tagline {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--ink-quiet);
+  }
+  .auth-rr-h1, .auth-rr-dek, .auth-rr-foot { display: none; }
 
   .auth-rr-right {
-    padding: 26px 18px 34px;
-    padding-bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+    flex: 1;
+    justify-content: flex-start;
+    padding: 26px 22px 28px;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
   }
-  .auth-rr-h2 { font-size: 28px; margin-bottom: 20px; }
-  .auth-rr-field { margin-bottom: 14px; }
+  .auth-rr-form { display: flex; flex-direction: column; flex: 1; max-width: none; }
 
-  /* The two links shared a `space-between` row, which put "forgot password →"
-     and "new here? create account →" at opposite edges of a 340px screen — two
-     14px targets a thumb's width apart, one of which is the only route to
-     registration. Stacked, they each get a line and a full-width hit box. */
-  .auth-rr-links { flex-direction: column; align-items: stretch; gap: 4px; margin-top: 14px; }
+  .auth-rr-eyebrow, .auth-rr-h2 { display: none; }
 
-  .auth-rr-trust { margin-top: 26px; padding-top: 18px; }
+  .auth-rr-field { margin-bottom: 18px; }
+  .auth-rr-fl {
+    margin-bottom: 8px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--ink-quiet);
+  }
+  .auth-rr-input {
+    background: var(--bg-field);
+    border-color: var(--rule-soft);
+    border-radius: 3px;
+    padding: 15px 16px;
+    font-size: 17px;
+  }
+
+  .auth-rr-submit { margin-top: 10px; padding: 16px 18px; }
+
+  .auth-rr-links {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 2px;
+    margin-top: 18px;
+  }
+  .auth-rr-links .auth-rr-link-italic { justify-content: center; color: var(--oxblood); }
+  .auth-rr-switch { text-align: center; color: var(--ink-quiet); }
+
+  .auth-rr-trust {
+    margin-top: auto;
+    padding-top: 32px;
+    border-top: none;
+    gap: 0;
+  }
+  .auth-rr-trust-dot { display: none; }
+  .auth-rr-trust-text {
+    font-style: normal;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-faint);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

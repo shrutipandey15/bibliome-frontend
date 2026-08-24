@@ -101,8 +101,11 @@ export default function AuthPage() {
   return (
     <div className="auth-rr">
       <div className="auth-rr-left">
-        <div className="auth-rr-brand">
-          Biblio<em>me</em>
+        <div className="auth-rr-mark">
+          <div className="auth-rr-brand">
+            Biblio<em>me</em>
+          </div>
+          <p className="auth-rr-tagline">Books you don't rate. Books you record.</p>
         </div>
         <div>
           <h1 className="auth-rr-h1">
@@ -240,16 +243,13 @@ export default function AuthPage() {
               </div>
             )}
 
-            <button type="submit" className="btn brass auth-rr-submit" disabled={isDisabled}>
-              <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 17 }}>
-                {loading ? "Reading" : cooldown > 0 ? "Locked" : isLogin ? "Enter" : "Begin"}
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em" }}>YOUR SHELF</span>
+            <button type="submit" className="btn auth-rr-submit" disabled={isDisabled}>
+              {loading ? "Signing in\u2026" : cooldown > 0 ? "Locked" : isLogin ? "Sign in" : "Create account"}
             </button>
           </form>
 
           <div className="auth-rr-links">
-            <Link to="/reset-password" className="auth-rr-link-italic">forgot password →</Link>
+            <Link to="/reset-password" className="auth-rr-link-italic">Forgot your password?</Link>
             {/* Was an `<a role="button">` with no href. An anchor without one is
                 not focusable, so the only route from sign-in to registration
                 could not be reached by keyboard at all — and `role="button"`
@@ -264,7 +264,7 @@ export default function AuthPage() {
                 setPassword("");
               }}
             >
-              {isLogin ? "new here? create account →" : "have an account? sign in →"}
+              {isLogin ? "New here? Create an account" : "Have an account? Sign in"}
             </button>
           </div>
 
