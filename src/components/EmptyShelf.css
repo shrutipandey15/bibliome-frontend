@@ -9,6 +9,10 @@
   gap: 60px;
   align-items: center;
 }
+
+.es-glyph { display: none; }
+.es-privacy { display: none; }
+
 .es-eyebrow { margin-bottom: 18px; color: var(--brass) !important; }
 .es-h1 {
   font-size: 88px;
@@ -165,11 +169,103 @@
   .es-grid { grid-template-columns: 1fr; gap: 40px; }
   .es-h1 { font-size: 56px; }
 }
-@media (max-width: 480px) {
-  .es-page { padding: 32px 18px; }
-  .es-h1 { font-size: 40px; }
-  .es-dek { font-size: 17px; }
-  .es-search { font-size: 15px; padding-left: 42px; }
+
+@media (max-width: 640px) {
+
+  .es-page {
+    padding: 24px 22px 8px;
+    min-height: calc(100dvh - 210px);
+    display: flex;
+  }
+  .es-grid { display: flex; flex-direction: column; flex: 1; gap: 0; }
+  .es-primary { display: flex; flex-direction: column; flex: 1; text-align: center; }
+  .es-glyph {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 7px;
+    flex: none;
+    height: 96px;
+    margin: auto auto 34px;
+  }
+  .es-glyph span {
+    width: 17px;
+    border-radius: 2px 2px 0 0;
+    background: var(--rule-soft);
+  }
+  .es-glyph span:nth-child(1) { height: 72px; }
+  .es-glyph span:nth-child(2) { height: 96px; }
+  .es-glyph span:nth-child(3) { height: 60px; }
+
+  .es-eyebrow { display: none; }
+
+  .es-h1 {
+    font-size: 33px;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .es-dek {
+    font-size: 16px;
+    font-style: normal;
+    line-height: 1.55;
+    color: var(--ink-quiet);
+    max-width: none;
+    margin-bottom: 0;
+  }
+  .es-dek em { color: inherit; font-style: normal; }
+
+  .es-actions { margin-top: auto; padding-top: 40px; }
+
+  .es-search {
+    justify-content: center;
+    padding: 17px 18px;
+    background: var(--walnut-mid);
+    border-color: var(--walnut-edge);
+    border-radius: 3px;
+    outline: none;
+    font-family: var(--font-body);
+    font-style: normal;
+    font-weight: 600;
+    font-size: 15px;
+    color: #f5ecd2;
+    cursor: pointer;
+    min-height: 52px;
+  }
+  .es-search:hover { color: #f5ecd2; }
+  .es-search-glyph, .es-kbd { display: none; }
+  .es-search-text { flex: 0 0 auto; text-align: center; }
+  .es-search-note { display: none; }
+  .es-import-note { margin-top: 10px; }
+  .es-import-lead { display: none; }
+  .es-import-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 15px 16px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--bg-card);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 15px;
+    text-decoration: none;
+  }
+  .es-import-link:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  .es-privacy {
+    display: block;
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .es-seeds, .es-right { display: none; }
 }
 
 /* Import link on the cold-start screen [F2.6 / B2.7] */

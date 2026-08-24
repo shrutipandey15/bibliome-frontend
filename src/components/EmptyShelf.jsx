@@ -18,34 +18,35 @@ export default function EmptyShelf({ onAddClick, onImport }) {
   return (
     <div className="es-page">
       <div className="es-grid">
-        <div>
+        <div className="es-primary">
+          <div className="es-glyph" aria-hidden="true"><span /><span /><span /></div>
+
           <div className="label es-eyebrow">· your shelf is empty ·</div>
-          <h1 className="es-h1">
-            Begin with<br />
-            <em>one book.</em>
-          </h1>
+          <h1 className="es-h1">Nothing on the shelf yet.</h1>
           <p className="es-dek">
-            Not the book that's impressive. The book that <em>did</em> something to you.
-            The one you'd lend out reluctantly.
+            Start with the last book you finished.<br />
+            Not the best one — <em>the last one</em>.
           </p>
-
-          <button className="es-search" onClick={onAddClick}>
-            <span className="es-search-glyph">⌕</span>
-            <span className="es-search-text">search for a book…</span>
-            <span className="es-kbd">⌘ K</span>
-          </button>
-          <div className="es-search-note">
-            we'll search Google Books, Open Library, and the catalog at once.
-          </div>
-
-          {onImport && (
-            <div className="es-import-note">
-              already have a library elsewhere?{" "}
-              <button type="button" className="es-import-link" onClick={onImport}>
-                import from Goodreads or StoryGraph →
-              </button>
+          <div className="es-actions">
+            <button className="es-search" onClick={onAddClick}>
+              <span className="es-search-glyph">⌕</span>
+              <span className="es-search-text">Shelve a book</span>
+              <span className="es-kbd">⌘ K</span>
+            </button>
+            <div className="es-search-note">
+              we'll search Google Books, Open Library, and the catalog at once.
             </div>
-          )}
+
+            {onImport && (
+              <div className="es-import-note">
+                <span className="es-import-lead">already have a library elsewhere? </span>
+                <button type="button" className="es-import-link" onClick={onImport}>
+                  Import from Goodreads or StoryGraph
+                </button>
+              </div>
+            )}
+            <div className="es-privacy">Private by default</div>
+          </div>
 
           <div className="es-seeds">
             <div className="label" style={{ marginBottom: 10 }}>or — pick a suggested shelf to seed yours</div>

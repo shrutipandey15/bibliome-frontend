@@ -378,7 +378,16 @@
 
 /* responsive */
 @media (max-width: 900px) {
-  .em-card { grid-template-columns: 1fr; }
+  /* Not `1fr` alone: a bare `1fr` track is `minmax(auto, 1fr)`, so its floor is
+     the content's MIN-CONTENT width, not zero. With one wide, unbreakable row
+     inside .em-right (the wizard's header, or the family-doors strip), that
+     floor came out wider than the phone itself — the grid column "blew out"
+     past the viewport with nothing to clip it (.em-card goes overflow:visible
+     two rules down, so it happened silently, no scrollbar, just content
+     hanging off the right edge). `minmax(0, 1fr)` gives it a real floor of
+     zero, so the column shrinks to the container and each child manages its
+     own overflow (the doors row already does, via its own overflow-x:auto). */
+  .em-card { grid-template-columns: minmax(0, 1fr); }
   .em-left { min-height: 220px; }
 }
 @media (max-width: 640px) {
@@ -564,3 +573,181 @@
     overflow-wrap: anywhere;      /* "want to read" wraps instead of pushing out */
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE PHONE WIZARD — a new entry, asked as three questions
+   ═══════════════════════════════════════════════════════════════════
+   Everything below is scoped to `.em-wiz`, a class EntryModal.jsx puts on the
+   card only when `useIsNarrow() && !entry?.id`. So none of it can reach the
+   desk layout, and none of it can reach an EDIT on a phone — that still opens
+   the single-page form, because correcting one date should not be a walk.
+
+   No media query needed: the class itself is the phone condition, and JS has
+   already evaluated it. Placed at the end of the file so these rules win the
+   source-order ties against the base `.em-h` / `.em-footer` they override. */
+
+.em-wiz .em-right { padding: 0 18px; }
+
+/* ── Header ──
+   Sticky, so the way out and the sense of position survive a long step (the
+   emotion list on step 2 runs past a screen). `.modal-card` is the scroller;
+   nothing between here and it sets overflow, which is what the phone tier
+   above already relies on for the sticky footer. */
+.em-wiz-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -18px;
+  padding: 10px 18px 14px;
+  background: var(--bg-card);
+}
+/* The grabber. Purely a signal that this sheet is a sheet — there is no drag
+   handler behind it, and it is aria-hidden so it is not announced as one. */
+.em-wiz-grab {
+  width: 38px; height: 4px;
+  margin: 0 auto 16px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+.em-wiz-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* A flex item's default min-width is `auto`, which means "never shrink below my
+   own content" — so this mono, letter-spaced label refused to compress on a
+   375px phone and pushed Close past the screen edge instead. `min-width: 0`
+   lets it shrink; the ellipsis is what it shrinks TO rather than a hard clip. */
+.em-wiz-count {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-quiet);
+}
+.em-wiz-close {
+  flex: none;
+  min-height: 44px;
+  padding: 0 2px 0 12px;
+  border: none;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.em-wiz-close:hover { color: var(--oxblood); }
+.em-wiz-close:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* ── The question ── */
+.em-wiz .em-wiz-h {
+  font-size: 26px;
+  line-height: 1.15;
+  margin: 6px 0 8px;
+}
+.em-wiz-sub {
+  margin-bottom: 20px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-quiet);
+}
+.em-wiz-note {
+  margin-top: 12px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-quiet);
+}
+
+.em-wiz .em-input { min-height: 54px; font-size: 17px; background: var(--bg-field); }
+
+/* ── The family doors ──
+   One row that scrolls sideways rather than a block that wraps to three lines
+   and pushes the emotions themselves off the screen. `scroll-padding` keeps a
+   focused door clear of the edge when Tab brings it into view. */
+.em-wiz .em-fam-doors {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-padding: 0 18px;
+  margin: 0 -18px 4px;
+  padding: 2px 18px 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.em-wiz .em-fam-doors::-webkit-scrollbar { display: none; }
+.em-wiz .em-fam-door { flex: none; border-radius: 999px; padding: 10px 16px; }
+.em-wiz .em-fam-door.open {
+  background: var(--walnut-mid);
+  border-color: var(--walnut-edge);
+  color: #f5ecd2;
+}
+
+/* ── The emotions ──
+   Rows, so a phrase like "I had to stop and stare" gets a full line, and so the
+   strength slider has somewhere to live when the row is tagged. */
+.em-emo-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.em-emo-row {
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  background: var(--bg-vellum);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.em-emo-row.active { border-color: var(--brass); background: var(--bg-card); }
+.em-emo-row-tap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.em-emo-row-tap:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.em-emo-row-tap .swatch {
+  flex: none;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  /* Untagged rows show the emotion's own colour at a whisper, so the list reads
+     as a palette without every row shouting. Tagging it brings it up full. */
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+.em-emo-row.active .swatch { opacity: 1; }
+.em-emo-row-label { flex: 1; }
+.em-emo-row-strength {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px 14px;
+}
+
+/* ── Back / Next ──
+   Inherits the sticky-footer treatment from the phone tier above (position,
+   safe-area padding, the fade under it); this only sets the split. Next is the
+   wider of the two and carries the fill, so which one continues is legible
+   without reading either. */
+.em-wiz .em-wiz-footer { display: flex; gap: 10px; }
+.em-wiz-back {
+  flex: 0 0 auto;
+  min-width: 92px;
+  justify-content: center;
+  min-height: 54px;
+  font-size: 15px;
+}
+.em-wiz-next {
+  flex: 1;
+  justify-content: center;
+  min-height: 54px;
+  padding: 15px 18px;
+  background: var(--walnut-mid);
+  border-color: var(--walnut-edge);
+  color: #f5ecd2;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 3px;
+}
+.em-wiz-next:hover:not(:disabled) { background: var(--walnut); }
+.em-wiz-next:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }

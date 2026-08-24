@@ -144,6 +144,28 @@ export default function EntryModal({
   // from `entry` rather than live state, so the fold doesn't spring open again
   // while you're typing into it.
   const isNarrow = useIsNarrow();
+
+  // ── The phone wizard ──
+  //
+  // Below 640 a NEW entry is asked as three questions instead of presented as
+  // one form. The form is ~10 field groups; on a phone that is four screens of
+  // scrolling before the reader knows whether they are nearly done, and the one
+  // required field (title) is at the top with the save at the very bottom.
+  //
+  // Editing is deliberately NOT stepped. An edit is usually a one-field fix —
+  // "actually I finished it Tuesday" — and walking three steps to change a date
+  // is worse than scrolling to it. Desktop is not stepped either: the whole form
+  // fits there, and stepping would only add clicks.
+  //
+  // `useIsNarrow` reports "wide" where matchMedia is missing (jsdom), so every
+  // existing test and every server render takes exactly the path it took before.
+  const wizard = isNarrow && !entry?.id;
+  const [step, setStep] = useState(1);
+  const STEPS = 3;
+  // True when a given group belongs on the screen. Off the wizard it is always
+  // true, which is what keeps the single-page form a single page.
+  const onStep = (n) => !wizard || step === n;
+
   const [moreOpen, setMoreOpen] = useState(
     () => !isNarrow || Boolean(entry?.verdict || entry?.quote || entry?.notes),
   );
@@ -152,6 +174,16 @@ export default function EntryModal({
   useEffect(() => { if (!isNarrow) setMoreOpen(true); }, [isNarrow]);
 
   const families = getEmotionFamilies();
+
+  // Step 2 with every door shut is a row of five buttons and an empty screen.
+  // On the single-page form the closed state is right — the doors sit among
+  // other fields and opening one is a choice — but here the step IS the
+  // question, so it arrives already open on the first family.
+  useEffect(() => {
+    if (wizard && step === 2 && openFamily === null && families[0]) {
+      setOpenFamily(families[0].family);
+    }
+  }, [wizard, step, openFamily, families]);
 
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -221,6 +253,12 @@ export default function EntryModal({
   const setStrength = (id, strength) => setEmotions((prev) =>
     prev.map((e) => (e.id === id ? { ...e, strength } : e)));
 
+  // Which tagged emotions need a slider in the standalone list below the doors.
+  const openIds = new Set(
+    (families.find((f) => f.family === openFamily)?.emotions || []).map(([id]) => id),
+  );
+  const strengthRows = wizard ? emotions.filter((e) => !openIds.has(e.id)) : emotions;
+
   const strengths = emotions.map((e) => e.strength);
   const topStrength = strengths.length ? Math.max(...strengths) : null;
 
@@ -275,7 +313,7 @@ export default function EntryModal({
   return (
     // Dialog semantics (role/aria-modal/focus trap) are owned by the wrapping
     // <Modal> now — don't duplicate them here. [F1.7]
-    <div className="em-card">
+    <div className={`em-card ${wizard ? "em-wiz" : ""}`}>
       <div className="em-left" style={{ background: `linear-gradient(155deg, ${coverColor}, color-mix(in srgb, ${coverColor} 50%, #000))` }}>
         <div className="em-left-frame" />
         <div className="em-left-content">
@@ -302,15 +340,43 @@ export default function EntryModal({
       </div>
 
       <div className="em-right">
-        <button className="em-close" onClick={onClose} aria-label="Close">×</button>
+        {!wizard && <button className="em-close" onClick={onClose} aria-label="Close">×</button>}
 
-        <div className="label" style={{ marginBottom: 8 }}>{isEdit ? `edit · entry no. ${entryNo}` : "new entry"}</div>
-        <h2 className="em-h">
-          {firstWords ? <>What did <em>{firstWords}</em> do to you?</> : "Begin a new entry."}
-        </h2>
+        {wizard ? (
+          <>
+            <div className="em-wiz-head">
+              <div className="em-wiz-grab" aria-hidden="true" />
+              <div className="em-wiz-head-row">
+                <div className="label-sm em-wiz-count">
+                  shelving a book · {step} of {STEPS}
+                </div>
+                <button type="button" className="em-wiz-close" onClick={onClose}>Close</button>
+              </div>
+            </div>
 
+            <h2 className="em-h em-wiz-h">
+              {step === 1 && "What did you read?"}
+              {step === 2 && "What did it do to you?"}
+              {step === 3 && "Where did you leave it?"}
+            </h2>
+            {step === 2 && <p className="em-wiz-sub">Pick as many as are true.</p>}
+            {step === 3 && <p className="em-wiz-sub">Everything here is optional.</p>}
+          </>
+        ) : (
+          <>
+            <div className="label" style={{ marginBottom: 8 }}>{isEdit ? `edit · entry no. ${entryNo}` : "new entry"}</div>
+            <h2 className="em-h">
+              {firstWords ? <>What did <em>{firstWords}</em> do to you?</> : "Begin a new entry."}
+            </h2>
+          </>
+        )}
+
+        {onStep(1) && (
         <div className="em-field">
-          <div className="label-sm em-field-label">title · author</div>
+          {/* "TITLE · AUTHOR" under "What did you read?" is the same question
+              twice. Step 3's labels stay — that step asks several unrelated
+              things and its heading can only name one of them. */}
+          {!wizard && <div className="label-sm em-field-label">title · author</div>}
           <div className="em-search-wrap">
             <input
               ref={inputRef}
@@ -395,8 +461,15 @@ export default function EntryModal({
               )}
             </div>
           )}
+          {wizard && (
+            <p className="em-wiz-note">
+              Search never blocks the save- type it yourself if it isn't there.
+            </p>
+          )}
         </div>
+        )}
 
+        {onStep(3) && (
         <div className="em-field">
           <div className="label-sm em-field-label">reading status</div>
           <div className="em-status" role="radiogroup" aria-label="Reading status">
@@ -469,9 +542,11 @@ export default function EntryModal({
             </div>
           )}
         </div>
+        )}
 
+        {onStep(2) && (
         <div className="em-field">
-          <div className="label-sm em-field-label">what did it make you feel?</div>
+          {!wizard && <div className="label-sm em-field-label">what did it make you feel?</div>}
           {/* Five doors → the emotions inside. Recognition, not recall. [Part A] */}
           <div className="em-fam-doors">
             {families.map(({ family, emotions: famEmos }) => {
@@ -491,7 +566,41 @@ export default function EntryModal({
               );
             })}
           </div>
-          {openFamily && (
+          {openFamily && (wizard ? (
+            <div className="em-emo-rows">
+              {(families.find((f) => f.family === openFamily)?.emotions || []).map(([id, e]) => {
+                const active = isSelected(id);
+                const strength = emotions.find((x) => x.id === id)?.strength ?? DEFAULT_STRENGTH;
+                const label = e.label || id;
+                return (
+                  <div key={id} className={`em-emo-row ${active ? "active" : ""}`}>
+                    <button
+                      type="button"
+                      className="em-emo-row-tap"
+                      aria-pressed={active}
+                      onClick={() => toggleEmo(id)}
+                    >
+                      <span className="swatch" style={{ background: e.color }} />
+                      <span className="em-emo-row-label">{label}</span>
+                    </button>
+                    {active && (
+                      <div className="em-emo-row-strength">
+                        <input
+                          className="em-strength-range"
+                          type="range"
+                          min="1" max="10"
+                          value={strength}
+                          aria-label={`${label} strength`}
+                          onChange={(ev) => setStrength(id, +ev.target.value)}
+                        />
+                        <span className="em-strength-num">{strength}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
             <div className="em-emo-chips em-fam-chips">
               {(families.find((f) => f.family === openFamily)?.emotions || []).map(([id, e]) => {
                 const active = isSelected(id);
@@ -510,14 +619,16 @@ export default function EntryModal({
                 );
               })}
             </div>
-          )}
+          ))}
         </div>
-
-        {emotions.length > 0 && (
+        )}
+        {onStep(2) && strengthRows.length > 0 && (
           <div className="em-field">
-            <div className="label-sm em-field-label">how strong was each?</div>
+            <div className="label-sm em-field-label">
+              {wizard ? "tagged from other families" : "how strong was each?"}
+            </div>
             <div className="em-strengths">
-              {emotions.map(({ id, strength }) => {
+              {strengthRows.map(({ id, strength }) => {
                 const e = EMOTIONS[id] || {};
                 // Phrases are authored with their own casing — several now open
                 // with a first-person "I", so we must not lowercase them here.
@@ -555,7 +666,7 @@ export default function EntryModal({
         {/* DNF reason — only surfaces when the book was abandoned, so it stays
             in the main flow: it is already conditional, and folding a field
             that only appears when it is relevant hides it twice. [Part C] */}
-        {DNF_STATUSES.includes(status) && (
+        {onStep(3) && DNF_STATUSES.includes(status) && (
           <OneTap
             label="why did you put it down?"
             options={DNF_OPTIONS}
@@ -568,6 +679,7 @@ export default function EntryModal({
         {/* Fields stay mounted while folded — their values live in this
             component's state, so nothing is lost either way, but keeping them
             mounted means a collapse can't drop focus mid-typing. */}
+        {onStep(3) && (
         <details
           className="em-more"
           open={moreOpen}
@@ -608,7 +720,31 @@ export default function EntryModal({
             />
           </div>
         </details>
+        )}
 
+        {wizard ? (
+          <div className="em-footer em-wiz-footer">
+            {step > 1 && (
+              <button type="button" className="btn ghost em-wiz-back" onClick={() => setStep(step - 1)}>
+                Back
+              </button>
+            )}
+            {step < STEPS ? (
+              <button
+                type="button"
+                className="btn em-wiz-next"
+                onClick={() => setStep(step + 1)}
+                disabled={step === 1 && !title.trim()}
+              >
+                Next
+              </button>
+            ) : (
+              <button type="button" className="btn em-wiz-next" onClick={handleSave} disabled={!title.trim()}>
+                {duplicate ? "Shelve it again" : "Shelve it"}
+              </button>
+            )}
+          </div>
+        ) : (
         <div className="em-footer">
           {isEdit ? (
             <button className="em-remove" onClick={handleDelete}>– remove from shelf</button>
@@ -633,6 +769,7 @@ export default function EntryModal({
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
