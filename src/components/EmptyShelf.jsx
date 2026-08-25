@@ -25,7 +25,7 @@ export default function EmptyShelf({ onAddClick, onImport }) {
           <h1 className="es-h1">Nothing on the shelf yet.</h1>
           <p className="es-dek">
             Start with the last book you finished.<br />
-            Not the best one — <em>the last one</em>.
+            Not the best one-  <em>the last one</em>.
           </p>
           <div className="es-actions">
             <button className="es-search" onClick={onAddClick}>

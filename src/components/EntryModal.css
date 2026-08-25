@@ -378,15 +378,6 @@
 
 /* responsive */
 @media (max-width: 900px) {
-  /* Not `1fr` alone: a bare `1fr` track is `minmax(auto, 1fr)`, so its floor is
-     the content's MIN-CONTENT width, not zero. With one wide, unbreakable row
-     inside .em-right (the wizard's header, or the family-doors strip), that
-     floor came out wider than the phone itself — the grid column "blew out"
-     past the viewport with nothing to clip it (.em-card goes overflow:visible
-     two rules down, so it happened silently, no scrollbar, just content
-     hanging off the right edge). `minmax(0, 1fr)` gives it a real floor of
-     zero, so the column shrinks to the container and each child manages its
-     own overflow (the doors row already does, via its own overflow-x:auto). */
   .em-card { grid-template-columns: minmax(0, 1fr); }
   .em-left { min-height: 220px; }
 }

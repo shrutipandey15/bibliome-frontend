@@ -162,8 +162,6 @@ export default function EntryModal({
   const wizard = isNarrow && !entry?.id;
   const [step, setStep] = useState(1);
   const STEPS = 3;
-  // True when a given group belongs on the screen. Off the wizard it is always
-  // true, which is what keeps the single-page form a single page.
   const onStep = (n) => !wizard || step === n;
 
   const [moreOpen, setMoreOpen] = useState(
@@ -174,11 +172,6 @@ export default function EntryModal({
   useEffect(() => { if (!isNarrow) setMoreOpen(true); }, [isNarrow]);
 
   const families = getEmotionFamilies();
-
-  // Step 2 with every door shut is a row of five buttons and an empty screen.
-  // On the single-page form the closed state is right — the doors sit among
-  // other fields and opening one is a choice — but here the step IS the
-  // question, so it arrives already open on the first family.
   useEffect(() => {
     if (wizard && step === 2 && openFamily === null && families[0]) {
       setOpenFamily(families[0].family);
@@ -373,9 +366,6 @@ export default function EntryModal({
 
         {onStep(1) && (
         <div className="em-field">
-          {/* "TITLE · AUTHOR" under "What did you read?" is the same question
-              twice. Step 3's labels stay — that step asks several unrelated
-              things and its heading can only name one of them. */}
           {!wizard && <div className="label-sm em-field-label">title · author</div>}
           <div className="em-search-wrap">
             <input

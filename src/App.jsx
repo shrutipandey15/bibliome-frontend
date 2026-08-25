@@ -911,8 +911,27 @@ function Dashboard() {
                     with the disclosure semantics, keyboard operation and
                     find-in-page behaviour already correct. */}
                 <summary className="rr-fold-summary">
-                  <span>Your patterns</span>
-                  <span className="rr-fold-chev" aria-hidden="true">⌄</span>
+                  {/* This heading stays put whether the fold is open or closed —
+                      only the toggle at its end relabels. <Patterns> is told
+                      `hideMasthead` whenever it mounts here, so opening never
+                      draws "Your Patterns." a second time a couple hundred
+                      pixels down. */}
+                  <div className="rr-fold-text">
+                    <div className="label-sm rr-fold-fig">fig. 03 · the patterns</div>
+                    <div className="rr-fold-headrow">
+                      <span className="rr-fold-h">Your <em>Patterns</em>.</span>
+                      <span className="rr-fold-toggle">
+                        {patternsOpen ? "Hide" : "Open"}
+                        <span className="rr-fold-chev" aria-hidden="true">⌄</span>
+                      </span>
+                    </div>
+                    {!patternsOpen && (
+                      <p className="rr-fold-dek">
+                        Real from your first book — the heatmap, the full emotion
+                        ledger, and everything else, folded away until you want it.
+                      </p>
+                    )}
+                  </div>
                 </summary>
                 {/* Not rendered while collapsed. The heatmap is a 69 × 18 matrix
                     — well over a thousand cells — so this is the difference
@@ -920,7 +939,7 @@ function Dashboard() {
                     costs everything it would have cost open. */}
                 {patternsOpen && (stale.stats || stale.heatmap
                   ? <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Reading your patterns...</div></div>
-                  : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} embedded />)}
+                  : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} embedded hideMasthead={isNarrow} />)}
               </details>
             </ErrorBoundary>
           </>

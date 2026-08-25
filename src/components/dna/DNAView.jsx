@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { EMOTIONS, EMO_LIST } from "../../services/emotions";
 import DNACard from "../DNACard";
 import DNAGate from "./DNAGate";
@@ -5,6 +6,7 @@ import Insight from "./Insight";
 import EvolutionView from "./EvolutionView";
 import LockedInsights from "./LockedInsights";
 import { MIN_BOOKS } from "./constants";
+import useIsNarrow from "../../hooks/useIsNarrow";
 import "./DNAView.css";
 
 /**
@@ -65,11 +67,27 @@ function Portrait({ counts, current, blindSpots = [] }) {
   if (!reached) return null;
   const flagged = new Set(blindSpots);
 
-  return (
-    <section className="dna-portrait" aria-labelledby="dna-portrait-title">
-      <h2 id="dna-portrait-title" className="dna-section-label">
-        <span className="dna-numeral">III</span> The shape of you
-      </h2>
+  // Collapsible on phone, where 18 rows is real scroll — but OPEN on every
+  // mount. The blanks are the whole argument of this section ("the blank IS
+  // the blind spot, made visible" — see the block comment above), so nothing
+  // here may load pre-hidden; a reader can only ever close what they've
+  // already been shown. No separate toggle: the heading itself is the
+  // <summary>, so there's one clickable thing, not a heading plus a button
+  // beside it. Desktop renders the plain heading it always has — the section
+  // already fits without help there, so it gains no click target it didn't
+  // have before.
+  const narrow = useIsNarrow();
+  const [open, setOpen] = useState(true);
+  useEffect(() => { if (!narrow) setOpen(true); }, [narrow]);
+
+  const heading = (
+    <h2 id="dna-portrait-title" className="dna-section-label">
+      <span className="dna-numeral">III</span> The shape of you
+    </h2>
+  );
+
+  const list = (
+    <>
       <ul className="dna-portrait-list">
         {rows.map((r) => {
           const untouched = r.n <= 0;
@@ -104,6 +122,33 @@ function Portrait({ counts, current, blindSpots = [] }) {
         {hasCounts ? " · figures are books" : " · figures are shares of your recent reading"}.
         The blanks are the ones you never have.
       </p>
+    </>
+  );
+
+  return (
+    <section className="dna-portrait" aria-labelledby="dna-portrait-title">
+      {narrow ? (
+        <details
+          className="dna-portrait-fold"
+          open={open}
+          onToggle={(e) => setOpen(e.currentTarget.open)}
+        >
+          {/* A heading as a <summary>'s sole child keeps its accessible name —
+              screen readers announce it as both the disclosure control and the
+              section heading, rather than losing the numeral/label to a plain
+              clickable div. */}
+          <summary className="dna-portrait-fold-summary">
+            {heading}
+            <span className="dna-portrait-fold-chev" aria-hidden="true">⌄</span>
+          </summary>
+          {list}
+        </details>
+      ) : (
+        <>
+          {heading}
+          {list}
+        </>
+      )}
     </section>
   );
 }
@@ -164,6 +209,42 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
       .map((r) => ({ emotion_id: r.slug, count: Math.round(r.weight * 100) })),
   };
 
+  const narrow = useIsNarrow();
+  const archetypeBody = !arch ? (
+    <p className="dna-arch-none">
+      Not enough tagged books to name a shorthand yet. The findings above
+      are still yours — the label is the one thing that needs a clear
+      favourite, and yours is still a tie.
+    </p>
+  ) : (
+    <DNACard
+      ref={cardRef}
+      profile={cardProfile}
+      username={username}
+      size="small"
+      allowShare
+      onSave={onSave}
+      showDescription={false}
+      footer={arch.description && <p className="dna-arch-desc">{arch.description}</p>}
+    />
+  );
+  const archetypeHeading = (
+    <h2 id="dna-arch-title" className="dna-section-label">
+      <span className="dna-numeral">V</span> The shorthand
+    </h2>
+  );
+
+  const evolution = (
+    <EvolutionView profiles={profile.profiles} drift={profile.drift} snapshotCount={snapshotCount} />
+  );
+  const portrait = (
+    <Portrait
+      counts={stats?.emotion_counts}
+      current={profile.profiles?.current}
+      blindSpots={arch?.blind_spots}
+    />
+  );
+
   return (
     <div className="dna-view">
       {/* Running head — the volume line, set like a page header rather than a
@@ -207,72 +288,76 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
           )}
 
           <Divider />
-
-          {/* II — WHAT'S CHANGED. The return mechanic. [F7.3] */}
-          <EvolutionView profiles={profile.profiles} drift={profile.drift} snapshotCount={snapshotCount} />
-
-          <Divider />
-
-          {/* III — THE SHAPE OF YOU. The fingerprint, not the label. */}
-          <Portrait
-            counts={stats?.emotion_counts}
-            current={profile.profiles?.current}
-            blindSpots={arch?.blind_spots}
-          />
-
-          <Divider />
-
-          {/* IV — OTHER FINDINGS, ranked by surprise. Basis on every one. [F7.2] */}
-          {rest.length > 0 && (
-            <section className="dna-more" aria-labelledby="dna-more-title">
-              <h2 id="dna-more-title" className="dna-section-label">
-                <span className="dna-numeral">IV</span> Other findings
-              </h2>
-              <ul className="dna-more-list">
-                {rest.map((i) => (
-                  <li key={`${i.category}-${i.variant}`}><Insight insight={i} /></li>
-                ))}
-              </ul>
-            </section>
+          {narrow ? (
+            <>
+              {portrait}
+              <Divider />
+              {evolution}
+            </>
+          ) : (
+            <>
+              {evolution}
+              <Divider />
+              {portrait}
+            </>
           )}
 
-          {/* NOT YET — locked, WITH the real reason. [F7.4] */}
-          <LockedInsights locked={profile.locked} />
+          <Divider />
+
+          {/* V, IN FLOW — phone only. See `archetypeBody` above for why. */}
+          {narrow && (
+            <>
+              <Divider />
+              <section aria-labelledby="dna-arch-title">
+                {archetypeHeading}
+                {archetypeBody}
+              </section>
+            </>
+          )}
+
+          {/* IV — OTHER FINDINGS, ranked by surprise. Basis on every one. [F7.2]
+              Its own Divider, rather than a border baked into `.dna-more` —
+              every section boundary on this page is one or the other, never
+              both, so nothing downstream can end up sitting between two
+              separators a `gap` apart. */}
+          {rest.length > 0 && (
+            <>
+              <Divider />
+              <section className="dna-more" aria-labelledby="dna-more-title">
+                <h2 id="dna-more-title" className="dna-section-label">
+                  <span className="dna-numeral">IV</span> Other findings
+                </h2>
+                <ul className="dna-more-list">
+                  {rest.map((i) => (
+                    <li key={`${i.category}-${i.variant}`}><Insight insight={i} /></li>
+                  ))}
+                </ul>
+              </section>
+            </>
+          )}
+
+          {/* NOT YET — locked, WITH the real reason. [F7.4] Same rule: its own
+              Divider, guarded on the same condition LockedInsights uses to
+              decide whether to render at all — an empty `locked` array must
+              not leave a divider pointing at nothing. */}
+          {profile.locked?.length > 0 && (
+            <>
+              <Divider />
+              <LockedInsights locked={profile.locked} />
+            </>
+          )}
         </div>
 
-        {/* V — THE SHORTHAND. Still demoted in the argument (it is the label,
-            not the finding) but no longer hidden behind a toggle: it is the one
-            thing here anybody wants to keep, and it was being rendered
-            off-screen purely so `onSave` could rasterise it. */}
-        <aside className="dna-aside" aria-labelledby="dna-arch-title">
-          <h2 id="dna-arch-title" className="dna-section-label">
-            <span className="dna-numeral">V</span> The shorthand
-          </h2>
-          {/* No archetype is a real answer, not a loading state: past the gate,
-              the reader's tally can still name nobody. Saying so is the whole
-              point — the alternative is the label the engine used to hand out by
-              list order to anyone who had tagged nothing. */}
-          {!arch ? (
-            <p className="dna-arch-none">
-              Not enough tagged books to name a shorthand yet. The findings above
-              are still yours — the label is the one thing that needs a clear
-              favourite, and yours is still a tie.
-            </p>
-          ) : (
-            <DNACard
-              ref={cardRef}
-              profile={cardProfile}
-              username={username}
-              size="small"
-              allowShare
-              onSave={onSave}
-              /* The plate is already dense; on this page the description has a
-                 column to live in underneath it. */
-              showDescription={false}
-              footer={arch.description && <p className="dna-arch-desc">{arch.description}</p>}
-            />
-          )}
-        </aside>
+        {!narrow && (
+          <aside className="dna-aside" aria-labelledby="dna-arch-title">
+            {archetypeHeading}
+            {/* No archetype is a real answer, not a loading state: past the gate,
+                the reader's tally can still name nobody. Saying so is the whole
+                point — the alternative is the label the engine used to hand out
+                by list order to anyone who had tagged nothing. */}
+            {archetypeBody}
+          </aside>
+        )}
       </div>
     </div>
   );

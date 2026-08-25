@@ -857,18 +857,20 @@
   }
 
   /* ---------- Collapsible section (mobile) ---------- */
+  /* A one-line "Your patterns ⌄" told the reader there was more, not what it
+     was. This is the same masthead <Patterns> renders once open — figure
+     number, heading, one line on what's inside — so closed and open show the
+     same claim about the section instead of a teaser and then a different
+     heading a tap later. */
   .rr-fold-summary {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    min-height: 56px;
-    padding: 0 18px;
+    gap: 14px;
+    padding: 20px 18px;
     margin-top: 8px;
     border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
-    font-family: var(--font-display);
-    font-size: 19px;
     color: var(--ink);
     cursor: pointer;
     /* Both are needed to drop the native disclosure triangle — the pseudo for
@@ -877,6 +879,51 @@
   }
   .rr-fold-summary::-webkit-details-marker { display: none; }
   .rr-fold-summary:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+  .rr-fold-text { min-width: 0; width: 100%; }
+  .rr-fold-fig {
+    margin-bottom: 6px;
+    color: var(--ink-faint) !important;
+  }
+  /* Heading and toggle share one row and one baseline — "Open"/"Hide" reads as
+     part of the sentence ("Your Patterns. Open") rather than a control parked
+     on its own line with the rest of the row empty beside it. */
+  .rr-fold-headrow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .rr-fold-h {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  /* Same colour <Patterns>'s own "Your Patterns." uses (`.st-h1 em`,
+     `--oxblood`) — this heading and that one are now the same claim shown at
+     two moments (before you open it, and while it's open), so they read as
+     one heading, not a yellow one that hands off to a red one once you tap. */
+  .rr-fold-h em { color: var(--oxblood); font-style: italic; }
+  .rr-fold-dek {
+    margin-top: 6px;
+    font-family: var(--font-display);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-quiet);
+  }
+  .rr-fold-toggle {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    padding: 0 2px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
   .rr-fold-chev { color: var(--brass); font-size: 20px; transition: transform .2s ease; }
   .rr-fold[open] .rr-fold-chev { transform: rotate(180deg); }
 

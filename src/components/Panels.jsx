@@ -273,7 +273,7 @@ export function Heatmap({ data }) {
 // `embedded` renders it as the closing section of the DNA tab rather than a page
 // of its own: the heading drops to an h2 (the DNA view owns the h1) and the empty
 // state stays silent, since the DNA gate above it already says "not enough yet".
-export function Patterns({ stats, heatmap, embedded = false }) {
+export function Patterns({ stats, heatmap, embedded = false, hideMasthead = false }) {
   if (!stats || stats.total_books === 0) {
     if (embedded) return null;
     return (
@@ -297,16 +297,25 @@ export function Patterns({ stats, heatmap, embedded = false }) {
 
   return (
     <div className="st-page">
-      <div className="st-masthead">
-        <div>
-          <div className="label" style={{ marginBottom: 14 }}>fig. 03 · the patterns</div>
-          {embedded
-            ? <h2 className="st-h1">Your <em>Patterns</em>.</h2>
-            : <h1 className="st-h1">Your <em>Patterns</em>.</h1>}
-        </div>
-        <div className="label">your shelf · in aggregate</div>
-      </div>
-      <div className="rule-dbl" style={{ marginBottom: 32 }} />
+      {/* `hideMasthead` — the mobile fold's own <summary> (App.jsx) already
+          shows this exact heading, inline with its Open/Hide toggle, before
+          this component ever mounts open. Rendering it again here would be
+          the same words twice a couple hundred pixels apart; the h2 case only
+          exists on a phone, where the summary's copy is the one that stays. */}
+      {!hideMasthead && (
+        <>
+          <div className="st-masthead">
+            <div>
+              <div className="label" style={{ marginBottom: 14 }}>fig. 03 · the patterns</div>
+              {embedded
+                ? <h2 className="st-h1">Your <em>Patterns</em>.</h2>
+                : <h1 className="st-h1">Your <em>Patterns</em>.</h1>}
+            </div>
+            <div className="label">your shelf · in aggregate</div>
+          </div>
+          <div className="rule-dbl" style={{ marginBottom: 32 }} />
+        </>
+      )}
 
       {/* No dashboard stat cards here [F-DNA-9]. The counts they showed (books
           logged, avg intensity, books/month, diversity) are figures, not

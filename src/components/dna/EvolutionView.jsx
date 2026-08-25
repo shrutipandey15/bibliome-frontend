@@ -25,6 +25,15 @@ function topSlug(vec) {
   return best;
 }
 
+const RATIO_WORDS = { 2: "twice", 3: "three times", 4: "four times", 5: "five times" };
+function ratioPhrase(current, enduring) {
+  if (!enduring || enduring <= 0) return null;
+  const ratio = current / enduring;
+  if (ratio < 1.4) return null;
+  const rounded = Math.round(ratio);
+  return RATIO_WORDS[rounded] || `${ratio.toFixed(1)}×`;
+}
+
 function rows(vec, cap = 4) {
   const total = Object.values(vec || {}).reduce((s, w) => s + w, 0) || 1;
   return Object.entries(vec || {})
@@ -89,9 +98,11 @@ export default function EvolutionView({ profiles, drift = 0, snapshotCount = nul
             <span className="evo-drift-mark" aria-hidden="true">→</span>
             <span className="evo-drift-to" style={{ color: emoColor(toTop) }}>{emoLabel(toTop)}</span>
           </div>
-          {/* The text equivalent — the shift stated plainly, from the data. [F7.8] */}
           <p className="evo-drift-summary">
-            Enduringly, you read toward {emoLabel(fromTop)}. Lately, {emoLabel(toTop)}.
+            Enduringly, you read toward {emoLabel(fromTop)}. Lately, {emoLabel(toTop)}
+            {ratioPhrase(current?.[toTop], enduring?.[toTop])
+              ? <> — {ratioPhrase(current?.[toTop], enduring?.[toTop])} as often as before.</>
+              : "."}
           </p>
         </div>
       ) : (
