@@ -117,9 +117,9 @@ export function Heatmap({ data }) {
   const visibleBooks = ordered.slice(0, shown);
   const remaining = ordered.length - visibleBooks.length;
 
-  // NOTE: emoTotals, bestPair and blindSpots below stay computed over ALL books
+  // NOTE: emoTotals, bestPair and untagged below stay computed over ALL books
   // on purpose. They are aggregate facts about the shelf, not about the window —
-  // windowing them would make the row counts and "strongest pairing" silently
+  // windowing them would make the row counts and "most often together" silently
   // change every time someone pressed "show older".
 
   let bestPair = null, bestCount = 0;
@@ -132,7 +132,13 @@ export function Heatmap({ data }) {
   }
 
   const presentSet = new Set(emos);
-  const blindSpots = EMO_LIST.filter(([id]) => !presentSet.has(id)).slice(0, 3);
+  // Every register this shelf hasn't touched yet — the whole list, in vocabulary
+  // order. This used to be `.slice(0, 3)` under the heading "blind spots", which
+  // was ranking by declaration order and calling it a finding: two readers with
+  // the same shelf size saw the same three names because it was just list
+  // position. Show all of them, and let the copy be honest about how little a
+  // gap means this early.
+  const untagged = EMO_LIST.filter(([id]) => !presentSet.has(id));
 
   return (
     <div className="hm-page paper">
@@ -146,7 +152,8 @@ export function Heatmap({ data }) {
               worse than either statement alone. */}
           <p className="hm-dek">
             Your books × the emotions you assigned them. Darker means felt harder.
-            The clusters tell you who you are when no one is watching.
+            Watch for the rows that run dark and the columns that stack up — a
+            pattern worth noticing, not a verdict yet.
           </p>
         </div>
         <div className="label hm-corner">
@@ -231,26 +238,35 @@ export function Heatmap({ data }) {
               derived from two different sources about 600px apart. The Patterns
               copy is the one that survives, because that is where the other
               headline figures live. */}
-          {bestPair && (
+          {bestPair && bestCount >= 2 && (
             <div className="card editorial">
-              <div className="label" style={{ marginBottom: 10 }}>strongest pairing</div>
+              <div className="label" style={{ marginBottom: 10 }}>most often together</div>
               <div className="hm-rail-pair">
                 <em style={{ color: EMOTIONS[bestPair[0]]?.color }}>{EMOTIONS[bestPair[0]]?.name}</em>
                 {" + "}
                 <em style={{ color: EMOTIONS[bestPair[1]]?.color }}>{EMOTIONS[bestPair[1]]?.name}</em>
               </div>
               <div className="hm-rail-sub">
-                co-occur in {bestCount} book{bestCount === 1 ? "" : "s"} · ρ {((bestCount / books.length) * 0.9 + 0.1).toFixed(2)}
+                you tagged both on the same book {bestCount} time{bestCount === 1 ? "" : "s"}, out of {books.length}
               </div>
-              <div className="hm-rail-aside">You almost never want one without the other.</div>
+              {/* No coefficient here. There used to be a "ρ 0.42" printed on this
+                  line, computed as co-occurrences ÷ books × 0.9 + 0.1 — a made-up
+                  number wearing the symbol for a real statistic. The DNA view
+                  won't call two feelings a pairing until 15 books; this is only a
+                  tally of what's landed together so far. */}
+              <div className="hm-rail-aside">
+                {books.length < 15
+                  ? "Could be a real pair, could just be a short shelf. Ask again in a few books."
+                  : "These two tend to arrive as a set."}
+              </div>
             </div>
           )}
 
-          {blindSpots.length > 0 && (
+          {untagged.length > 0 && (
             <div className="card editorial" style={{ borderTop: "3px solid var(--ink-faint)" }}>
-              <div className="label" style={{ marginBottom: 10 }}>blind spots</div>
+              <div className="label" style={{ marginBottom: 10 }}>not tagged yet</div>
               <div className="hm-blind-list">
-                {blindSpots.map(([id, e]) => (
+                {untagged.map(([id, e]) => (
                   <div className="hm-blind-row" key={id}>
                     <span className="hm-blind-dot" style={{ background: e.color }} />
                     <span className="hm-blind-name">{e.name}</span>
@@ -258,7 +274,11 @@ export function Heatmap({ data }) {
                   </div>
                 ))}
               </div>
-              <div className="hm-rail-aside">The emotions you never reach for.</div>
+              <div className="hm-rail-aside">
+                {books.length < 10
+                  ? "Every feeling you haven't reached for yet. This early it mostly means you haven't hit that book — the DNA view waits for 10 before it reads anything into a gap."
+                  : "The feelings your shelf keeps stepping around."}
+              </div>
             </div>
           )}
         </div>
@@ -313,6 +333,15 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
             </div>
             <div className="label">your shelf · in aggregate</div>
           </div>
+          {/* Why this section sits outside the 5-book DNA gate, said plainly — so
+              a reader with three books doesn't take "strongest pairing" here as
+              the mirror contradicting its own "needs five before it can say
+              anything true" a screen above. */}
+          <p className="st-dek">
+            Straight counts off your shelf — no gate, no interpretation. The mirror
+            up top stays quiet until 5 books because it's trying to describe
+            <em> you</em>. This is just arithmetic, and arithmetic works from book one.
+          </p>
           <div className="rule-dbl" style={{ marginBottom: 32 }} />
         </>
       )}
@@ -366,7 +395,9 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
               </div>
             </div>
           )}
-          {hardest && (
+          {/* Gated at 3: with two books "most intense read" is just "the higher
+              of your two", which isn't worth a card. */}
+          {hardest && totalBooks >= 3 && (
             <div className="card editorial st-card-hardest">
               <div className="label" style={{ marginBottom: 12 }}>most intense read</div>
               <div className="st-hardest-title">{hardest.title}</div>
@@ -376,14 +407,12 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
               )}
             </div>
           )}
-          {top && (
-            <div className="card editorial st-vibe" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${top.color} 10%, var(--bg-card)), var(--bg-card))` }}>
-              <div className="label" style={{ marginBottom: 10, color: top.color }}>shelf vibe</div>
-              <div className="st-vibe-text">
-                “A quiet shelf of patient, attentive readers — the kind who underline in pencil.”
-              </div>
-            </div>
-          )}
+          {/* A "shelf vibe" card used to sit here with one hardcoded sentence —
+              "A quiet shelf of patient, attentive readers, the kind who underline
+              in pencil" — shown identically to every reader regardless of what
+              was on their shelf. That's the exact fabricated-insight move the DNA
+              view exists to avoid, so it's gone. If it comes back, it has to be
+              computed from this reader's own tally. */}
         </div>
       </div>
     </div>

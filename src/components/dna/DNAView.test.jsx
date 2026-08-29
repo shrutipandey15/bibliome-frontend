@@ -44,7 +44,7 @@ const fullProfile = {
     { category: "contradiction", variant: "a", text: "You said you read for comfort. You rate the ones that hurt 2.3 points higher.", n: 47, surprise: 0.9 },
     { category: "blind_spot", variant: "rare", text: "47 books. Never once: tenderness.", n: 47, surprise: 0.7 },
   ],
-  locked: [{ category: "seasonality", unlocks_at: "25 books + 12 months", reason: "needs 12 months of reading" }],
+  locked: [{ category: "seasonality", unlocks_at: "25 books + 12 months", reason: "25 books across a full year of reading, once you've read here that long", have: null, need: 25 }],
   profiles: {
     enduring: { comfort: 0.6, grief: 0.3, devastation: 0.1 },
     current: { devastation: 0.7, grief: 0.2, comfort: 0.1 },
@@ -150,11 +150,12 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
   it("shows locked insights WITH the real reason, no timers [F7.4]", async () => {
     await renderView({ profile: fullProfile, username: "alice" });
     expect(screen.getByText("Seasonality")).toBeInTheDocument();
-    // The backend's own requirement text, set as a sentence. No countdown, and no
-    // "you are N short" — the payload carries no such figure.
+    // The backend's own requirement text, set as a sentence. No countdown, no
+    // "you are N short", and — because seasonality is time-gated — no "you have N"
+    // either, since logging books can't close that gap.
     const locked = document.querySelector(".dna-locked-row");
-    expect(locked.textContent).toMatch(/Seasonality waits on 12 months of reading\./i);
-    expect(locked.textContent).not.toMatch(/\d+ short|days|weeks left/i);
+    expect(locked.textContent).toMatch(/Seasonality waits on .*full year of reading/i);
+    expect(locked.textContent).not.toMatch(/\d+ short|days|weeks left|you have/i);
   });
 
   it("refuses forbidden framing: no mysticism, no streak, no comparative ranking [F7.5/F7.6]", async () => {

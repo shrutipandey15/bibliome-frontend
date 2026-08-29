@@ -198,7 +198,12 @@ const DNACard = forwardRef(function DNACard(
 
         {p.blind_spots?.length > 0 && (
           <div className="dna-blinds">
-            <div className="label-sm">what you avoid</div>
+            {/* These are the archetype's known failure modes — the same lines for
+                everyone who lands on this type — not a measurement of which
+                feelings THIS reader skips. Labelled as what it is. The DNA page's
+                Portrait does the per-reader version, cross-checked against your
+                own untagged registers. */}
+            <div className="label-sm">where this type tends to get stuck</div>
             <div className="dna-blind">{p.blind_spots.join(" · ")}</div>
           </div>
         )}

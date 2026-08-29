@@ -119,8 +119,8 @@ function Portrait({ counts, current, blindSpots = [] }) {
       </ul>
       <p className="dna-portrait-note">
         {reached} of {rows.length} reached for
-        {hasCounts ? " · figures are books" : " · figures are shares of your recent reading"}.
-        The blanks are the ones you never have.
+        {hasCounts ? " · figures are book counts" : " · figures are shares of your recent reading"}.
+        The blanks are the feelings you've never once recorded.
       </p>
     </>
   );

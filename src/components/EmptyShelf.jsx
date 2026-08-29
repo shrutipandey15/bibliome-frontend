@@ -11,7 +11,7 @@ const SEED_SHELVES = [
 const AFTER_STEPS = [
   { n: "01", t: "You log it",         d: "Title + author. We find the cover." },
   { n: "02", t: "You tag what it did", d: "Emotions, intensity, the line that hit." },
-  { n: "03", t: "You shelve it",       d: "Five books = DNA. Ten = the portrait sharpens." },
+  { n: "03", t: "You shelve it",       d: "At five books it starts reading you back. The more you log, the more it can say." },
 ];
 
 export default function EmptyShelf({ onAddClick, onImport }) {
@@ -25,7 +25,7 @@ export default function EmptyShelf({ onAddClick, onImport }) {
           <h1 className="es-h1">Nothing on the shelf yet.</h1>
           <p className="es-dek">
             Start with the last book you finished.<br />
-            Not the best one-  <em>the last one</em>.
+            Not the best one — <em>the last one</em>.
           </p>
           <div className="es-actions">
             <button className="es-search" onClick={onAddClick}>

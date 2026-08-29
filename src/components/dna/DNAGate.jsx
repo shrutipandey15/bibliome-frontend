@@ -24,7 +24,7 @@ export default function DNAGate({ bookCount = 0, minBooks = MIN_BOOKS, message }
         {cap(spell(bookCount))} {bookWord} in.
       </h1>
       <p className="dna-gate-promise">
-        {message || `The mirror needs ${spell(minBooks)} before it can say anything true.`}
+        {message || `The mirror needs ${spell(minBooks)} before it can say anything true about you. (Your raw counts are below — those work from book one.)`}
       </p>
       {!message && (
         <p className="dna-gate-sub">Log {spell(remaining)} more and it begins.</p>

@@ -298,6 +298,7 @@
   color: var(--ink-faint);
 }
 .dna-locked-name { font-style: normal; color: var(--ink-quiet); }
+.dna-locked-have { font-style: normal; color: var(--ink-ghost); font-size: 12.5px; }
 
 /* ── Honest empty state (the gate) ── */
 .dna-gate {

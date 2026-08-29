@@ -46,10 +46,10 @@ const STEPS = [
     d: `Type a title and we look for it in Google Books, Open Library and our own catalog at once — cover, author and all. Or type it in yourself; the search never blocks the save.` },
   { n: "02", t: "Say what it did to you",
     d: `Not a rating. Pick from ${EMO_LIST.length} feelings, grouped into five families you open one at a time, and give each one a strength. Keep the line you couldn't forget.` },
-  { n: "03", t: "Finish it in three beats",
-    d: "A book doesn't leave you the way it found you, so finishing one asks three times: how it began, how it felt in the thick of it, how it left you. That arc is what a star can't hold." },
-  { n: "04", t: `After ${MIN_BOOKS} books, it reads you back`,
-    d: `Your archetype — one of ${ARCHETYPE_COUNT} — plus the patterns underneath it: what you reach for, what shows up together, and the feelings you have never once recorded.` },
+  { n: "03", t: "Walk it back in three beats",
+    d: "A book doesn't leave you the way it found you. When you finish one, you can trace the arc — how it began, how it felt in the thick of it, how it left you. Take it when a book earns it, skip it when it doesn't. That arc is what a star can't hold." },
+  { n: "04", t: `After ${MIN_BOOKS} books, it starts reading you back`,
+    d: `A first insight or two, pulled only from what you recorded — and usually, though not always, an archetype (one of ${ARCHETYPE_COUNT}; it would rather say nothing than guess). The deeper patterns — what shows up together, the feelings you never reach for — wait on a bigger shelf, and it won't fake them to fill the page.` },
 ];
 
 // The constraints that make Resonance bearable rather than another inbox. All

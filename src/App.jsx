@@ -922,8 +922,9 @@ function Dashboard() {
                     </div>
                     {!patternsOpen && (
                       <p className="rr-fold-dek">
-                        Real from your first book — the heatmap, the full emotion
-                        ledger, and everything else, folded away until you want it.
+                        Straight counts from your first book — the heatmap and the
+                        full emotion ledger, no gate and no interpretation. The
+                        mirror above stays quiet until 5; this is just arithmetic.
                       </p>
                     )}
                   </div>

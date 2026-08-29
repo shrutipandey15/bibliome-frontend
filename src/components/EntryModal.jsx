@@ -453,7 +453,7 @@ export default function EntryModal({
           )}
           {wizard && (
             <p className="em-wiz-note">
-              Search never blocks the save- type it yourself if it isn't there.
+              Search never blocks the save — type it in yourself if it isn't there.
             </p>
           )}
         </div>
