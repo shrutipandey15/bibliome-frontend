@@ -31,11 +31,12 @@ const TABS = [
   { id: "journal", label: "Journal", Icon: NotebookPen,   to: "/journal" },
 ];
 
-export default function TabBar({ active, shelfCount, barOnly = false }) {
+export default function TabBar({ active, shelfCount, barOnly = false, fab = null }) {
   const navigate = useNavigate();
 
   return (
     <nav className={`rr-tabs ${barOnly ? "rr-tabs-baronly" : ""}`} aria-label="Sections">
+      {fab}
       {TABS.map((t) => {
         const on = active === t.id;
         return (

@@ -23,7 +23,7 @@ function fmtDate(iso) {
   catch { return ""; }
 }
 
-export default function EchoThread({ echoId, onReport }) {
+export default function EchoThread({ echoId, onReport, onClose }) {
   const [thread, setThread] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState("");
@@ -84,6 +84,11 @@ export default function EchoThread({ echoId, onReport }) {
 
   return (
     <div className="et" style={{ "--eco-c": color }}>
+      <button type="button" className="et-phone-close" onClick={onClose}>
+        <span className="et-phone-grab" aria-hidden="true" />
+        <span className="et-phone-back">‹ Echo</span>
+      </button>
+
       {/* THE ECHO — with its actions attached, the way the card has them. The
           reaction row used to sit at the very bottom, below the reply box, which
           put it after the conversation it belongs to. */}

@@ -53,6 +53,7 @@
   text-wrap: pretty;
 }
 .ep-head-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.ep-phone-head { display: none; }
 
 /* ── the one filter row that stays in the column: whose feed ── */
 .ep-scope {
@@ -372,6 +373,38 @@
      rather than as a scroll affordance.) */
   .ep-rail { display: none; }
   .ep-main { order: 0; padding: 22px 18px 0; }
+  .ep-masthead { display: none; }
+  .ep-phone-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 -18px 18px;
+    padding: 14px 18px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    background: var(--bg-page);
+    border-bottom: 1px solid var(--rule);
+  }
+  .ep-phone-eyebrow { letter-spacing: 0.22em; }
+  .ep-phone-actions { display: flex; align-items: center; gap: 14px; }
+  .ep-phone-write {
+    border: none;
+    background: none;
+    padding: 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--oxblood);
+    cursor: pointer;
+  }
+  .ep-phone-write:hover { text-decoration: underline; }
+  .ep-phone-write:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
   .ep-scope { flex-wrap: wrap; gap: 10px; }
   .ep-feel-trigger {

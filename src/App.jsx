@@ -155,7 +155,7 @@ function avatarInitial(user) {
   return letter ? letter.toUpperCase() : "·";
 }
 
-function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, canGenerate, generating, navigate, entriesCount }) {
+function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, canGenerate, generating, navigate, entriesCount, fabHidden }) {
   const initial = avatarInitial(user);
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -243,7 +243,24 @@ function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, ca
           </button>
         </div>
       </div>
-      <TabBar active={tab} shelfCount={entriesCount} />
+      <TabBar
+        active={tab}
+        shelfCount={entriesCount}
+        fab={
+          /* Mobile's add-book affordance, replacing the header `+` below 640 —
+             not joining it. Two buttons for one action would split the
+             reader's attention; this one just moves it into the thumb zone,
+             since the header sits at the top of a 6.7" screen where a thumb
+             reaches worst. */
+          <button
+            className={`rr-fab ${fabHidden ? "is-hidden" : ""}`}
+            onClick={onAddBook}
+            aria-label="Add a book"
+          >
+            <Plus size={26} aria-hidden="true" />
+          </button>
+        }
+      />
 
       {/* A bottom sheet rather than a dropdown. Modal already gives us the focus
           trap, Escape, backdrop-press and focus restore, and .rr-modal-card
@@ -823,6 +840,7 @@ function Dashboard() {
         generating={generating}
         navigate={navigate}
         entriesCount={entries.length}
+        fabHidden={fabHidden}
       />
 
       <main>
@@ -945,20 +963,6 @@ function Dashboard() {
           </>
         )}
       </main>
-
-      {/* Mobile's add-book affordance, replacing the header `+` below 640 — not
-          joining it. Two buttons for one action would split the reader's
-          attention; this one just moves it into the thumb zone, since the
-          header sits at the top of a 6.7" screen where a thumb reaches worst.
-          Mounted here rather than inside ReadingRoomHeader so it stays put
-          across all four tabs, exactly as the header button did. */}
-      <button
-        className={`rr-fab ${fabHidden ? "is-hidden" : ""}`}
-        onClick={() => setModal("new")}
-        aria-label="Add a book"
-      >
-        <Plus size={26} aria-hidden="true" />
-      </button>
 
       {modal && (
         <Modal

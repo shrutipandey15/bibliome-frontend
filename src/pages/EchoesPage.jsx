@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronDown, PenLine } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { EMOTIONS, getEmotionFamilies } from "../services/emotions";
 import {
   getEchoFeed, blockHandle, muteHandle, reportEcho, reportReply,
@@ -141,6 +141,15 @@ export default function EchoesPage() {
             <ThemeToggle className="rr-theme-toggle" />
           </div>
         </header>
+        <div className="ep-phone-head">
+          <span className="label-sm ep-phone-eyebrow">echo</span>
+          <div className="ep-phone-actions">
+            <ThemeToggle className="rr-theme-toggle" />
+            <button type="button" className="ep-phone-write" onClick={() => setComposing(true)}>
+              Write one
+            </button>
+          </div>
+        </div>
 
         {/* WHOSE — everyone vs your own. It composes with the feeling anchor in
             the rail: "your echoes" + "grief" is one query. */}
@@ -274,6 +283,7 @@ export default function EchoesPage() {
           <EchoThread
             echoId={threadEcho.id}
             onReport={(reply) => setReportTarget({ echo: threadEcho, reply })}
+            onClose={() => setThreadEcho(null)}
           />
         </Modal>
       )}
@@ -285,13 +295,6 @@ export default function EchoesPage() {
       )}
 
       {toast && <div className={`toast toast-${toast.type}`} onClick={() => setToast(null)}>{toast.message}</div>}
-
-      {/* The rail's other half. Phones only, and deliberately the same shape as
-          the Shelf's add-book FAB — this page's single creative action, put
-          where a thumb reaches. */}
-      <button className="rr-fab ep-fab" onClick={() => setComposing(true)} aria-label="Write an echo">
-        <PenLine size={24} aria-hidden="true" />
-      </button>
 
       {feelSheet && (
         <Modal
@@ -333,7 +336,15 @@ export default function EchoesPage() {
 
       {/* Phones only. Without it, tapping ECHO in the bottom bar navigated to a
           page with no bottom bar — a persistent control that vanished on use. */}
-      <TabBar active="echoes" barOnly />
+      <TabBar
+        active="echoes"
+        barOnly
+        fab={
+          <button className="rr-fab" onClick={() => setComposing(true)} aria-label="Write an echo">
+            <Plus size={26} aria-hidden="true" />
+          </button>
+        }
+      />
     </div>
   );
 }

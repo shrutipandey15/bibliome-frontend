@@ -70,9 +70,8 @@
 
 /* ---------- Add-book FAB (mobile) ----------
    Hidden by default; only the 640 tier turns it on, where it replaces the
-   header `+`. Uses the plain `.btn` fill (--ink) rather than brass: brass is
-   what "Read your DNA" wears, and the celebratory action and the workhorse
-   action should not look like the same offer. */
+   header `+` and takes the same `--foil` brass finish "Read your DNA" wears —
+   see the 640 tier for the full styling and why. */
 .rr-fab { display: none; }
 
 /* Above 640 the Patterns section runs inline exactly as it always has: the
@@ -797,6 +796,19 @@
   }
   .rr-tab.active { color: var(--brass); font-weight: 600; }
   .rr-tab-icon { display: block; }
+  /* Reserves the notch the centred FAB sits in, between Shelf/DNA and
+     Echo/Journal — the four tabs stay `flex: 1` (so Shelf and Journal don't
+     drift off-centre from the pair beside them), and the gap comes out of
+     that shared space rather than from a fifth flex item.
+
+     Indices are 3 and 4, not 2 and 3: `{fab}` renders as `.rr-tabs`'s FIRST
+     child (see TabBar.jsx), ahead of the four `.rr-tab`s, so every tab's
+     `:nth-child` position is shifted up by one. Both current callers
+     (App.jsx, EchoesPage.jsx) always pass a `fab`, so this holds for both —
+     but it means a future TabBar caller that renders no `fab` would need
+     these shifted back down by one, since `{null}` contributes no child. */
+  .rr-tab:nth-child(3) { margin-right: 46px; }
+  .rr-tab:nth-child(4) { margin-left: 46px; }
   /* Both were positioned against the ribbon's box. The count is desktop
      inventory detail, and `✦` marked the active tab in a layout where colour
      alone couldn't — the bar can say it with colour. */
@@ -823,33 +835,40 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    position: fixed;
-    right: 18px;
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    /* Under the tab bar (100), the modal backdrop (200) and the toast (300).
-       They don't overlap, but if the bar ever grows the bar should win. */
-    z-index: 90;
-    width: 56px;
-    height: 56px;
+    position: absolute;
+    left: 50%;
+    bottom: 15px;
+    z-index: 2;
+    transform: translateX(-50%);
+    width: 58px;
+    height: 58px;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--bg-page);
-    box-shadow: var(--shadow-md);
+    border: 1px solid color-mix(in srgb, var(--brass) 70%, #000);
+    background: var(--foil);
+    color: #2a1a08;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.18);
+    box-shadow:
+      0 0 0 4px var(--bg-card),
+      0 2px 0 color-mix(in srgb, var(--brass) 40%, #000),
+      var(--shadow-md);
     cursor: pointer;
   }
-  .rr-fab:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+  .rr-fab:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
   /* `visibility` rides along so a hidden FAB is genuinely gone rather than an
      invisible tap target and a stop on the keyboard tab order. The 0s delay
      flips it instantly on the way in and only after the slide on the way out,
-     so the transition still plays. */
+     so the transition still plays. Both states keep the `translateX(-50%)`
+     that centres the button — `is-hidden` only adds a Y offset on top of it,
+     never replaces the transform outright, or hiding would also snap it back
+     to the left edge for the length of the animation. */
   .rr-fab {
+    transform: translateX(-50%);
     transition: transform .24s ease, opacity .24s ease, visibility 0s;
   }
   .rr-fab.is-hidden {
-    transform: translateY(calc(100% + 28px));
+    transform: translateX(-50%) translateY(calc(100% + 28px));
     opacity: 0;
     pointer-events: none;
     visibility: hidden;

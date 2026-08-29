@@ -111,12 +111,41 @@
 /* iOS focus zoom — see the note in App.css on .rr-sort-select. */
 @media (pointer: coarse) {
   .et-reply-input { font-size: 16px; }
+  .et-react { min-height: 44px; padding: 8px 13px; }
+  .et-reply-report { min-height: 44px; display: inline-flex; align-items: center; }
 }
 .et-error { color: var(--oxblood); font-size: 13px; }
 .et-replybox-foot { display: flex; align-items: center; justify-content: space-between; }
 .et-count { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-ghost); }
+.et-phone-close { display: none; }
 
 @media (max-width: 640px) {
   .et-modal-card { border-radius: 18px 18px 0 0; transform-origin: bottom center; }
   .et-echo, .et-replies, .et-replybox { padding-left: 20px; padding-right: 20px; }
+
+  .et-phone-close {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+  .et-phone-grab {
+    width: 38px; height: 4px;
+    margin-bottom: 14px;
+    border-radius: 2px;
+    background: var(--rule);
+  }
+  .et-phone-back {
+    align-self: flex-start;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-quiet);
+  }
+  .et-phone-close:hover .et-phone-back { color: var(--oxblood); }
+  .et-phone-close:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
 }
