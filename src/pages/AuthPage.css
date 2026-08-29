@@ -11,7 +11,7 @@
     radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--oxblood) 18%, transparent), transparent 70%),
     linear-gradient(135deg, var(--walnut-mid), var(--walnut));
   color: #f5ecd2;
-  padding: 60px 56px;
+  padding: max(60px, calc(40px + env(safe-area-inset-top, 0px))) 56px 60px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -211,7 +211,7 @@
     color: var(--ink);
     min-height: auto;
     display: block;
-    padding: 40px 22px 0;
+    padding: calc(40px + env(safe-area-inset-top, 0px)) 22px 0;
   }
   .auth-rr-brand { font-size: 34px; color: var(--ink); }
   .auth-rr-brand em { color: var(--ink); }

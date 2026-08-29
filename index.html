@@ -83,15 +83,26 @@
           else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
         } catch (e) { /* private mode — fall back to Vellum */ }
         document.documentElement.setAttribute("data-theme", t);
+        // Keep the PWA status-bar / browser-chrome colour in step with the
+        // theme, so a Vellum reader doesn't get a dark bar above a cream page.
+        try {
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute("content", t === "dark" ? "#0c0805" : "#ece2cf");
+        } catch (e) {}
       })();
     </script>
     <!-- Installable [add-on to #6]. On iOS this is not cosmetic: Safari only
          permits Web Push for an app added to the home screen, so without a
          manifest the push toggle can never succeed there. -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#0c0805" />
+    <!-- Default is the Vellum page colour; the inline theme script below rewrites
+         it to the Lamplight colour for dark readers before first paint. -->
+    <meta name="theme-color" content="#ece2cf" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- `default` (not `black-translucent`): the header now pads for
+         env(safe-area-inset-top), so we want an opaque status bar that matches
+         theme-color rather than the page sliding under a translucent one. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Bibliome" />
     <link rel="apple-touch-icon" href="/favicon.png" />
   </head>

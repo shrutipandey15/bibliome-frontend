@@ -317,7 +317,7 @@
 @media (max-width: 1080px) {
   /* Stacked, so `center` would now centre vertically — reset it. */
   .echoes-page { flex-direction: column; justify-content: flex-start; }
-  .ep-main { max-width: none; width: 100%; padding: 40px 40px 90px; order: 2; }
+  .ep-main { max-width: none; width: 100%; padding: calc(40px + env(safe-area-inset-top, 0px)) 40px 90px; order: 2; }
   .ep-rail {
     order: 1;
     position: static;

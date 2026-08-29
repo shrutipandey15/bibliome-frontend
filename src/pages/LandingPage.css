@@ -11,7 +11,11 @@
 .rr-wordmark em { color: var(--oxblood); font-style: italic; }
 
 /* ----- HERO ----- */
-.lrr-hero { padding: 32px 56px 70px; position: relative; overflow: hidden; }
+/* padding-top folds in env(safe-area-inset-top) so the nav's Sign in / Begin /
+   theme buttons clear the status bar when the site runs as an installed PWA in
+   standalone mode (viewport-fit=cover puts the layout under the status bar).
+   Resolves to 0 in a normal browser tab. */
+.lrr-hero { padding: calc(32px + env(safe-area-inset-top, 0px)) 56px 70px; position: relative; overflow: hidden; }
 .lrr-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 90px; }
 .lrr-nav-links { display: flex; align-items: center; gap: 22px; }
 .lrr-nav-links a {
@@ -346,7 +350,7 @@
      feel like a printed spread. Six of them on a phone is six extra screens of
      scrolling between arguments, and the reader pays for it in thumb-miles. */
   .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto { padding-top: 56px; padding-bottom: 56px; }
-  .lrr-hero { padding-top: 20px; padding-bottom: 48px; }
+  .lrr-hero { padding-top: calc(20px + env(safe-area-inset-top, 0px)); padding-bottom: 48px; }
   .lrr-final { padding-top: 56px; padding-bottom: 40px; }
 
   /* ── Hero ──

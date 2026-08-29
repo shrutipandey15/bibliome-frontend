@@ -43,6 +43,10 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    // Keep the PWA status-bar / browser-chrome colour in step with the theme
+    // (the inline script in index.html does the same for the first paint).
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#0c0805" : "#ece2cf");
   }, [theme]);
 
   // Persist only on an explicit choice. Writing on mount would immediately make
