@@ -6,6 +6,7 @@ import { useJournal, JournalProvider } from "./contexts/JournalContext";
 import { JournalKeyProvider } from "./contexts/JournalKeyContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import useIsNarrow from "./hooks/useIsNarrow";
+import useFabHidden from "./hooks/useFabHidden";
 import { useHead } from "./hooks/useHead";
 import ThemeToggle from "./components/ThemeToggle";
 import TabBar from "./components/TabBar";
@@ -678,34 +679,7 @@ function Dashboard() {
   const [view, setView] = useState("cover");
   const [toast, setToast] = useState(null);
 
-  // The FAB gets out of the way while you're reading down the page and comes
-  // back the moment you scroll up. DNA is almost entirely prose, and a button
-  // parked over the middle of a sentence is worse than one you have to flick to
-  // recover.
-  const [fabHidden, setFabHidden] = useState(false);
-  useEffect(() => {
-    let last = window.scrollY;
-    let queued = false;
-    const onScroll = () => {
-      if (queued) return;
-      queued = true;
-      // rAF-coalesced: scroll fires far faster than we can usefully react, and
-      // this listener runs on every page in the app.
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        const dy = y - last;
-        // Near the top there is nothing to read past yet, so the button stays.
-        // The 6px threshold ignores jitter and iOS rubber-banding, which would
-        // otherwise flicker the FAB at the ends of the page.
-        if (y <= 120) setFabHidden(false);
-        else if (Math.abs(dy) > 6) setFabHidden(dy > 0);
-        last = y;
-        queued = false;
-      });
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const fabHidden = useFabHidden();
 
   // Patterns is a whole second page below the DNA argument. On a phone it opens
   // collapsed; on desktop there is room for it inline, so it starts open and its

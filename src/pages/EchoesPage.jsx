@@ -12,6 +12,7 @@ import EchoCard from "../components/echo/EchoCard";
 import EchoComposer from "../components/echo/EchoComposer";
 import EchoThread from "../components/echo/EchoThread";
 import ReportModal from "../components/echo/ReportModal";
+import useFabHidden from "../hooks/useFabHidden";
 import "./EchoesPage.css";
 
 /**
@@ -41,6 +42,7 @@ export const MINE_FILTER_SUPPORTED = false;
 
 export default function EchoesPage() {
   const navigate = useNavigate();
+  const fabHidden = useFabHidden();
   // `?echo=<id>` opens straight into that thread — the landing point for an
   // "someone replied to your echo" notification. Read once, on mount: it's an
   // entry point, not a live binding, and re-reading it would reopen the thread
@@ -340,7 +342,11 @@ export default function EchoesPage() {
         active="echoes"
         barOnly
         fab={
-          <button className="rr-fab" onClick={() => setComposing(true)} aria-label="Write an echo">
+          <button
+            className={`rr-fab ${fabHidden ? "is-hidden" : ""}`}
+            onClick={() => setComposing(true)}
+            aria-label="Write an echo"
+          >
             <Plus size={26} aria-hidden="true" />
           </button>
         }
