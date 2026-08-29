@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { getNotifications, markNotificationsRead } from "../../services/api";
+import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 import { notificationTarget } from "./target";
 import Modal from "../Modal";
 import "./NotificationCenter.css";
@@ -29,10 +30,11 @@ import "./NotificationCenter.css";
  * than N rows. Neither is a delivery delay for the first event.)
  */
 
-// Quiet enough not to be a drain, frequent enough that a reply lands within a
-// minute of arriving. The tab also refetches whenever it regains focus, which is
-// what actually covers the "came back after lunch" case.
-const POLL_MS = 60_000;
+// The realtime socket is the primary path now — a notification pushes in and
+// this refetches immediately. The poll is the fallback for when the socket is
+// down, so it can be slow. Focus/visibility refetch still covers "came back
+// after lunch".
+const POLL_MS = 300_000;
 function timeAgo(iso) {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (mins < 1) return "just now";
@@ -100,6 +102,11 @@ export default function NotificationCenter() {
   // state of the world at page load.
   const openRef = useRef(open);
   openRef.current = open;
+
+  // Anything the server would notify about pushes a contentless "notify" event.
+  // Don't reorder the list under an open panel — same rule as the poll below.
+  useRealtimeEvent("notify", () => { if (!openRef.current) load(); });
+
   useEffect(() => {
     // Don't refetch while the panel is open — reordering the list under the
     // reader's cursor is worse than a few seconds of staleness.

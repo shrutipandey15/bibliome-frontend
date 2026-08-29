@@ -111,7 +111,7 @@ describe("NotificationCenter — clicking a notification takes you there", () =>
       getNotifications.mockResolvedValue(data);
       // act(), or the poll's state update lands outside React's batching and
       // the suite fills with warnings about it.
-      await act(async () => { await vi.advanceTimersByTimeAsync(61_000); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(301_000); });
 
       await waitFor(() => expect(container.querySelector(".nc-dot")).not.toBeNull());
     } finally {

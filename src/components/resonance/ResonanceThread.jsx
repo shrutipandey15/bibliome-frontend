@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react
 import {
   getThreadMessages, sendThreadMessage, blockThread, reportThread,
 } from "../../services/api";
+import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 
 /**
  * The conversation, once both readers have said yes. [F: letters, not chat]
@@ -10,11 +11,16 @@ import {
  * and the backend serves none of it either:
  *   - no read receipts, no "seen at", no delivery ticks
  *   - no typing indicator, no presence dot, no "last active"
- *   - no polling loop — the transcript loads when you open it and after you send
+ *   - no chat-style poll: the transcript loads on open and after you send
  *
  * The effect is a letter you wrote and a letter that arrived, which is the pace
  * this whole feature is built for. Adding a 5-second poll here would quietly
  * make it a chat app.
+ *
+ * Delivery is now live (see "Refresh" below): a reply pushes in over the
+ * realtime socket and appears at the end of the transcript, with a slow timer +
+ * tab-focus refetch as the fallback when the socket is down. Typing / presence /
+ * read receipts land in later realtime phases.
  */
 
 const MAX_MESSAGE = 2000; // matches resonance_service.MAX_MESSAGE_CHARS
@@ -85,6 +91,44 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   }, [threadId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // ── Refresh ──
+  // Merges by id and appends: never touches `loading` (so the transcript
+  // doesn't flash "opening…"), never re-runs the open-on-newest scroll, never
+  // scrolls the page under someone reading history. A letter just shows up at
+  // the end.
+  const refresh = useCallback(async () => {
+    if (document.visibilityState !== "visible") return;
+    let data;
+    try {
+      data = await getThreadMessages(threadId);
+    } catch {
+      return; // something else retries
+    }
+    const incoming = data.messages || [];
+    setMessages((prev) => {
+      const have = new Set(prev.map((m) => m.id));
+      const fresh = incoming.filter((m) => !have.has(m.id));
+      return fresh.length ? [...prev, ...fresh] : prev;
+    });
+  }, [threadId]);
+
+  // Realtime is the fast path — a reply pushes a "notify" event and this picks
+  // it up in ~100ms. The slow timer + tab-focus catch-up cover a dropped socket.
+  useRealtimeEvent("notify", (ev) => { if (ev.kind === "resonance_message") refresh(); });
+
+  useEffect(() => {
+    const FALLBACK_MS = 45000;
+    const id = setInterval(refresh, FALLBACK_MS);
+    const onFocus = () => refresh();
+    document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [refresh]);
 
   // Land on the newest letter, once, on open. `auto` rather than `smooth`: this
   // should read as where the thread opened, not as a journey it took you on.

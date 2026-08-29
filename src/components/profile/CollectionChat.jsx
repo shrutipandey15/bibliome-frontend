@@ -8,12 +8,14 @@ import {
   getCollectionSparks,
 } from "../../services/api";
 import CrisisInterstitial from "../echo/CrisisInterstitial";
+import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 import "./CollectionChat.css";
 
 const PAGE = 50;
-// Fast enough that a reply feels live, slow enough that a room left open all
-// afternoon is not a hammering. Only ever runs while the tab is visible.
-const POLL_MS = 5000;
+// The realtime socket is the fast path — a new message pushes a "notify" event
+// and this catches up instantly. The poll is the fallback for a dropped socket,
+// so it can be gentler than the old 5s. Still visible-only.
+const POLL_MS = 20000;
 // Messages from the same person inside this window render as one block — the
 // difference between a conversation and a list of stamped records.
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
@@ -82,33 +84,40 @@ export default function CollectionChat({ collectionId, collection }) {
     getCollectionSparks(id).then((r) => setSparks(r.sparks || [])).catch(() => {});
   }, [id]);
 
-  // ── Live: poll only while the tab is visible ──
+  // Pull anything that has arrived since the newest message we hold. Shared by
+  // the realtime handler, the poll, and the tab-focus catch-up.
+  const catchUp = useCallback(async () => {
+    if (document.visibilityState !== "visible") return;
+    try {
+      // No `after` yet means the room was empty when it opened (or the first
+      // page came back empty). Without this the poll never starts and the very
+      // first message from someone else only appears on a reload.
+      const page = await getCollectionMessages(id, {
+        after: latestRef.current || undefined, bookId: filter || null, limit: PAGE,
+      });
+      if (!page.messages.length) return;
+      setMessages((prev) => {
+        // Our own send appends locally and this will see it again, so a dedupe
+        // by id is required, not defensive.
+        const have = new Set(prev.map((m) => m.id));
+        const fresh = page.messages.filter((m) => !have.has(m.id));
+        return fresh.length ? [...prev, ...fresh] : prev;
+      });
+      remember(page.messages);
+    } catch { /* a failed catch-up is not worth surfacing; something retries */ }
+  }, [id, filter]);
+
+  // ── Live: realtime first, poll as fallback, both visible-only ──
+  useRealtimeEvent("notify", (ev) => { if (ev.kind === "collection_message") catchUp(); });
+
   useEffect(() => {
-    const tick = async () => {
-      if (document.visibilityState !== "visible" || !latestRef.current) return;
-      try {
-        const page = await getCollectionMessages(id, {
-          after: latestRef.current, bookId: filter || null, limit: PAGE,
-        });
-        if (!page.messages.length) return;
-        setMessages((prev) => {
-          // Our own send appends locally and the poll will see it again, so a
-          // dedupe by id is required, not defensive.
-          const have = new Set(prev.map((m) => m.id));
-          const fresh = page.messages.filter((m) => !have.has(m.id));
-          return fresh.length ? [...prev, ...fresh] : prev;
-        });
-        remember(page.messages);
-      } catch { /* a failed poll is not worth surfacing; the next one retries */ }
-    };
-    const timer = setInterval(tick, POLL_MS);
-    // Catch up the moment the tab comes back rather than waiting a full tick.
-    document.addEventListener("visibilitychange", tick);
+    const timer = setInterval(catchUp, POLL_MS);
+    document.addEventListener("visibilitychange", catchUp);
     return () => {
       clearInterval(timer);
-      document.removeEventListener("visibilitychange", tick);
+      document.removeEventListener("visibilitychange", catchUp);
     };
-  }, [id, filter]);
+  }, [catchUp]);
 
   // Follow new messages only if the reader is already at the bottom. Yanking
   // someone away from history they are reading is worse than a missed scroll.

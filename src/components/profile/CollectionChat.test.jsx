@@ -11,6 +11,11 @@ vi.mock("../../services/api", () => ({
   getCollectionSparks: vi.fn(),
 }));
 
+let rtHandlers = [];
+vi.mock("../../hooks/useRealtimeEvent", () => ({
+  default: (_filter, handler) => { rtHandlers.push(handler); },
+}));
+
 import CollectionChat from "./CollectionChat";
 import {
   getCollectionConversations, getCollectionMessages, sendCollectionMessage,
@@ -38,6 +43,7 @@ async function mount() {
 describe("CollectionChat — one room per collection [#6]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    rtHandlers = [];
     getCollectionConversations.mockResolvedValue(BOOKS);
     getCollectionSparks.mockResolvedValue({ sparks: [] });
     getCollectionMessages.mockResolvedValue(page([msg()]));
@@ -81,13 +87,23 @@ describe("CollectionChat — one room per collection [#6]", () => {
       .toHaveBeenCalledWith("c1", "about this one", "b1"));
   });
 
-  it("polls for other people's messages while visible", async () => {
-    // "Smooth" means you don't reload to see a reply.
+  it("catches up immediately on a realtime collection_message event", async () => {
+    // The fast path: a message pushes a "notify" event and the room refetches
+    // without waiting for the fallback poll.
+    await mount();
+
+    getCollectionMessages.mockResolvedValue(page([msg({ id: "rt1", body: "pushed in" })]));
+    await act(async () => { await rtHandlers.at(-1)({ type: "notify", kind: "collection_message" }); });
+
+    expect(await screen.findByText("pushed in")).toBeInTheDocument();
+  });
+
+  it("still polls for other people's messages while visible (socket-down fallback)", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     await mount();
 
     getCollectionMessages.mockResolvedValue(page([msg({ id: "m9", body: "arrived later" })]));
-    await act(async () => { vi.advanceTimersByTime(6000); });
+    await act(async () => { vi.advanceTimersByTime(21000); });
 
     expect(await screen.findByText("arrived later")).toBeInTheDocument();
   });
@@ -98,7 +114,7 @@ describe("CollectionChat — one room per collection [#6]", () => {
     await mount();
 
     getCollectionMessages.mockResolvedValue(page([msg()]));   // same id as on screen
-    await act(async () => { vi.advanceTimersByTime(6000); });
+    await act(async () => { vi.advanceTimersByTime(21000); });
 
     expect(screen.getAllByText("the statues")).toHaveLength(1);
   });

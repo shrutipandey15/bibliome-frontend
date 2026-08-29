@@ -10,6 +10,7 @@ import useFabHidden from "./hooks/useFabHidden";
 import { useHead } from "./hooks/useHead";
 import useAppUpdate from "./hooks/useAppUpdate";
 import UpdateBanner from "./components/UpdateBanner";
+import { startRealtime, stopRealtime } from "./services/realtime";
 import ThemeToggle from "./components/ThemeToggle";
 import TabBar from "./components/TabBar";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
@@ -1055,6 +1056,14 @@ function AuthedLayout() {
   // leave someone unsubscribed. Never prompts — see autoSubscribeIfGranted.
   useEffect(() => {
     if (authed) autoSubscribeIfGranted();
+  }, [authed]);
+
+  // The one live connection for the session — messages and notifications push
+  // in over it. Every consuming surface still polls as a fallback.
+  useEffect(() => {
+    if (!authed) return;
+    startRealtime();
+    return () => stopRealtime();
   }, [authed]);
 
   // Signing in from an invite link returns you to the invitation. [#5]
