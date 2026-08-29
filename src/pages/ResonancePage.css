@@ -505,6 +505,25 @@
   color: var(--ink);
   margin-top: 6px;
 }
+/* Presence [realtime phase 2] */
+.rt-here {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+.rt-here-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--moss);
+  flex: none;
+}
 .rt-facts {
   padding-top: 18px;
   border-top: 1px solid var(--rule-soft);

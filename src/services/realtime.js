@@ -17,6 +17,12 @@ import { getAccessToken, refreshOnce } from "./api";
 
 const listeners = new Set();
 
+// Scopes (conversation rooms) this client currently has open. Re-sent on every
+// reconnect so presence/typing survive a dropped socket.
+const activeScopes = new Set();
+const lastTypingSent = new Map(); // scope -> ms timestamp
+const TYPING_THROTTLE_MS = 2500;
+
 let ws = null;
 let started = false;
 let backoff = 1000;
@@ -76,6 +82,8 @@ async function connect() {
     if (msg.type === "ready") {
       lastBeat = Date.now();
       backoff = 1000;
+      // Re-enter every open scope — a fresh socket knows nothing about them.
+      for (const scope of activeScopes) send({ type: "scope_enter", scope });
       emit({ type: "__status", connected: true });
       return;
     }
@@ -135,6 +143,8 @@ export function stopRealtime() {
   clearInterval(heartbeatTimer);
   document.removeEventListener("visibilitychange", onVisible);
   window.removeEventListener("online", onVisible);
+  activeScopes.clear();
+  lastTypingSent.clear();
   if (ws) {
     try { ws.close(); } catch { /* noop */ }
     ws = null;
@@ -145,6 +155,39 @@ export function stopRealtime() {
 export function onRealtime(fn) {
   listeners.add(fn);
   return () => listeners.delete(fn);
+}
+
+function send(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    try { ws.send(JSON.stringify(obj)); return true; } catch { /* fall through */ }
+  }
+  return false;
+}
+
+/**
+ * Open a conversation scope ("collection:<id>" or "thread:<id>") to receive its
+ * presence roster and typing traffic. Idempotent; safe before the socket is up
+ * (re-sent on connect).
+ */
+export function enterScope(scope) {
+  if (!scope || activeScopes.has(scope)) return;
+  activeScopes.add(scope);
+  send({ type: "scope_enter", scope });
+}
+
+export function leaveScope(scope) {
+  if (!scope || !activeScopes.has(scope)) return;
+  activeScopes.delete(scope);
+  lastTypingSent.delete(scope);
+  send({ type: "scope_leave", scope });
+}
+
+/** Tell the scope you're typing. Throttled — call it freely on every keystroke. */
+export function sendTyping(scope) {
+  if (!scope || !activeScopes.has(scope)) return;
+  const now = Date.now();
+  if (now - (lastTypingSent.get(scope) || 0) < TYPING_THROTTLE_MS) return;
+  if (send({ type: "typing", scope })) lastTypingSent.set(scope, now);
 }
 
 /** Current connection state, for a status indicator. */

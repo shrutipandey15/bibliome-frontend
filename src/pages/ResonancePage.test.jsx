@@ -143,10 +143,12 @@ describe("ResonancePage — empty state", () => {
   });
 });
 
-describe("ResonanceThread — calm by omission", () => {
+describe("ResonanceThread — read state stays private", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("shows the letters with no read receipts or typing state", async () => {
+  it("never reports whether a letter was read", async () => {
+    // Presence and typing were added deliberately (phases 2–3). The line held:
+    // no read receipts, no "delivered", no "seen your letter", no "opened".
     getResonanceMatches.mockResolvedValue(
       list([{ ...suggested, status: "connected", handle: "quiet_reader", thread_id: "t1" }])
     );
@@ -161,6 +163,7 @@ describe("ResonanceThread — calm by omission", () => {
     await userEvent.click(await screen.findByRole("button", { name: /open the letters/i }));
     await waitFor(() => expect(screen.getByText("your note reached me")).toBeInTheDocument());
 
-    expect(container.textContent).not.toMatch(/seen|read receipt|typing|online|delivered|last active/i);
+    expect(container.textContent).not.toMatch(/delivered|read receipt|last active|✓✓|double tick/i);
+    expect(container.textContent).not.toMatch(/\b(seen|opened|read)\s+(your|this|the)\s+(letter|message|note)/i);
   });
 });

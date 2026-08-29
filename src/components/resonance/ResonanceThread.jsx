@@ -3,24 +3,22 @@ import {
   getThreadMessages, sendThreadMessage, blockThread, reportThread,
 } from "../../services/api";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
+import useScopePresence from "../../hooks/useScopePresence";
 
 /**
- * The conversation, once both readers have said yes. [F: letters, not chat]
+ * The conversation, once both readers have said yes.
  *
- * Everything a live chat app uses to manufacture urgency is deliberately absent,
- * and the backend serves none of it either:
- *   - no read receipts, no "seen at", no delivery ticks
- *   - no typing indicator, no presence dot, no "last active"
- *   - no chat-style poll: the transcript loads on open and after you send
+ * This started life as "letters, not chat" — no live signals of any kind. That
+ * was revisited deliberately (2026-08): it now carries the live signals a real
+ * conversation has, over the realtime socket —
+ *   - a reply appears at the end of the transcript as it lands (with a slow
+ *     timer + tab-focus refetch as the socket-down fallback; see "Refresh")
+ *   - the other reader's presence shows as "here now"
+ *   - their typing shows in the compose footer
  *
- * The effect is a letter you wrote and a letter that arrived, which is the pace
- * this whole feature is built for. Adding a 5-second poll here would quietly
- * make it a chat app.
- *
- * Delivery is now live (see "Refresh" below): a reply pushes in over the
- * realtime socket and appears at the end of the transcript, with a slow timer +
- * tab-focus refetch as the fallback when the socket is down. Typing / presence /
- * read receipts land in later realtime phases.
+ * The one line NOT crossed: read state stays private. No read receipts, no
+ * "seen at", no notice of when a letter was opened — that is still promised in
+ * the UI copy and enforced by the backend serving nothing of the sort.
  */
 
 const MAX_MESSAGE = 2000; // matches resonance_service.MAX_MESSAGE_CHARS
@@ -117,6 +115,10 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   // it up in ~100ms. The slow timer + tab-focus catch-up cover a dropped socket.
   useRealtimeEvent("notify", (ev) => { if (ev.kind === "resonance_message") refresh(); });
 
+  const { present, typing, notifyTyping } = useScopePresence(threadId ? `thread:${threadId}` : null);
+  const partnerHere = !!handle && present.has(handle);
+  const partnerTyping = !!handle && typing.has(handle);
+
   useEffect(() => {
     const FALLBACK_MS = 45000;
     const id = setInterval(refresh, FALLBACK_MS);
@@ -204,6 +206,9 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
         <div className="rt-who">
           <div className="rt-kicker">letters with</div>
           <div className="rt-with">{handle ? `@${handle}` : "your reader"}</div>
+          {partnerHere && (
+            <div className="rt-here"><span className="rt-here-dot" aria-hidden="true" /> here now</div>
+          )}
         </div>
 
         <div className="rt-facts">
@@ -218,12 +223,11 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
       </aside>
 
       <div className="rt-main">
-        {/* The pace, stated once at the top, because everything absent from this
-            screen is absent on purpose and silence about it reads as an
-            unfinished feature. */}
+        {/* Read state is still private: you can see when they're here and when
+            they're writing, but never whether a letter has been opened. */}
         <p className="rt-pace">
-          Nothing here reports back — no dots, no ticks, no notice of when a letter was
-          opened. It arrives when it arrives.
+          You'll see when they're here and when they're writing. A letter being
+          read is never reported — no receipts, no “seen”.
         </p>
 
         {safety && (
@@ -283,15 +287,16 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
           <textarea
             className="rt-compose-field"
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(e) => { setBody(e.target.value); notifyTyping(); }}
             placeholder="Take the time you'd take with paper."
             rows={5}
             maxLength={MAX_MESSAGE}
             aria-label="Your message"
           />
           <div className="rt-compose-foot">
-            {/* No "they're typing", no "delivered". Just the act of sending. */}
-            <span className="rt-compose-note">sent once · no edits after</span>
+            <span className="rt-compose-note" aria-live="polite">
+              {partnerTyping ? `@${handle} is writing…` : "sent once · no edits after"}
+            </span>
             <button className="btn brass" onClick={send} disabled={!body.trim() || sending}>
               {sending ? "sending…" : "send the letter"}
             </button>

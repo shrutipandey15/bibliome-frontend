@@ -9,7 +9,15 @@ import {
 } from "../../services/api";
 import CrisisInterstitial from "../echo/CrisisInterstitial";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
+import useScopePresence from "../../hooks/useScopePresence";
 import "./CollectionChat.css";
+
+function typingLabel(handles) {
+  const names = [...handles];
+  if (names.length === 1) return `@${names[0]} is typing…`;
+  if (names.length === 2) return `@${names[0]} and @${names[1]} are typing…`;
+  return "Several people are typing…";
+}
 
 const PAGE = 50;
 // The realtime socket is the fast path — a new message pushes a "notify" event
@@ -110,6 +118,8 @@ export default function CollectionChat({ collectionId, collection }) {
   // ── Live: realtime first, poll as fallback, both visible-only ──
   useRealtimeEvent("notify", (ev) => { if (ev.kind === "collection_message") catchUp(); });
 
+  const { present, typing, notifyTyping } = useScopePresence(id ? `collection:${id}` : null);
+
   useEffect(() => {
     const timer = setInterval(catchUp, POLL_MS);
     document.addEventListener("visibilitychange", catchUp);
@@ -204,6 +214,13 @@ export default function CollectionChat({ collectionId, collection }) {
         </div>
       )}
 
+      {present.size > 0 && (
+        <p className="cc-here-strip">
+          <span className="cc-here-dot" aria-hidden="true" />
+          {[...present].map((h) => `@${h}`).join(", ")} {present.size === 1 ? "is" : "are"} here now
+        </p>
+      )}
+
       {cursor && (
         <button className="cc-older" onClick={older}>load earlier messages</button>
       )}
@@ -234,6 +251,9 @@ export default function CollectionChat({ collectionId, collection }) {
                     <div className="cc-msg-meta">
                       <span className="cc-msg-who">
                         {m.is_mine ? "you" : `@${m.handle || "a reader"}`}
+                        {!m.is_mine && m.handle && present.has(m.handle) && (
+                          <span className="cc-here-dot" title="here now" aria-label="here now" />
+                        )}
                       </span>
                       <time
                         className="cc-msg-when"
@@ -263,6 +283,8 @@ export default function CollectionChat({ collectionId, collection }) {
         )}
       </div>
 
+      {typing.size > 0 && <p className="cc-typing" aria-live="polite">{typingLabel(typing)}</p>}
+
       {crisis && <CrisisInterstitial crisis={crisis} onClose={() => setCrisis(null)} />}
 
       {/* Textarea first, controls beneath. A select + textarea + button on one
@@ -272,7 +294,7 @@ export default function CollectionChat({ collectionId, collection }) {
         <textarea
           className="cc-compose-input"
           value={draft}
-          onChange={(e) => { setDraft(e.target.value); setRefusal(null); }}
+          onChange={(e) => { setDraft(e.target.value); setRefusal(null); notifyTyping(); }}
           onKeyDown={onKeyDown}
           placeholder="Say something…"
           rows={1}
