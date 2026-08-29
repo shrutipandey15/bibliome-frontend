@@ -8,6 +8,8 @@ import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import useIsNarrow from "./hooks/useIsNarrow";
 import useFabHidden from "./hooks/useFabHidden";
 import { useHead } from "./hooks/useHead";
+import useAppUpdate from "./hooks/useAppUpdate";
+import UpdateBanner from "./components/UpdateBanner";
 import ThemeToggle from "./components/ThemeToggle";
 import TabBar from "./components/TabBar";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
@@ -1087,6 +1089,7 @@ const RouteLoader = () => (
 export default function App() {
   const { authed, loading } = useAuth();
   const navigate = useNavigate();
+  const updateReady = useAppUpdate();
 
   // Pull the canonical emotion vocabulary from the server once at boot so labels
   // and colors can never drift from the backend. Best-effort: the local seed is
@@ -1099,6 +1102,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
+    <UpdateBanner show={updateReady} />
     <Suspense fallback={<RouteLoader />}>
       <Routes>
         <Route path="/s/:token" element={<SharedProfile />} />

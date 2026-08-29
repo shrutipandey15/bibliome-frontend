@@ -685,6 +685,30 @@
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* ---------- "New version ready" pill ---------- */
+/* Pinned to the top so it never fights the bottom tab bar / FAB / toast, and
+   padded for the PWA status bar. See hooks/useAppUpdate.js. */
+.app-update-banner {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 400;
+  max-width: calc(100vw - 32px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--brass, var(--rule));
+  background: var(--bg-card);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app-update-banner:hover { border-color: var(--ink-quiet); }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1080px) {
   .rr-header-row, .rr-tabs, .rr-hero, .rr-statstrip, .rr-filterbar, .rr-stacks, .rr-siderail, .rr-footer, .progress-wrap { padding-left: 28px; padding-right: 28px; }
