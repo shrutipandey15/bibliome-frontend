@@ -289,16 +289,6 @@
    component uses to decide whether to render at all), so a border here would
    double it: a ◆ ◆ ◆ and a hairline a `gap` apart, reading as two separators
    for one boundary. */
-.dna-locked { padding-top: 14px; }
-.dna-locked .dna-section-label { color: var(--ink-ghost); }
-.dna-locked-list { list-style: none; margin: 0; padding: 0; }
-.dna-locked-row {
-  font-family: var(--font-display); font-style: italic;
-  font-size: 14px; line-height: 1.9;
-  color: var(--ink-faint);
-}
-.dna-locked-name { font-style: normal; color: var(--ink-quiet); }
-.dna-locked-have { font-style: normal; color: var(--ink-ghost); font-size: 12.5px; }
 
 /* ── Honest empty state (the gate) ── */
 .dna-gate {

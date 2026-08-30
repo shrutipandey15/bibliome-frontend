@@ -147,15 +147,12 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
     expect(screen.getByText(/weighted toward what you've read lately/i)).toBeInTheDocument();
   });
 
-  it("shows locked insights WITH the real reason, no timers [F7.4]", async () => {
-    await renderView({ profile: fullProfile, username: "alice" });
-    expect(screen.getByText("Seasonality")).toBeInTheDocument();
-    // The backend's own requirement text, set as a sentence. No countdown, no
-    // "you are N short", and — because seasonality is time-gated — no "you have N"
-    // either, since logging books can't close that gap.
-    const locked = document.querySelector(".dna-locked-row");
-    expect(locked.textContent).toMatch(/Seasonality waits on .*full year of reading/i);
-    expect(locked.textContent).not.toMatch(/\d+ short|days|weeks left|you have/i);
+  it("no longer renders a 'NOT YET' list — that moved to the Register fold below [F7.4]", async () => {
+    const { container } = await renderView({ profile: fullProfile, username: "alice" });
+    // The locked list used to live here; it's now one ledger on the DNA tab,
+    // rendered by App outside this component.
+    expect(container.querySelector(".dna-locked")).not.toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/\bnot yet\b/i);
   });
 
   it("refuses forbidden framing: no mysticism, no streak, no comparative ranking [F7.5/F7.6]", async () => {

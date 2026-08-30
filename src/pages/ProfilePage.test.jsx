@@ -28,10 +28,12 @@ const profile = {
   member_since: "2024-03-01T00:00:00+00:00",
   now_reading: [{ entry_id: "n1", title: "Reading Now", author: "A", dominant_emotion: "grief", status: "reading" }],
   collections: [],
+  // The Register (milestones + DNA gates) renders on the DNA tab now, not here —
+  // see components/profile/Register.test.jsx and App's DNA tab.
   milestones: [
     { kind: "first_book", label: "Logged your first book", achieved: true, achieved_at: "2024-11-02T00:00:00+00:00" },
-    { kind: "full_spectrum", label: "Read across all 18 emotional registers", achieved: false, achieved_at: null },
   ],
+  register: null,
   book_count: 5,
   registers_felt: 4,
   avg_intensity: 6.2,
@@ -46,7 +48,7 @@ describe("ProfilePage self-view [F2.8]", () => {
     getInsight.mockResolvedValue(null);
   });
 
-  it("renders the identity strip, Now, history and milestones", async () => {
+  it("renders the identity strip, Now and history", async () => {
     getMyProfile.mockResolvedValue(profile);
     const { container } = render(<ProfilePage />);
     await waitFor(() => expect(screen.getByText("Alice")).toBeInTheDocument());
@@ -54,7 +56,8 @@ describe("ProfilePage self-view [F2.8]", () => {
     expect(screen.getByText("The Grief Romantic")).toBeInTheDocument();
     expect(screen.getByText("Reading Now")).toBeInTheDocument();
     expect(screen.getByText("Recent Book")).toBeInTheDocument();
-    expect(screen.getByText(/Logged your first book/)).toBeInTheDocument();
+    // The Register moved to the DNA tab — the profile no longer carries it.
+    expect(container.textContent).not.toMatch(/the register|fig\. 04/i);
     // Still no social metrics of any kind — the rule that matters. [F2.8]
     expect(container.textContent).not.toMatch(/follower|following|profile views/i);
   });
@@ -67,15 +70,6 @@ describe("ProfilePage self-view [F2.8]", () => {
     expect(screen.getByText("registers felt")).toBeInTheDocument();
     // An empty shelf has no average; the figure is absent, never a fabricated 0.
     expect(screen.queryByText("avg intensity")).not.toBeInTheDocument();
-  });
-
-  it("dims the milestones still ahead instead of hiding them", async () => {
-    getMyProfile.mockResolvedValue(profile);
-    render(<ProfilePage />);
-    await waitFor(() => screen.getByText("Alice"));
-
-    expect(screen.getByText(/Read across all 18 emotional registers/)).toBeInTheDocument();
-    expect(screen.getByText("not yet")).toBeInTheDocument();
   });
 
   it("renders the lines you kept, and expanding is reversible", async () => {

@@ -18,7 +18,7 @@ import "./ProfilePage.css";
  *
  * "A reader's identity through their reading, not through metrics." Renders the
  * blueprint's information hierarchy from the composed /me/profile: identity strip
- * → Now → signature → collections → history → milestones. No follower counts, no
+ * → Now → signature → collections → history. No follower counts, no
  * profile-view counts, no comparison — only substance.
  *
  * Two columns: the study on the left (who you are, what's open, what you've
@@ -327,7 +327,6 @@ export default function ProfilePage() {
   const nowReading = profile.now_reading || [];
   const recent = profile.recent || [];
   const margins = profile.margins || [];
-  const milestones = profile.milestones || [];
   const bookCount = profile.book_count ?? 0;
 
   // The cached signature carries the archetype; the live payload carries this
@@ -484,32 +483,10 @@ export default function ProfilePage() {
         </div>
 
         <div className="pf-rail">
-          {/* 8. Milestones — substance only, dated, with what's still ahead. */}
-          {milestones.length > 0 && (
-            <FoldSection
-              narrow={narrow}
-              className="pf-section pf-section--flush"
-              title="milestones"
-              phoneAside={`${milestones.filter((m) => m.achieved !== false).length} of ${milestones.length}`}
-            >
-              <ul className="pf-milestones">
-                {milestones.map((m) => {
-                  // Payloads written before milestones carried state have neither
-                  // flag nor date — treat those as reached, which is what they were.
-                  const reached = m.achieved !== false;
-                  return (
-                    <li key={m.kind} className={`pf-milestone${reached ? "" : " pf-milestone--ahead"}`}>
-                      <span className="pf-milestone-glyph" aria-hidden="true">{reached ? "✦" : "✧"}</span>
-                      <div>
-                        <div className="pf-milestone-label">{m.label}</div>
-                        <div className="pf-milestone-when">{reached ? (monthYear(m.achieved_at) || "reached") : "not yet"}</div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </FoldSection>
-          )}
+          {/* Milestones moved to the DNA tab's Register, which now carries them
+              alongside the DNA gates as one ledger — one place to see progress,
+              rather than a five-item rail list here and a "NOT YET" list there.
+              "the shelf says" below links across to it. */}
 
           {/* 9. What the shelf noticed. Renders only when there is a real one. */}
           {insight && (

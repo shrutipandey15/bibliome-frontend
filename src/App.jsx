@@ -37,6 +37,8 @@ import ReadForQuestion from "./components/dna/ReadForQuestion";
 import { MIN_BOOKS, openedBooks } from "./components/dna/constants";
 import LandingPage from "./pages/LandingPage";
 import { Patterns } from "./components/Panels";
+import Register from "./components/profile/Register";
+import { buildRegister } from "./components/profile/registerData";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Shelf from "./components/Shelf";
 import { ShelfDecoration } from "./components/Shelf";
@@ -693,6 +695,18 @@ function Dashboard() {
   // Re-sync on breakpoint crossings, so a resize can't strand the section closed
   // on a wide screen where its <summary> is hidden and there'd be no way to open it.
   useEffect(() => { setPatternsOpen(!isNarrow); }, [isNarrow]);
+  // The Register carries its own disclosure at every width (its summary is never
+  // hidden), so it only needs a sensible default: open on desktop, folded on a
+  // phone where it's a long list below the mirror.
+  const [registerOpen, setRegisterOpen] = useState(!isNarrow);
+  useEffect(() => { setRegisterOpen(!isNarrow); }, [isNarrow]);
+  // Built from data the DNA tab already holds: the shelf (for the five life
+  // milestones) and the DNA payload's own `earned`/`locked` rows (for the
+  // readings). No extra request — good for the installed PWA.
+  const register = useMemo(
+    () => buildRegister(entries, analytics.profile),
+    [entries, analytics.profile],
+  );
   const [showReadFor, setShowReadFor] = useState(false);
   const dnaCardRef = useRef(null);
 
@@ -891,6 +905,42 @@ function Dashboard() {
                 stats={analytics.stats}
               />
             </ErrorBoundary>
+
+            {/* The Register — one ledger of what the shelf has earned and what's
+                still ahead: the five life milestones and the DNA gates together.
+                Replaces the old "NOT YET" list here and the milestones rail on
+                the profile. Its <summary> shows at every width, so it folds on
+                desktop too. Outside the 5-book gate for the same reason Patterns
+                is — the milestones are real from the first book. */}
+            {register && (
+              <ErrorBoundary name="Register">
+                <details
+                  className="reg-fold"
+                  open={registerOpen}
+                  onToggle={(e) => setRegisterOpen(e.currentTarget.open)}
+                >
+                  <summary className="reg-fold-summary">
+                    <div className="reg-fold-text">
+                      <div className="label-sm reg-fold-fig">fig. 04 · the register</div>
+                      <div className="reg-fold-headrow">
+                        <span className="reg-fold-h">Your <em>Register</em>.</span>
+                        <span className="reg-fold-toggle">
+                          {registerOpen ? "Hide" : "Open"}
+                          <span className="reg-fold-chev" aria-hidden="true">⌄</span>
+                        </span>
+                      </div>
+                      {!registerOpen && (
+                        <p className="reg-fold-dek">
+                          {register.earned_count} of {register.total} earned — every
+                          milestone and reading, in one place.
+                        </p>
+                      )}
+                    </div>
+                  </summary>
+                  {registerOpen && <Register register={register} hideMasthead />}
+                </details>
+              </ErrorBoundary>
+            )}
 
             {/* The aggregate, folded in below the mirror. Deliberately OUTSIDE the
                 DNA gate — patterns are real from the first book, so a reader under

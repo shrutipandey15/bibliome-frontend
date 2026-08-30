@@ -4,7 +4,6 @@ import DNACard from "../DNACard";
 import DNAGate from "./DNAGate";
 import Insight from "./Insight";
 import EvolutionView from "./EvolutionView";
-import LockedInsights from "./LockedInsights";
 import { MIN_BOOKS } from "./constants";
 import useIsNarrow from "../../hooks/useIsNarrow";
 import "./DNAView.css";
@@ -336,16 +335,10 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
             </>
           )}
 
-          {/* NOT YET — locked, WITH the real reason. [F7.4] Same rule: its own
-              Divider, guarded on the same condition LockedInsights uses to
-              decide whether to render at all — an empty `locked` array must
-              not leave a divider pointing at nothing. */}
-          {profile.locked?.length > 0 && (
-            <>
-              <Divider />
-              <LockedInsights locked={profile.locked} />
-            </>
-          )}
+          {/* What's still locked lives in the Register fold directly below this
+              view (App's DNA tab) — one ledger, earned and not-yet together,
+              instead of a "NOT YET" list here and a milestones list on the
+              profile. This view keeps only what it can say today. */}
         </div>
 
         {!narrow && (
