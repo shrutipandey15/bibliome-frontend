@@ -306,7 +306,6 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
           {/* V, IN FLOW — phone only. See `archetypeBody` above for why. */}
           {narrow && (
             <>
-              <Divider />
               <section aria-labelledby="dna-arch-title">
                 {archetypeHeading}
                 {archetypeBody}
