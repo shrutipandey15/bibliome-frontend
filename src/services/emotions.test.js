@@ -4,9 +4,9 @@ import { EMOTIONS, EMO_LIST, hydrateEmotions, getPrimaryEmotion, getEmotionFamil
 describe("shared emotion vocabulary [F1.5 / P2-9]", () => {
   it("the display label is the human phrase, with the plain word on `name`", () => {
     // Per VISION §4 the reader sees the first-person phrase, never the word/slug.
-    expect(EMOTIONS.grief.label).toBe("it left a hole");
+    expect(EMOTIONS.grief.label).toBe("I'm still not over it");
     expect(EMOTIONS.devastation.label).toBe("it wrecked me");
-    expect(EMOTIONS.confusion.label).toBe("I lost the plot");
+    expect(EMOTIONS.confusion.label).toBe("I have no idea what happened");
     // The plain word is still available for compact/analytic surfaces.
     expect(EMOTIONS.grief.name).toBe("grief");
     expect(EMOTIONS.devastation.name).toBe("devastation");
@@ -44,9 +44,9 @@ describe("shared emotion vocabulary [F1.5 / P2-9]", () => {
   it("groups the vocabulary into the five families in order [Part A]", () => {
     const fams = getEmotionFamilies();
     expect(fams.map((f) => f.family)).toEqual([
-      "It hurt", "It held me", "It wanted something", "It moved me", "It lost me",
+      "it messed me up", "it held me", "the yearning", "it hit different", "it lost me",
     ]);
-    const hurt = fams.find((f) => f.family === "It hurt");
+    const hurt = fams.find((f) => f.family === "it messed me up");
     expect(hurt.emotions.map(([slug]) => slug)).toContain("devastation");
     expect(hurt.emotions.map(([slug]) => slug)).toContain("rage");
   });

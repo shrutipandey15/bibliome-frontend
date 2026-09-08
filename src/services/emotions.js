@@ -16,25 +16,25 @@ import {
 // can drift) and stay local. The server's `symbol` (emoji) is stored too, if a
 // surface prefers it.
 const PRESENTATION = {
-  // It hurt
+  // it messed me up
   devastation: { Icon: Wind,      glyph: "·" },
   grief:       { Icon: Droplets,  glyph: "◦" },
   dread:       { Icon: CloudMoon, glyph: "◐" },
   rage:        { Icon: Flame,     glyph: "◉" },
-  // It held me
+  // it held me
   comfort:     { Icon: Coffee,    glyph: "○" },
   tenderness:  { Icon: Eye,       glyph: "◎" },
   joy:         { Icon: Sun,       glyph: "☀" },
   amusement:   { Icon: Laugh,     glyph: "‡" },
-  // It wanted something
+  // the yearning
   longing:     { Icon: Leaf,      glyph: "❋" },
   desire:      { Icon: Heart,     glyph: "♡" },
   nostalgia:   { Icon: Hourglass, glyph: "☾" },
-  // It moved me
+  // it hit different
   awe:         { Icon: Telescope, glyph: "✺" },
   recognition: { Icon: Aperture,  glyph: "◈" },
   catharsis:   { Icon: Sparkles,  glyph: "✧" },
-  // It lost me
+  // it lost me
   boredom:     { Icon: Meh,       glyph: "—" },
   revulsion:   { Icon: Frown,     glyph: "✗" },
   confusion:   { Icon: Tornado,   glyph: "✦" },
@@ -50,29 +50,29 @@ const PRESENTATION = {
 // render in first-appearance order.
 // Tuple: [slug, family, name(word), phrase, color, description]
 const SEED = [
-  // It hurt
-  ["devastation", "It hurt", "devastation", "it wrecked me",        "#3D2B3D", "Complete emotional destruction — the books that ruin you"],
-  ["grief",       "It hurt", "grief",       "it left a hole",       "#6B4F8E", "Loss, absence, mourning — the ache"],
-  ["dread",       "It hurt", "dread",       "I couldn't relax",     "#4B6B8E", "Anxiety, foreboding, existential unease"],
-  ["rage",        "It hurt", "rage",        "I was so angry",       "#C44B4B", "Fury, injustice, the urge to burn things down"],
-  // It held me
-  ["comfort",     "It held me", "comfort",    "it felt safe",           "#8E6B4B", "Safety, warmth, being held by a book"],
-  ["tenderness",  "It held me", "tenderness", "it was gentle with me",  "#9B6B7B", "Gentle love, care, soft emotional moments"],
-  ["joy",         "It held me", "joy",        "it made me happy",       "#E0A458", "Delight, gladness, the lightness a book can give"],
-  ["amusement",   "It held me", "amusement",  "it made me laugh",       "#C9B24B", "Sharp humour, wit, the perfectly placed line that makes you grin"],
-  // It wanted something
-  ["longing",     "It wanted something", "longing",   "I ached for it",     "#5B6B8E", "Distance, wanting what you cannot have"],
-  ["desire",      "It wanted something", "desire",    "the tension got me", "#9B5B8E", "Wanting, romantic tension, the pull toward"],
-  ["nostalgia",   "It wanted something", "nostalgia", "it took me back",    "#B07B4B", "The ache of memory, a time you cannot return to"],
-  // It moved me
-  ["awe",         "It moved me", "awe",         "I had to stop and stare", "#4B7B6B", "Wonder, scale, the sublime"],
-  ["recognition", "It moved me", "recognition", "how did it know",         "#4B8E8A", "Being seen — the book that knew you already"],
-  ["catharsis",   "It moved me", "catharsis",   "I needed that cry",       "#C9A96E", "Release, relief, the exhale after tension"],
-  // It lost me
-  ["boredom",     "It lost me", "boredom",      "it bored me",           "#8A8A7A", "Flatness, the pages that wouldn't turn"],
-  ["revulsion",   "It lost me", "revulsion",    "I couldn't stomach it", "#6B7A4B", "Disgust, recoil, wanting to put it down"],
-  ["confusion",   "It lost me", "confusion",    "I lost the plot",       "#7B6B9B", "Lost the thread, couldn't follow, unmoored"],
-  ["indifference","It lost me", "indifference", "nothing landed",        "#9A9A9A", "Nothing landed — you closed it and felt nothing"],
+  // it messed me up
+  ["devastation", "it messed me up", "devastation", "it wrecked me",                          "#3D2B3D", "The books that take something out of you. You finish and just sit there for a while."],
+  ["grief",       "it messed me up", "grief",       "I'm still not over it",                   "#6B4F8E", "Loss and mourning. The ache that doesn't leave when the book ends."],
+  ["dread",       "it messed me up", "dread",       "shoulders up by my ears the entire time", "#4B6B8E", "The low hum of something-bad-is-coming that you read the whole book with."],
+  ["rage",        "it messed me up", "rage",        "I wanted to throw it across the room",    "#C44B4B", "Injustice you can't let go of. The book that makes you want to burn it all down."],
+  // it held me
+  ["comfort",     "it held me", "comfort",    "it felt like being tucked in",  "#8E6B4B", "The book that's a soft place to land. Safe, warm, yours."],
+  ["tenderness",  "it held me", "tenderness", "handle-with-care kind of love", "#9B6B7B", "Gentle, careful love. The book that's kind to you."],
+  ["joy",         "it held me", "joy",        "I closed it smiling",           "#E0A458", "Pure lightness. You put it down happier than you picked it up."],
+  ["amusement",   "it held me", "amusement",  "I actually laughed out loud",   "#C9B24B", "Genuinely funny. The lines you stop to read out loud to someone."],
+  // the yearning
+  ["longing",     "the yearning", "longing",   "the yearning was unreal",      "#5B6B8E", "Wanting something you can't quite name, or can't have."],
+  ["desire",      "the yearning", "desire",    "the tension nearly killed me", "#9B5B8E", "The pull toward. Romantic tension, want, the ache of almost."],
+  ["nostalgia",   "the yearning", "nostalgia", "it smelled like a memory",     "#B07B4B", "The ache of a time you can't go back to. It puts you somewhere you used to be."],
+  // it hit different
+  ["awe",         "it hit different", "awe",         "I had to put it down and just sit there", "#4B7B6B", "Wonder at the sheer scale of it. You have to stop and let it land."],
+  ["recognition", "it hit different", "recognition", "it read my mind",                        "#4B8E8A", "Being seen. The book that already knew you."],
+  ["catharsis",   "it hit different", "catharsis",   "I cried and felt lighter after",         "#C9A96E", "The release after the tension. A cry that leaves you lighter."],
+  // it lost me
+  ["boredom",     "it lost me", "boredom",      "my two brain cells died",          "#8A8A7A", "The pages wouldn't turn. You kept checking how much was left."],
+  ["revulsion",   "it lost me", "revulsion",    "I felt a little sick",             "#6B7A4B", "Recoil. Something in it you couldn't sit with."],
+  ["confusion",   "it lost me", "confusion",    "I have no idea what happened",     "#7B6B9B", "You lost the thread and never found it again."],
+  ["indifference","it lost me", "indifference", "closed it and forgot it existed", "#9A9A9A", "It closed and left nothing behind. You felt nothing either way."],
 ];
 
 export const EMOTIONS = {};

@@ -90,24 +90,24 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
   it("renders the five family doors and reveals emotions only on tap", async () => {
     render(<EntryModal entry={base()} onSave={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()} />);
     // Family doors present.
-    expect(screen.getByRole("button", { name: /It hurt/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /It lost me/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /it messed me up/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /it lost me/i })).toBeInTheDocument();
     // Emotions inside a family are hidden until the door is tapped. Chips show the
     // human phrase, never the word/slug.
     expect(screen.queryByRole("button", { name: "it wrecked me" })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /It hurt/i }));
+    await userEvent.click(screen.getByRole("button", { name: /it messed me up/i }));
     expect(screen.getByRole("button", { name: "it wrecked me" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "it left a hole" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "I'm still not over it" })).toBeInTheDocument();
   });
 
   it("saves two emotions at independent strengths", async () => {
     const onSave = vi.fn();
     render(<EntryModal entry={base()} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
-    await userEvent.click(screen.getByRole("button", { name: /It hurt/i }));
+    await userEvent.click(screen.getByRole("button", { name: /it messed me up/i }));
     await userEvent.click(screen.getByRole("button", { name: "it wrecked me" }));
-    await userEvent.click(screen.getByRole("button", { name: "it left a hole" }));
+    await userEvent.click(screen.getByRole("button", { name: "I'm still not over it" }));
     fireEvent.change(screen.getByLabelText("it wrecked me strength"), { target: { value: "9" } });
-    fireEvent.change(screen.getByLabelText("it left a hole strength"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("I'm still not over it strength"), { target: { value: "2" } });
     await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     expect(onSave.mock.calls[0][0].emotions).toEqual(
@@ -127,8 +127,8 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByLabelText("it left a hole strength")).toHaveValue("3");
-    expect(screen.getByLabelText("I was so angry strength")).toHaveValue("8");
+    expect(screen.getByLabelText("I'm still not over it strength")).toHaveValue("3");
+    expect(screen.getByLabelText("I wanted to throw it across the room strength")).toHaveValue("8");
   });
 
   it("saves the verdict and leaves dnf_reason null on a non-abandoned book", async () => {
