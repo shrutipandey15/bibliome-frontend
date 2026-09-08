@@ -121,10 +121,37 @@ export async function saveCardAsImage(domNode, username, { story = true } = {}) 
       ctx.restore();
     }
 
+    const filename = `bibliome-${username || "card"}${story ? "-story" : ""}.png`;
+    const blob = await new Promise((resolve, reject) => {
+      try {
+        out.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob returned null"))), "image/png");
+      } catch (e) {
+        reject(e);   // tainted canvas — a cross-origin image without CORS headers got in
+      }
+    });
+
+    // iOS Safari ignores <a download> and caps data: URLs, so a synthesised
+    // click never lands a file. The Web Share API's file mode is the supported
+    // route to the camera roll on mobile; fall back to an object URL elsewhere.
+    const file = new File([blob], filename, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "My Reading DNA" });
+        return true;
+      } catch (err) {
+        if (err && err.name === "AbortError") return false;
+        // fall through to the object-URL download
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.download = `bibliome-${username || "card"}${story ? "-story" : ""}.png`;
-    link.href = out.toDataURL("image/png");
+    link.download = filename;
+    link.href = url;
+    document.body.appendChild(link);
     link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
     return true;
   } catch (err) {
     console.error("Image generation failed", err);

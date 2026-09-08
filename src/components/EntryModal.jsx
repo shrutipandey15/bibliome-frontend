@@ -161,8 +161,21 @@ export default function EntryModal({
   // existing test and every server render takes exactly the path it took before.
   const wizard = isNarrow && !entry?.id;
   const [step, setStep] = useState(1);
-  const STEPS = 3;
-  const onStep = (n) => !wizard || step === n;
+
+  // A want-to-read book hasn't been read, so "what did it do to you?" is a
+  // question the reader can't answer yet. On the phone wizard that screen is
+  // mandatory scrolling past nothing; drop it and the flow is two steps. The
+  // desktop form just leaves the emotions blank, so it needs no branch.
+  const skipEmotions = status === "want_to_read";
+  const STEPS = wizard && skipEmotions ? 2 : 3;
+  // Wizard section → step number. Status is asked before emotions so the wizard
+  // knows whether the emotions step applies at all.
+  const stepFor = { book: 1, status: 2, emotions: 3 };
+  const onStep = (section) => !wizard || step === stepFor[section];
+
+  // Changing the status back to want-to-read on step 2 shrinks the wizard; if
+  // the reader was already on step 3, pull them back onto the last real step.
+  useEffect(() => { if (step > STEPS) setStep(STEPS); }, [step, STEPS]);
 
   const [moreOpen, setMoreOpen] = useState(
     () => !isNarrow || Boolean(entry?.verdict || entry?.quote || entry?.notes),
@@ -173,7 +186,7 @@ export default function EntryModal({
 
   const families = getEmotionFamilies();
   useEffect(() => {
-    if (wizard && step === 2 && openFamily === null && families[0]) {
+    if (wizard && step === stepFor.emotions && openFamily === null && families[0]) {
       setOpenFamily(families[0].family);
     }
   }, [wizard, step, openFamily, families]);
@@ -348,12 +361,12 @@ export default function EntryModal({
             </div>
 
             <h2 className="em-h em-wiz-h">
-              {step === 1 && "What did you read?"}
-              {step === 2 && "What did it do to you?"}
-              {step === 3 && "Where did you leave it?"}
+              {step === stepFor.book && "What did you read?"}
+              {step === stepFor.status && "Where did you leave it?"}
+              {step === stepFor.emotions && "What did it do to you?"}
             </h2>
-            {step === 2 && <p className="em-wiz-sub">Pick as many as are true.</p>}
-            {step === 3 && <p className="em-wiz-sub">Everything here is optional.</p>}
+            {step === stepFor.status && <p className="em-wiz-sub">Everything here is optional.</p>}
+            {step === stepFor.emotions && <p className="em-wiz-sub">Pick as many as are true.</p>}
           </>
         ) : (
           <>
@@ -364,7 +377,7 @@ export default function EntryModal({
           </>
         )}
 
-        {onStep(1) && (
+        {onStep("book") && (
         <div className="em-field">
           {!wizard && <div className="label-sm em-field-label">title · author</div>}
           <div className="em-search-wrap">
@@ -459,7 +472,7 @@ export default function EntryModal({
         </div>
         )}
 
-        {onStep(3) && (
+        {onStep("status") && (
         <div className="em-field">
           <div className="label-sm em-field-label">reading status</div>
           <div className="em-status" role="radiogroup" aria-label="Reading status">
@@ -534,7 +547,7 @@ export default function EntryModal({
         </div>
         )}
 
-        {onStep(2) && (
+        {onStep("emotions") && (
         <div className="em-field">
           {!wizard && <div className="label-sm em-field-label">what did it make you feel?</div>}
           {/* Five doors → the emotions inside. Recognition, not recall. [Part A] */}
@@ -612,7 +625,7 @@ export default function EntryModal({
           ))}
         </div>
         )}
-        {onStep(2) && strengthRows.length > 0 && (
+        {onStep("emotions") && strengthRows.length > 0 && (
           <div className="em-field">
             <div className="label-sm em-field-label">
               {wizard ? "tagged from other families" : "how strong was each?"}
@@ -656,7 +669,7 @@ export default function EntryModal({
         {/* DNF reason — only surfaces when the book was abandoned, so it stays
             in the main flow: it is already conditional, and folding a field
             that only appears when it is relevant hides it twice. [Part C] */}
-        {onStep(3) && DNF_STATUSES.includes(status) && (
+        {onStep("status") && DNF_STATUSES.includes(status) && (
           <OneTap
             label="why did you put it down?"
             options={DNF_OPTIONS}
@@ -669,7 +682,7 @@ export default function EntryModal({
         {/* Fields stay mounted while folded — their values live in this
             component's state, so nothing is lost either way, but keeping them
             mounted means a collapse can't drop focus mid-typing. */}
-        {onStep(3) && (
+        {onStep("status") && (
         <details
           className="em-more"
           open={moreOpen}

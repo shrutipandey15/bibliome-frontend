@@ -799,7 +799,10 @@ function Dashboard() {
     catch (err) { showToast(err.message || "Failed to generate DNA"); }
   };
   const handleSaveCard = async () => {
-    try { await saveCardAsImage(dnaCardRef.current, user?.username); showToast("Card saved", "success"); }
+    try {
+      const ok = await saveCardAsImage(dnaCardRef.current, user?.username);
+      if (ok) showToast("Card saved", "success");
+    }
     catch { showToast("Couldn't save card — try a screenshot instead."); }
   };
   const markReadForAsked = () => { try { localStorage.setItem("bibliome_readfor_asked", "1"); } catch { /* ignore */ } };

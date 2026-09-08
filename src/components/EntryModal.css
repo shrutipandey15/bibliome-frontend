@@ -728,17 +728,32 @@
   min-height: 54px;
   font-size: 15px;
 }
-.em-wiz-next {
+/* Scoped under .em-wiz so it always wins over the global .btn fill — otherwise
+   .btn's own background/color leak through on hover and the label sinks into
+   the button. Every state sets background AND colour together. */
+.em-wiz .em-wiz-next {
   flex: 1;
   justify-content: center;
   min-height: 54px;
   padding: 15px 18px;
-  background: var(--walnut-mid);
-  border-color: var(--walnut-edge);
-  color: #f5ecd2;
+  background: var(--brass);
+  border: 1px solid color-mix(in srgb, var(--brass) 65%, #000);
+  color: #1a120a;
   font-size: 15px;
   font-weight: 600;
   border-radius: 3px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.18);
 }
-.em-wiz-next:hover:not(:disabled) { background: var(--walnut); }
-.em-wiz-next:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.em-wiz .em-wiz-next:hover:not(:disabled),
+.em-wiz .em-wiz-next:active:not(:disabled) {
+  background: color-mix(in srgb, var(--brass) 82%, #fff);
+  color: #1a120a;
+}
+.em-wiz .em-wiz-next:disabled {
+  background: var(--walnut-mid);
+  color: var(--ink-faint);
+  border-color: var(--walnut-edge);
+  text-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
