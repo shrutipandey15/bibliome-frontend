@@ -8,6 +8,7 @@ vi.mock("html2canvas", () => ({
     width: fakeCard.width,
     height: fakeCard.height,
     toDataURL: () => "data:image/png;base64,plate",
+    toBlob: (cb) => cb(new Blob(["plate"], { type: "image/png" })),
   })),
 }));
 
@@ -27,6 +28,7 @@ function stubCanvas() {
     if (tag === "canvas") {
       el.getContext = () => ctx;
       el.toDataURL = () => "data:image/png;base64,story";
+      el.toBlob = (cb) => cb(new Blob(["story"], { type: "image/png" }));
       created.push(el);
     }
     if (tag === "a") { el.click = vi.fn(); links.push(el); }
@@ -58,7 +60,15 @@ function cardNode() {
 }
 
 describe("saveCardAsImage [F2.4]", () => {
-  beforeEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ""; stubComputedStyle(); });
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    document.body.innerHTML = "";
+    stubComputedStyle();
+    // jsdom has no object-URL plumbing and no Web Share API; the mobile branch
+    // needs the latter absent (it is) and the download branch needs the former.
+    URL.createObjectURL = vi.fn(() => "blob:card");
+    URL.revokeObjectURL = vi.fn();
+  });
 
   it("exports a 1080x1920 story frame by default, so it can be posted as-is", async () => {
     const { created } = stubCanvas();
