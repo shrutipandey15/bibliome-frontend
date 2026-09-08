@@ -12,8 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <title>Bibliome — The Emotional Fingerprint of Your Reading Life</title>
-    <meta name="description" content="Discover your unique reading personality. Bibliome maps the emotions your books triggered, the patterns you didn't know you had, and the reader you've become. Free. No ads." />
-    <meta name="keywords" content="bibliome, reading personality, book emotions, reading tracker, emotional reading, book journal, reading psychology, book personality test" />
+    <meta name="description" content="Bibliome is a private reading journal that tracks the emotions books make you feel, not stars or page counts. After 5 books it reads your patterns back as a reading archetype. Free, no ads, end-to-end encrypted." />
     <meta name="author" content="Bibliome" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://bibliome.app/" />
@@ -44,9 +43,12 @@
       "@type": "WebApplication",
       "name": "Bibliome",
       "url": "https://bibliome.app",
-      "description": "Discover your unique reading personality. Bibliome maps the emotions your books triggered into a visual personality profile.",
+      "description": "Bibliome is a private reading journal that tracks the emotions books make you feel. After 5 books it reads your patterns back as one of 8 reading archetypes.",
       "applicationCategory": "LifestyleApplication",
       "operatingSystem": "Web",
+      "sameAs": [
+        "https://github.com/shrutipandey15/bibliome"
+      ],
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -61,6 +63,9 @@
       ]
     }
     </script>
+    <!-- FAQPage structured data is injected by LandingPage.jsx from its own FAQ
+         array, so it can't drift from the visible section. The prose FAQ in the
+         <noscript> below is the copy for crawlers that don't run JS. -->
     <noscript>
       <style>
         body { background: #06060a; color: #e8e4dc; font-family: Georgia, serif; padding: 40px; max-width: 800px; margin: 0 auto; }
@@ -120,9 +125,50 @@
       <h2>How Bibliome works</h2>
       <p>Log what a book did to you, not how many stars it earned. Tag from 18 emotions. After 5 books the engine reads your patterns back to you as an archetype — worked out from what you actually recorded, never a quiz, and never something you pick for yourself.</p>
       <h2>Which kind of reader are you?</h2>
-      <p>The Grief Romantic. The Midnight Arsonist. The Comfort Architect. One of many, and the one you get is the one your reading earned.</p>
+      <p>The Grief Romantic. The Midnight Arsonist. The Comfort Architect. One of 8, and the one you get is the one your reading earned.</p>
       <h2>What it isn't</h2>
       <p>Free. No ads. No data selling. The journal is end-to-end encrypted, so we can't read it either.</p>
+
+      <h2>Bibliome vs Goodreads</h2>
+      <p>Goodreads is a catalogue and a social network: stars, rankings, page counts, yearly goals, followers. Bibliome is a private mirror. There are no stars and nothing to be popular in — no page counts, no reading goals, no streaks, and nobody can follow you. It records how a book made you feel; Goodreads records that you read it.</p>
+
+      <h2>Frequently asked questions</h2>
+      <h3>What is Bibliome?</h3>
+      <p>A private journal for readers. Instead of rating a book, you record what it did to you — which of 18 emotions it pulled, how strongly, and how it left you. After 5 books it reads your patterns back as a reading archetype.</p>
+      <h3>Is Bibliome an emotion or mood book tracker?</h3>
+      <p>Yes. You log each book against 18 emotions grouped into five families, with a strength for each, instead of a star rating. Over time those emotions become a picture of you as a reader.</p>
+      <h3>Is Bibliome free?</h3>
+      <p>Yes — free, with no ads, no third-party analytics or tracking scripts, and no data selling.</p>
+      <h3>How is Bibliome different from Goodreads?</h3>
+      <p>No stars, no rankings, no page counts, no yearly goals, no streaks, no followers. Bibliome records how a book made you feel; Goodreads records that you read it.</p>
+      <h3>How is Bibliome different from The StoryGraph?</h3>
+      <p>The StoryGraph analyses mood and pace to recommend your next read. Bibliome is not a recommendation engine — it is a private emotional record of the books you have already read, and it turns that record into a reading personality.</p>
+      <h3>Can I import my books from Goodreads or StoryGraph?</h3>
+      <p>Yes. Export your library as a CSV from Goodreads or The StoryGraph and upload it; Bibliome imports the titles and reports how many parsed, imported, and were skipped.</p>
+      <h3>Is my reading journal private?</h3>
+      <p>The private journal is end-to-end encrypted in your browser before it is sent. Bibliome cannot read it — not from the database, not from a backup, not if compelled. You can export or delete everything yourself.</p>
+      <h3>What is Reading DNA and a reading archetype?</h3>
+      <p>Reading DNA is the profile Bibliome builds from your emotional patterns — the feelings you reach for, the ones you avoid, what shows up together. A reading archetype is the human-readable summary of it: one of 8, such as the Grief Romantic or the Comfort Architect.</p>
+      <h3>How many books before I get a reading archetype?</h3>
+      <p>Five. After 5 logged books the engine offers a first insight or two and usually an archetype — one of 8, assigned from what you recorded, never a quiz and never something you pick.</p>
+      <h3>What are the reading archetypes?</h3>
+      <p>Examples include the Grief Romantic, the Midnight Arsonist, and the Comfort Architect. There are 8 in total, each assigned from the emotional patterns in your own reading.</p>
+      <h3>Can I share my Reading DNA?</h3>
+      <p>Yes. Each profile has a shareable card at its own link that anyone can open without an account. Nothing else on your profile is public.</p>
+      <h3>Does Bibliome connect me with other readers?</h3>
+      <p>In one narrow way, called Resonance. When someone else has recorded the same book with almost the same feelings at almost the same strength, Bibliome offers you a single way to say so — you write a note first, they see the note and not you, and if they write back you both learn who the other is at the same moment.</p>
+      <h3>How does Resonance match readers?</h3>
+      <p>Only on a shared book and the emotions you both recorded for it — never on anything social. You get at most three suggestions at a time, you cannot search for people, and a decline is silent.</p>
+      <h3>Can I read together with friends or share a reading list?</h3>
+      <p>Yes, through Collections. A collection is a curated set of books you can keep private or open to any signed-in reader, and you can invite specific people with a link. Each book in a shared collection has its own discussion page.</p>
+      <h3>Can I follow people or see follower counts?</h3>
+      <p>No. Nobody can follow you, and there are no counts on anything — no followers, no likes tallied, no leaderboards. It is built so it cannot become a social feed.</p>
+      <h3>What are Echoes?</h3>
+      <p>Echoes are Bibliome's one small public room: short notes about what a book did to you, in a chronological feed that ends with “you're caught up.” There is no path from an Echo to someone's profile, and you can block, mute, or report.</p>
+      <h3>Is there a Bibliome mobile app?</h3>
+      <p>Bibliome is a web app that installs to your home screen on phones and desktops, works offline for reading, and can send push notifications. There is no separate App Store or Play Store download.</p>
+      <h3>Does Bibliome track pages read, reading speed, or yearly goals?</h3>
+      <p>No. No page counts, no reading-speed stats, no yearly challenges, no streaks. The only thing it measures is how books made you feel.</p>
     </noscript>
 
     <script type="module" src="/src/main.jsx"></script>

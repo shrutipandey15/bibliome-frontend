@@ -3,6 +3,15 @@ Allow: /
 Disallow: /api/
 Disallow: /admin
 Disallow: /settings
+# Authed app surfaces. A signed-out crawler that hits one of these gets the
+# landing page rendered back at it (the SPA parent route), so without these it
+# would index a dozen duplicates of "/". Nothing here is a real page to a
+# logged-out visitor.
+Disallow: /echoes
+Disallow: /resonance
+Disallow: /journal
+Disallow: /me
+Disallow: /collections/
 # Reader surfaces, not marketing. /s/ is a share token — indexing one would
 # turn a link meant for a few people into a public page. /u/ needs a signed-in
 # viewer to resolve blocks and visibility, so a crawler only ever sees 404.

@@ -1149,6 +1149,20 @@ const RouteLoader = () => (
   </div>
 );
 
+// A React SPA answers every URL with 200, so an unknown path silently rendered
+// nothing. `noindex` is what keeps those soft-404s out of the index for any
+// crawler that fetches the page. [#4]
+function NotFound() {
+  useHead({ robots: "noindex, nofollow", title: "Not found — Bibliome" });
+  return (
+    <div className="loading-screen" style={{ flexDirection: "column", gap: 16 }}>
+      <div className="loading-glyph">◈</div>
+      <p>That page doesn't exist.</p>
+      <Link to="/">Back to Bibliome</Link>
+    </div>
+  );
+}
+
 export default function App() {
   const { authed, loading } = useAuth();
   const navigate = useNavigate();
@@ -1207,6 +1221,8 @@ export default function App() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="admin" element={<AdminPage />} />
         </Route>
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
     </ThemeProvider>

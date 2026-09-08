@@ -265,6 +265,33 @@
   color: var(--ink-soft);
 }
 
+/* ----- FAQ ----- */
+.lrr-faq { padding: 90px 56px; border-top: 1px solid var(--rule); }
+.lrr-faq .lrr-h2 { margin-bottom: 40px; }
+.lrr-faq-list { max-width: 68ch; }
+.lrr-faq-item {
+  border-bottom: 1px solid var(--rule);
+  padding: 20px 0;
+}
+.lrr-faq-q {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+.lrr-faq-q::-webkit-details-marker { display: none; }
+.lrr-faq-q::after { content: " +"; color: var(--ink-faint); }
+.lrr-faq-item[open] .lrr-faq-q::after { content: " –"; }
+.lrr-faq-d {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 12px 0 0;
+}
+
 /* ----- FINAL ----- */
 .lrr-final {
   padding: 100px 56px 60px;
@@ -313,7 +340,7 @@
 
 /* responsive */
 @media (max-width: 1080px) {
-  .lrr-hero, .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-final { padding-left: 28px; padding-right: 28px; }
+  .lrr-hero, .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-faq, .lrr-final { padding-left: 28px; padding-right: 28px; }
   .lrr-hero-grid { grid-template-columns: 1fr; gap: 50px; }
   .lrr-h1 { font-size: 64px; }
   .lrr-how-grid { grid-template-columns: repeat(2, 1fr); }
@@ -343,13 +370,13 @@
 }
 
 @media (max-width: 640px) {
-  .lrr-hero, .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-final { padding-left: 18px; padding-right: 18px; }
+  .lrr-hero, .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-faq, .lrr-final { padding-left: 18px; padding-right: 18px; }
 
   /* ── Vertical rhythm ──
      90px of air above and below every section is what makes the desk version
      feel like a printed spread. Six of them on a phone is six extra screens of
      scrolling between arguments, and the reader pays for it in thumb-miles. */
-  .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto { padding-top: 56px; padding-bottom: 56px; }
+  .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-faq { padding-top: 56px; padding-bottom: 56px; }
   .lrr-hero { padding-top: calc(20px + env(safe-area-inset-top, 0px)); padding-bottom: 48px; }
   .lrr-final { padding-top: 56px; padding-bottom: 40px; }
 

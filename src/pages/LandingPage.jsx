@@ -75,6 +75,53 @@ const MANIFESTO = [
   { x: false, t: "A mirror, with three doors.", d: "One small public room that ends in “you're caught up.” One reader at a time, when a book lines up. One journal, encrypted so that even we can't read it." },
 ];
 
+// The single source for the FAQ. It renders the visible section AND is
+// serialised into FAQPage JSON-LD (injected below, in an effect — Google
+// renders JS and reads it). The <noscript> block in index.html carries a
+// shorter prose copy for crawlers that don't run JS; keep the two roughly
+// aligned when a claim changes, but the structured data comes from here.
+// Numbers come from the same constants as the rest of the page.
+const FAQ = [
+  { q: "What is Bibliome?",
+    d: `A private journal for readers. Instead of rating a book, you record what it did to you — which of ${EMO_LIST.length} emotions it pulled, how hard, and how it left you. After ${MIN_BOOKS} books it reads your patterns back as a reading archetype.` },
+  { q: "Is Bibliome an emotion or mood book tracker?",
+    d: `Yes — that's the whole idea. You log each book against ${EMO_LIST.length} emotions grouped into five families, with a strength for each, instead of a star rating or a mood tag. Over time the emotions become a picture of you as a reader.` },
+  { q: "Is Bibliome free?",
+    d: "Yes — free, with no ads, no third-party analytics or tracking scripts, and no data selling." },
+  { q: "How is Bibliome different from Goodreads?",
+    d: "No stars, no rankings, no page counts, no yearly goals, no streaks, no followers. Bibliome records how a book made you feel; Goodreads records that you read it." },
+  { q: "How is Bibliome different from The StoryGraph?",
+    d: "The StoryGraph analyses mood and pace to recommend your next read. Bibliome isn't a recommendation engine — it's a private emotional record of the books you've already read, and it turns that record into a reading personality rather than a to-read list." },
+  { q: "Can I import my books from Goodreads or StoryGraph?",
+    d: "Yes. Export your library as a CSV from Goodreads or The StoryGraph and upload it; Bibliome imports the titles and tells you honestly how many parsed, imported, and were skipped." },
+  { q: "Is my reading journal private?",
+    d: "The private journal is end-to-end encrypted in your browser before it's sent. We can't read it — not from the database, not from a backup, not if compelled. You can export or delete everything yourself." },
+  { q: "How do I record how a book made me feel?",
+    d: `You open one emotion family at a time, pick the feelings that fit from the ${EMO_LIST.length}, and give each a strength. You can keep the line you couldn't forget, and when you finish a book you can trace its arc — how it began, how it felt in the thick of it, how it left you.` },
+  { q: "What is Reading DNA and a reading archetype?",
+    d: `Reading DNA is the profile Bibliome builds from your emotional patterns — the feelings you reach for, the ones you avoid, what shows up together. A reading archetype is the human-readable summary of that: one of ${ARCHETYPE_COUNT}, such as the Grief Romantic or the Comfort Architect.` },
+  { q: "How many books before I get an archetype?",
+    d: `${MIN_BOOKS}. After ${MIN_BOOKS} logged books the engine offers a first insight or two and usually an archetype — one of ${ARCHETYPE_COUNT}, assigned from what you recorded, never a quiz and never something you pick. Deeper patterns wait on a bigger shelf.` },
+  { q: "What are the reading archetypes?",
+    d: `Examples include the Grief Romantic, the Midnight Arsonist, and the Comfort Architect. There are ${ARCHETYPE_COUNT} in total, each assigned from the emotional patterns in your own reading.` },
+  { q: "Can I share my Reading DNA?",
+    d: "Yes. Each profile has a shareable card at its own link that anyone can open without an account. Nothing else on your profile is public." },
+  { q: "Does Bibliome connect me with other readers?",
+    d: "In one narrow way, called Resonance. When someone else has recorded the same book with almost the same feelings at almost the same strength, Bibliome offers you a single way to say so — you write a note first, they see the note and not you, and if they write back you both learn who the other is at the same moment." },
+  { q: "How does Resonance match readers?",
+    d: "Only on a shared book and the emotions you both recorded for it — never on how much you read, who you know, or anything social. You get at most three suggestions at a time, you can't search for people, and a decline is silent: the other reader is never told." },
+  { q: "Can I read together with friends or share a reading list?",
+    d: "Yes, through Collections. A collection is a curated set of books you can keep private or open to any signed-in reader, and you can invite specific people with a link. Each book in a shared collection has its own discussion page." },
+  { q: "Can I follow people or see follower counts?",
+    d: "No. Nobody can follow you, and there are no counts on anything, anywhere — no followers, no likes tallied, no leaderboards. It's built so it can't become a social feed." },
+  { q: "What are Echoes?",
+    d: "Echoes are Bibliome's one small public room: short notes about what a book did to you, in a chronological feed that ends with “you're caught up.” There's no path from an Echo to someone's profile or other posts, and you can block, mute, or report." },
+  { q: "Is there a Bibliome mobile app?",
+    d: "Bibliome is a web app that installs to your home screen on phones and desktops, works offline for reading, and can send push notifications. There's no separate App Store or Play Store download." },
+  { q: "Does Bibliome track pages read, reading speed, or yearly goals?",
+    d: "No. There are no page counts, no reading-speed stats, no yearly challenges, and no streaks. The only thing it measures is how books made you feel." },
+];
+
 function Wordmark({ size = 28 }) {
   return (
     <div className="rr-wordmark" style={{ fontSize: size }}>
@@ -99,6 +146,25 @@ export default function LandingPage({ onGetStarted }) {
   const [showCta, setShowCta] = useState(false);
   const heroCtaRef = useRef(null);
   const finalCtaRef = useRef(null);
+
+  // FAQPage structured data, built from the same FAQ array the section renders
+  // so the two can't disagree. Injected here rather than in index.html because
+  // that copy would have to be hand-kept in sync; Google runs JS and reads this.
+  useEffect(() => {
+    const el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.d },
+      })),
+    });
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, []);
 
   useEffect(() => {
     const targets = [heroCtaRef.current, finalCtaRef.current].filter(Boolean);
@@ -134,6 +200,7 @@ export default function LandingPage({ onGetStarted }) {
             <a href="#archetypes">Archetypes</a>
             <a href="#resonance">Resonance</a>
             <a href="#manifesto">Manifesto</a>
+            <a href="#faq">FAQ</a>
             <button className="btn ghost" onClick={onGetStarted} style={{ fontSize: 12 }}>Sign in</button>
             <button className="btn" onClick={onGetStarted} style={{ fontSize: 12 }}>Begin →</button>
             <ThemeToggle className="rr-theme-toggle" />
@@ -321,6 +388,20 @@ export default function LandingPage({ onGetStarted }) {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ============== FAQ ============== */}
+      <section className="lrr-faq paper" id="faq">
+        <div className="label" style={{ marginBottom: 10 }}>· questions ·</div>
+        <h2 className="lrr-h2">Frequently <em>asked</em>.</h2>
+        <div className="lrr-faq-list">
+          {FAQ.map((f) => (
+            <details key={f.q} className="lrr-faq-item">
+              <summary className="lrr-faq-q">{f.q}</summary>
+              <p className="lrr-faq-d">{f.d}</p>
+            </details>
+          ))}
         </div>
       </section>
 
