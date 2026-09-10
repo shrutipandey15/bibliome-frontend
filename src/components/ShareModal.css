@@ -1,109 +1,69 @@
-.share-modal {
-  max-width: 400px;
-  text-align: center;
-  max-height: 90vh;
-  overflow-y: auto;
+/* Content styles only — the overlay / card / centring / bottom-sheet all come
+   from <Modal> (`.modal-backdrop` + `.modal-card` in App.css). */
+.share-modal { max-width: min(420px, 100%); }
+
+.share-modal-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.share-modal-sub {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-quiet);
+  margin: 8px 0 18px;
 }
 
-.share-modal::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
-}
-
-.share-preview-area {
-  margin: 20px 0;
-  min-height: 200px;
-  background: #111114;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.share-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  max-height: 60vh;
-  object-fit: contain; 
-}
-
-.share-loader {
-  color: #888;
-  font-size: 0.9rem;
-  animation: pulse 1.5s infinite;
-}
-
-.share-error {
-  color: #ff6b6b;
-  font-size: 0.9rem;
-}
-
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-
-.share-link-row {
-  display: flex;
-  gap: 6px;
-  margin: 0 0 16px;
-}
+.share-link-row { display: flex; gap: 6px; }
 .share-link-input {
   flex: 1;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #aaa;
-  font-size: 12px;
-  font-family: var(--font-mono, monospace);
-  outline: none;
   min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--bg-field);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 .share-link-input:focus {
-  border-color: rgba(184,150,78,0.3);
-}
-/* iOS zooms the page on focus for controls under 16px and never zooms back.
-   This one is a readonly share URL, so it is tapped to select-and-copy — the
-   single most likely control in the app to be focused on a phone. */
-@media (pointer: coarse) {
-  .share-link-input { font-size: 16px; }
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+  border-color: var(--brass);
 }
 .share-link-copy {
-  padding: 8px 14px;
-  border-radius: 8px;
-  background: rgba(184,150,78,0.12);
-  border: 1px solid rgba(184,150,78,0.25);
-  color: #B8964E;
-  font-size: 12px;
-  font-family: var(--font-mono, monospace);
-  cursor: pointer;
+  padding: 9px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--brass) 10%, transparent);
+  color: var(--brass);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   white-space: nowrap;
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-.share-link-copy:hover {
-  background: rgba(184,150,78,0.2);
+.share-link-copy:hover { background: color-mix(in srgb, var(--brass) 18%, transparent); }
+
+.share-error {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--oxblood);
+  margin: 0;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 8px;
-}
-.action-btn.secondary {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #e0ddd8;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  flex: 1;
-  transition: all 0.2s;
-}
-.action-btn.secondary:hover {
-  background: rgba(255,255,255,0.08);
+.share-native { margin-top: 14px; width: 100%; justify-content: center; }
+
+/* iOS zooms the page for controls under 16px and never zooms back — this URL
+   field is the single most likely control in the app to be focused on a phone
+   (tap to select, copy). */
+@media (pointer: coarse) {
+  .share-link-input { font-size: 16px; min-height: 44px; }
+  .share-link-copy { min-height: 44px; }
 }

@@ -10,22 +10,46 @@
 }
 .rr-wordmark em { color: var(--oxblood); font-style: italic; }
 
-/* ----- HERO ----- */
-/* padding-top folds in env(safe-area-inset-top) so the nav's Sign in / Begin /
-   theme buttons clear the status bar when the site runs as an installed PWA in
-   standalone mode (viewport-fit=cover puts the layout under the status bar).
-   Resolves to 0 in a normal browser tab. */
-.lrr-hero { padding: calc(32px + env(safe-area-inset-top, 0px)) 56px 70px; position: relative; overflow: hidden; }
-.lrr-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 90px; }
-.lrr-nav-links { display: flex; align-items: center; gap: 22px; }
-.lrr-nav-links a {
+/* ----- NAV (sticky, every width) ----- */
+/* Lives outside `.lrr-hero` — that section is `overflow: hidden`, which traps
+   `position: sticky`. Solid `--bg-page` with a hairline rule at all times (a
+   transparent→solid toggle needs a scroll observer and a transition that raced
+   getComputedStyle in tests — not worth it). padding-top folds in
+   env(safe-area-inset-top) so the row clears the status bar in a standalone PWA
+   (viewport-fit=cover); resolves to 0 in a normal tab. */
+.lrr-nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 56px 12px;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--rule);
+}
+.lrr-nav-sections { display: flex; align-items: center; gap: 22px; flex: 1; min-width: 0; }
+.lrr-nav-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.lrr-nav-sections a {
   font-family: var(--font-display);
   font-style: italic;
-  color: var(--ink-soft);
+  color: var(--ink-quiet);
   font-size: 15px;
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
 }
+.lrr-nav-sections a:hover { color: var(--ink); }
+.lrr-nav-sections a[aria-current="true"] { color: var(--oxblood); border-bottom-color: var(--oxblood); }
+
+/* Anchor jumps land clear of the sticky nav rather than under it. */
+#how-it-works, #archetypes, #resonance, #manifesto, #faq { scroll-margin-top: 72px; }
+
+/* ----- HERO ----- */
+.lrr-hero { padding: 44px 56px 70px; position: relative; overflow: hidden; }
 
 .lrr-hero-grid {
   display: grid;
@@ -35,12 +59,13 @@
 }
 .lrr-hero-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
 .lrr-h1 {
-  font-size: 96px;
-  line-height: 0.92;
+  font-size: clamp(2.6rem, 7.5vw, 6rem);
+  line-height: 0.95;
   letter-spacing: -0.035em;
   font-weight: 400;
   margin-bottom: 32px;
   color: var(--ink);
+  text-wrap: balance;
 }
 .lrr-h1 em { color: var(--oxblood); font-style: italic; }
 .lrr-dek {
@@ -61,12 +86,14 @@
   cursor: pointer;
   text-decoration: none;
 }
-.lrr-trust-row { display: flex; align-items: center; gap: 20px; color: var(--ink-faint); }
+/* --ink-quiet, not --ink-faint: the faint token is ~2.4:1 on the paper ground
+   and this row carries the credibility copy. */
+.lrr-trust-row { display: flex; align-items: center; gap: 20px; color: var(--ink-quiet); }
 .lrr-trust-sep { width: 1px; height: 16px; background: var(--rule); }
 .lrr-trust-text {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-quiet);
 }
 
@@ -95,11 +122,12 @@
 }
 .lrr-how-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 56px; gap: 40px; }
 .lrr-h2 {
-  font-size: 56px;
+  font-size: clamp(1.95rem, 4.6vw, 3.5rem);
   font-weight: 400;
   letter-spacing: -0.02em;
-  line-height: 1;
+  line-height: 1.02;
   color: var(--ink);
+  text-wrap: balance;
 }
 .lrr-h2 em { color: var(--oxblood); font-style: italic; }
 .lrr-how-dek {
@@ -112,10 +140,11 @@
 .lrr-how-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
 .lrr-step { padding: 24px 28px; border-left: 1px solid var(--rule); }
 .lrr-step:first-child { padding-left: 0; border-left: none; }
+/* Was --brass at 11px (~4.0:1 on paper — under the 4.5:1 floor for small text). */
 .lrr-step-num {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--brass);
+  font-size: 12px;
+  color: var(--ink-quiet);
   letter-spacing: 0.2em;
   margin-bottom: 12px;
 }
@@ -150,29 +179,70 @@
   font-style: italic;
 }
 .lrr-arch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
-.lrr-arch-card { padding: 30px; overflow: hidden; }
-.lrr-arch-card-top { display: flex; justify-content: space-between; margin-bottom: 24px; align-items: flex-start; }
+
+/* Each card is an OBJECT in the archetype's own colour, not another grey
+   rectangle with a hairline on top. The band carries the colour (mixed toward
+   ink so cream text clears 4.5:1 on all three), an oversized glyph bleeding off
+   the corner as a graphic, and the name reversed out. The closing line of the
+   engine blurb is pulled up as the quote; the opener drops to support. */
+.lrr-arch-card {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.lrr-arch-band {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 22px 16px;
+  background: color-mix(in srgb, var(--a-color) 82%, #1a0e08);
+  color: #f5ecd2;
+}
 .lrr-arch-glyph {
-  font-size: 36px;
+  position: absolute;
+  right: 8px; top: -10px;
   font-family: var(--font-display);
+  font-size: 78px;
   line-height: 1;
+  opacity: 0.24;
+  pointer-events: none;
+}
+.lrr-arch-no {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  opacity: 0.72;
 }
 .lrr-arch-name {
+  position: relative;
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 27px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  margin-bottom: 6px;
+  line-height: 1.12;
+  margin-top: 8px;
+  text-wrap: balance;
+}
+.lrr-arch-body { padding: 18px 22px 22px; }
+.lrr-arch-pull {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.45;
   color: var(--ink);
+  margin: 0 0 10px;
 }
 /* `.lrr-arch-tag` and `.lrr-arch-bars` are gone with the invented taglines and
    the fixed-value fingerprint strip they styled. */
 .lrr-arch-blurb {
-  font-family: var(--font-display);
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--ink-soft);
-  margin: 14px 0 0;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-quiet);
+  margin: 0;
 }
 .lrr-arch-foot {
   margin-top: 28px;
@@ -282,7 +352,7 @@
   list-style: none;
 }
 .lrr-faq-q::-webkit-details-marker { display: none; }
-.lrr-faq-q::after { content: " +"; color: var(--ink-faint); }
+.lrr-faq-q::after { content: " +"; color: var(--ink-quiet); }
 .lrr-faq-item[open] .lrr-faq-q::after { content: " –"; }
 .lrr-faq-d {
   font-family: var(--font-display);
@@ -301,12 +371,13 @@
 }
 .lrr-final-orn { font-family: var(--font-display); font-size: 28px; color: var(--brass); margin-bottom: 18px; }
 .lrr-h2-large {
-  font-size: 64px;
+  font-size: clamp(2rem, 5.4vw, 4rem);
   font-weight: 400;
   letter-spacing: -0.02em;
-  line-height: 1.02;
+  line-height: 1.04;
   margin-bottom: 18px;
   color: var(--ink);
+  text-wrap: balance;
 }
 .lrr-h2-large em { color: var(--oxblood); font-style: italic; }
 .lrr-final-dek {
@@ -323,15 +394,42 @@
   border-top: 1px solid var(--rule);
   display: flex;
   justify-content: space-between;
-  color: var(--ink-faint);
+  color: var(--ink-quiet);
   font-family: var(--font-mono);
   font-size: 11.5px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.lrr-footer a { color: var(--ink-faint); text-decoration: none; }
+.lrr-footer a { color: var(--ink-quiet); text-decoration: none; }
 .lrr-footer a:hover { color: var(--oxblood); }
 .lrr-sep { margin: 0 6px; }
+
+/* ----- ACCESSIBILITY ----- */
+/* Global .label-sm is --ink-faint (~2.4:1 on the paper ground). Scoped bump for
+   this page's uses (trust row, archetype numbers, hero fig). */
+.landing-rr .label-sm { color: var(--ink-quiet); }
+
+/* The custom-coloured links/summaries here override the UA styles but set no
+   focus ring — keyboard and switch users had nothing to follow. */
+.landing-rr a:focus-visible,
+.landing-rr button:focus-visible,
+.landing-rr summary:focus-visible {
+  outline: 2px solid var(--oxblood);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.lrr-faq-q:focus-visible { outline-offset: 1px; }
+
+/* ----- FAQ GROUPS ----- */
+.lrr-faq-group + .lrr-faq-group { margin-top: 34px; }
+.lrr-faq-grouphead {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--oxblood);
+  margin-bottom: 4px;
+}
 
 /* ----- THE PHONE'S PERSISTENT CTA -----
    Hidden by default and turned on only by the 640 tier — see LandingPage.jsx
@@ -341,15 +439,44 @@
 /* responsive */
 @media (max-width: 1080px) {
   .lrr-hero, .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-faq, .lrr-final { padding-left: 28px; padding-right: 28px; }
+  .lrr-nav { padding-left: 28px; padding-right: 28px; }
   .lrr-hero-grid { grid-template-columns: 1fr; gap: 50px; }
-  .lrr-h1 { font-size: 64px; }
   .lrr-how-grid { grid-template-columns: repeat(2, 1fr); }
   .lrr-arch-grid { grid-template-columns: 1fr; }
   .lrr-manifesto-grid { grid-template-columns: 1fr; gap: 30px; }
   .lrr-res-grid { grid-template-columns: 1fr; gap: 34px; }
-  .lrr-h2 { font-size: 40px; }
-  .lrr-h2-large { font-size: 44px; }
-  .lrr-nav-links a { display: none; }
+}
+
+/* ── Section nav becomes a scrollable chip row ──
+   Below this width the inline links used to be `display: none` with nothing in
+   their place, leaving a 9-section page with no jump nav. The nav wraps to two
+   rows now: wordmark + actions, then a horizontally-scrollable row of section
+   chips. No drawer, no overlay, no JS. */
+@media (max-width: 1000px) {
+  .lrr-nav { flex-wrap: wrap; gap: 10px 16px; }
+  .lrr-nav-actions { margin-left: auto; }
+  .lrr-nav-sections {
+    order: 3;
+    flex-basis: 100%;
+    overflow-x: auto;
+    gap: 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+  .lrr-nav-sections::-webkit-scrollbar { display: none; }
+  .lrr-nav-sections a {
+    flex: none;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 7px 13px;
+    font-size: 13px;
+  }
+  .lrr-nav-sections a[aria-current="true"] {
+    border-color: var(--oxblood);
+    background: color-mix(in srgb, var(--oxblood) 8%, transparent);
+  }
+  .lrr-nav-actions .lrr-nav-signin { display: none; }  /* one primary action on phones */
 }
 
 /* ── Section heads stop being two columns ──
@@ -377,22 +504,18 @@
      feel like a printed spread. Six of them on a phone is six extra screens of
      scrolling between arguments, and the reader pays for it in thumb-miles. */
   .lrr-how, .lrr-arch, .lrr-res, .lrr-manifesto, .lrr-faq { padding-top: 56px; padding-bottom: 56px; }
-  .lrr-hero { padding-top: calc(20px + env(safe-area-inset-top, 0px)); padding-bottom: 48px; }
+  .lrr-hero { padding-top: 24px; padding-bottom: 48px; }
   .lrr-final { padding-top: 56px; padding-bottom: 40px; }
 
-  /* ── Hero ──
-     90px between the wordmark and the eyebrow pushed the headline — the one
-     thing that has to land before a thumb moves — most of the way down the
-     first screen. */
-  .lrr-nav { margin-bottom: 40px; gap: 10px; }
-  .lrr-nav-links { gap: 8px; }
+  /* ── Nav ── (safe-area inset rides on .lrr-nav's own padding now) */
+  .lrr-nav { padding-left: 18px; padding-right: 18px; column-gap: 12px; }
 
   /* The 40px rule and the label sat on one flex line, so the label wrapped to
      two and the rule floated at the vertical centre of a block it was meant to
      introduce. Above it instead, where a printed eyebrow rule belongs. */
   .lrr-hero-eyebrow { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 22px; }
 
-  .lrr-h1 { font-size: 40px; letter-spacing: -0.02em; margin-bottom: 22px; }
+  .lrr-h1 { letter-spacing: -0.02em; margin-bottom: 22px; }
   .lrr-dek { font-size: 18px; margin-bottom: 26px; }
 
   /* One decision per row. The gold button and "see how it works ↓" shared a
@@ -414,7 +537,6 @@
   .lrr-hero-fig { flex-direction: column; align-items: flex-start; gap: 6px; font-size: 13px; }
 
   /* ── How it works ── */
-  .lrr-h2 { font-size: 31px; }
   .lrr-how-grid { grid-template-columns: 1fr; }
   /* The rule turns 90°: it divides steps stacked in a column now, not columns. */
   .lrr-step { padding: 20px 0; border-left: none; border-top: 1px solid var(--rule); }
@@ -424,11 +546,15 @@
   /* ── Body copy ──
      15px is a desk size. On a phone held at arm's length it is the size that
      makes people zoom, and iOS zooms the whole page rather than reflowing. */
-  .lrr-step-d, .lrr-arch-blurb, .lrr-res-d { font-size: 16px; }
+  .lrr-step-d, .lrr-res-d { font-size: 16px; }
 
   /* ── Archetypes ── */
-  .lrr-arch-card { padding: 22px 20px; }
-  .lrr-arch-name { font-size: 24px; }
+  .lrr-arch-band { padding: 16px 18px 14px; }
+  .lrr-arch-body { padding: 16px 18px 20px; }
+  .lrr-arch-glyph { font-size: 64px; }
+  .lrr-arch-name { font-size: 23px; }
+  .lrr-arch-pull { font-size: 17px; }
+  .lrr-arch-blurb { font-size: 14.5px; }
   .lrr-arch-grid { gap: 16px; }
   .lrr-arch-foot { margin-top: 22px; }
 
@@ -441,7 +567,6 @@
   .lrr-manifesto-t { font-size: 21px; }
 
   /* ── Final ── */
-  .lrr-h2-large { font-size: 32px; }
   .lrr-final-dek { font-size: 17px; margin-bottom: 26px; }
   .lrr-final-btn { width: 100%; justify-content: center; }
   /* `.lrr-final` is centred, and the footer inherited it while being told to
@@ -512,6 +637,9 @@
   .lrr-nav .btn { min-height: 44px; }
   .lrr-link-italic { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; }
   .lrr-footer a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; }
+  /* The chip-row section links — the scroll row gives them horizontal breathing
+     space, so height is the only axis at risk. */
+  .lrr-nav-sections a { min-height: 40px; display: inline-flex; align-items: center; }
 }
 
 /* index.html sets viewport-fit=cover, so the layout viewport now runs under the

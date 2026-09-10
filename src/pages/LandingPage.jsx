@@ -14,18 +14,25 @@ import "./LandingPage.css";
 // and never has: a reader could be sold an archetype the engine cannot return.
 // Two of the three real ones also carried another archetype's colour and glyph.
 // If these drift again, the engine is the source of truth, not this file.
+//
+// `lead` + " " + `pull` is the archetype's verbatim engine description, split in
+// two only so the card can set the closing line as a pull-quote and the opener
+// as supporting text. Reordered on screen; not a word changed.
 const ARCHETYPES_PREVIEW = [
   {
     id: "grief_romantic", name: "The Grief Romantic", color: "#3A5A6B", glyph: "◈",
-    blurb: "You seek books that break your heart because feeling deeply is how you know you're alive. Loss isn't your enemy — numbness is.",
+    lead: "You seek books that break your heart because feeling deeply is how you know you're alive.",
+    pull: "Loss isn't your enemy — numbness is.",
   },
   {
     id: "midnight_arsonist", name: "The Midnight Arsonist", color: "#C47A3A", glyph: "△",
-    blurb: "You read like you're setting fire to your own beliefs. Comfort zones are for people who haven't found the right book yet.",
+    lead: "You read like you're setting fire to your own beliefs.",
+    pull: "Comfort zones are for people who haven't found the right book yet.",
   },
   {
     id: "comfort_architect", name: "The Comfort Architect", color: "#7A8B6F", glyph: "○",
-    blurb: "You build emotional safety through stories. Your bookshelf isn't a collection — it's a home you can always return to.",
+    lead: "You build emotional safety through stories.",
+    pull: "Your bookshelf isn't a collection — it's a home you can always return to.",
   },
 ];
 
@@ -81,45 +88,60 @@ const MANIFESTO = [
 // shorter prose copy for crawlers that don't run JS; keep the two roughly
 // aligned when a claim changes, but the structured data comes from here.
 // Numbers come from the same constants as the rest of the page.
+// `g` groups the list into the subheadings the section renders and keeps the
+// JSON-LD order stable. GROUP_ORDER is the render order; the first item of each
+// group renders open.
+const GROUP_ORDER = ["The basics", "Privacy", "How it compares", "Reading with others"];
 const FAQ = [
-  { q: "What is Bibliome?",
+  { g: "The basics", q: "What is Bibliome?",
     d: `A private journal for readers. Instead of rating a book, you record what it did to you — which of ${EMO_LIST.length} emotions it pulled, how hard, and how it left you. After ${MIN_BOOKS} books it reads your patterns back as a reading archetype.` },
-  { q: "Is Bibliome an emotion or mood book tracker?",
+  { g: "The basics", q: "Is Bibliome an emotion or mood book tracker?",
     d: `Yes — that's the whole idea. You log each book against ${EMO_LIST.length} emotions grouped into five families, with a strength for each, instead of a star rating or a mood tag. Over time the emotions become a picture of you as a reader.` },
-  { q: "Is Bibliome free?",
+  { g: "The basics", q: "Is Bibliome free?",
     d: "Yes — free, with no ads, no third-party analytics or tracking scripts, and no data selling." },
-  { q: "How is Bibliome different from Goodreads?",
-    d: "No stars, no rankings, no page counts, no yearly goals, no streaks, no followers. Bibliome records how a book made you feel; Goodreads records that you read it." },
-  { q: "How is Bibliome different from The StoryGraph?",
-    d: "The StoryGraph analyses mood and pace to recommend your next read. Bibliome isn't a recommendation engine — it's a private emotional record of the books you've already read, and it turns that record into a reading personality rather than a to-read list." },
-  { q: "Can I import my books from Goodreads or StoryGraph?",
-    d: "Yes. Export your library as a CSV from Goodreads or The StoryGraph and upload it; Bibliome imports the titles and tells you honestly how many parsed, imported, and were skipped." },
-  { q: "Is my reading journal private?",
-    d: "The private journal is end-to-end encrypted in your browser before it's sent. We can't read it — not from the database, not from a backup, not if compelled. You can export or delete everything yourself." },
-  { q: "How do I record how a book made me feel?",
+  { g: "The basics", q: "How do I record how a book made me feel?",
     d: `You open one emotion family at a time, pick the feelings that fit from the ${EMO_LIST.length}, and give each a strength. You can keep the line you couldn't forget, and when you finish a book you can trace its arc — how it began, how it felt in the thick of it, how it left you.` },
-  { q: "What is Reading DNA and a reading archetype?",
+  { g: "The basics", q: "What is Reading DNA and a reading archetype?",
     d: `Reading DNA is the profile Bibliome builds from your emotional patterns — the feelings you reach for, the ones you avoid, what shows up together. A reading archetype is the human-readable summary of that: one of ${ARCHETYPE_COUNT}, such as the Grief Romantic or the Comfort Architect.` },
-  { q: "How many books before I get an archetype?",
+  { g: "The basics", q: "How many books before I get an archetype?",
     d: `${MIN_BOOKS}. After ${MIN_BOOKS} logged books the engine offers a first insight or two and usually an archetype — one of ${ARCHETYPE_COUNT}, assigned from what you recorded, never a quiz and never something you pick. Deeper patterns wait on a bigger shelf.` },
-  { q: "What are the reading archetypes?",
+  { g: "The basics", q: "What are the reading archetypes?",
     d: `Examples include the Grief Romantic, the Midnight Arsonist, and the Comfort Architect. There are ${ARCHETYPE_COUNT} in total, each assigned from the emotional patterns in your own reading.` },
-  { q: "Can I share my Reading DNA?",
-    d: "Yes. Each profile has a shareable card at its own link that anyone can open without an account. Nothing else on your profile is public." },
-  { q: "Does Bibliome connect me with other readers?",
-    d: "In one narrow way, called Resonance. When someone else has recorded the same book with almost the same feelings at almost the same strength, Bibliome offers you a single way to say so — you write a note first, they see the note and not you, and if they write back you both learn who the other is at the same moment." },
-  { q: "How does Resonance match readers?",
-    d: "Only on a shared book and the emotions you both recorded for it — never on how much you read, who you know, or anything social. You get at most three suggestions at a time, you can't search for people, and a decline is silent: the other reader is never told." },
-  { q: "Can I read together with friends or share a reading list?",
-    d: "Yes, through Collections. A collection is a curated set of books you can keep private or open to any signed-in reader, and you can invite specific people with a link. Each book in a shared collection has its own discussion page." },
-  { q: "Can I follow people or see follower counts?",
-    d: "No. Nobody can follow you, and there are no counts on anything, anywhere — no followers, no likes tallied, no leaderboards. It's built so it can't become a social feed." },
-  { q: "What are Echoes?",
-    d: "Echoes are Bibliome's one small public room: short notes about what a book did to you, in a chronological feed that ends with “you're caught up.” There's no path from an Echo to someone's profile or other posts, and you can block, mute, or report." },
-  { q: "Is there a Bibliome mobile app?",
+  { g: "The basics", q: "Is there a Bibliome mobile app?",
     d: "Bibliome is a web app that installs to your home screen on phones and desktops, works offline for reading, and can send push notifications. There's no separate App Store or Play Store download." },
-  { q: "Does Bibliome track pages read, reading speed, or yearly goals?",
+
+  { g: "Privacy", q: "Is my reading journal private?",
+    d: "The private journal is end-to-end encrypted in your browser before it's sent. We can't read it — not from the database, not from a backup, not if compelled. You can export or delete everything yourself." },
+  { g: "Privacy", q: "Can I follow people or see follower counts?",
+    d: "No. Nobody can follow you, and there are no counts on anything, anywhere — no followers, no likes tallied, no leaderboards. It's built so it can't become a social feed." },
+  { g: "Privacy", q: "Does Bibliome track pages read, reading speed, or yearly goals?",
     d: "No. There are no page counts, no reading-speed stats, no yearly challenges, and no streaks. The only thing it measures is how books made you feel." },
+  { g: "Privacy", q: "Can I share my Reading DNA?",
+    d: "Yes. Each profile has a shareable card at its own link that anyone can open without an account. Nothing else on your profile is public." },
+
+  { g: "How it compares", q: "How is Bibliome different from Goodreads?",
+    d: "No stars, no rankings, no page counts, no yearly goals, no streaks, no followers. Bibliome records how a book made you feel; Goodreads records that you read it." },
+  { g: "How it compares", q: "How is Bibliome different from The StoryGraph?",
+    d: "The StoryGraph analyses mood and pace to recommend your next read. Bibliome isn't a recommendation engine — it's a private emotional record of the books you've already read, and it turns that record into a reading personality rather than a to-read list." },
+  { g: "How it compares", q: "Can I import my books from Goodreads or StoryGraph?",
+    d: "Yes. Export your library as a CSV from Goodreads or The StoryGraph and upload it; Bibliome imports the titles and tells you honestly how many parsed, imported, and were skipped." },
+
+  { g: "Reading with others", q: "Does Bibliome connect me with other readers?",
+    d: "In one narrow way, called Resonance. When someone else has recorded the same book with almost the same feelings at almost the same strength, Bibliome offers you a single way to say so — you write a note first, they see the note and not you, and if they write back you both learn who the other is at the same moment." },
+  { g: "Reading with others", q: "How does Resonance match readers?",
+    d: "Only on a shared book and the emotions you both recorded for it — never on how much you read, who you know, or anything social. You get at most three suggestions at a time, you can't search for people, and a decline is silent: the other reader is never told." },
+  { g: "Reading with others", q: "Can I read together with friends or share a reading list?",
+    d: "Yes, through Collections. A collection is a curated set of books you can keep private or open to any signed-in reader, and you can invite specific people with a link. Each book in a shared collection has its own discussion page." },
+  { g: "Reading with others", q: "What are Echoes?",
+    d: "Echoes are Bibliome's one small public room: short notes about what a book did to you, in a chronological feed that ends with “you're caught up.” There's no path from an Echo to someone's profile or other posts, and you can block, mute, or report." },
+];
+
+const NAV_LINKS = [
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#archetypes",   label: "Archetypes" },
+  { href: "#resonance",    label: "Resonance" },
+  { href: "#manifesto",    label: "Manifesto" },
+  { href: "#faq",          label: "FAQ" },
 ];
 
 function Wordmark({ size = 28 }) {
@@ -146,6 +168,9 @@ export default function LandingPage({ onGetStarted }) {
   const [showCta, setShowCta] = useState(false);
   const heroCtaRef = useRef(null);
   const finalCtaRef = useRef(null);
+
+  // Nav is sticky on every width. `activeSection` marks the link you're inside.
+  const [activeSection, setActiveSection] = useState("");
 
   // FAQPage structured data, built from the same FAQ array the section renders
   // so the two can't disagree. Injected here rather than in index.html because
@@ -189,24 +214,64 @@ export default function LandingPage({ onGetStarted }) {
     return () => io.disconnect();
   }, []);
 
+  // Scroll-spy for the nav's active-link marker. jsdom has no
+  // IntersectionObserver, so tests just get a nav with no active marker.
+  useEffect(() => {
+    if (typeof IntersectionObserver !== "function") return;
+
+    const sections = NAV_LINKS
+      .map((l) => document.getElementById(l.href.slice(1)))
+      .filter(Boolean);
+    // A zero-height band across the viewport middle: whichever section straddles
+    // that line is the active one. Order sections top-to-bottom so the last one
+    // to cross wins when two briefly overlap the line.
+    const order = new Map(sections.map((s, i) => [s.id, i]));
+    const onLine = new Set();
+    const spyIo = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) onLine.add(e.target.id);
+          else onLine.delete(e.target.id);
+        }
+        let top = "";
+        for (const id of onLine) if (top === "" || order.get(id) > order.get(top)) top = id;
+        setActiveSection(top);
+      },
+      { rootMargin: "-50% 0px -50% 0px" },
+    );
+    sections.forEach((s) => spyIo.observe(s));
+
+    return () => spyIo.disconnect();
+  }, []);
+
   return (
     <div className="landing-rr">
+      {/* ============== NAV ============== */}
+      {/* Sticky on every width. Lives outside `.lrr-hero` because that section is
+          `overflow: hidden`, which would trap `position: sticky`. safe-area-inset-top
+          rides on the nav now — it's the topmost element in the installed PWA. */}
+      <nav className="lrr-nav">
+        <Wordmark size={28} />
+        <div className="lrr-nav-sections">
+          {NAV_LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              aria-current={activeSection === l.href.slice(1) ? "true" : undefined}
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+        <div className="lrr-nav-actions">
+          <button className="btn ghost lrr-nav-signin" onClick={() => onGetStarted("signin")} style={{ fontSize: 12 }}>Sign in</button>
+          <button className="btn" onClick={() => onGetStarted("register")} style={{ fontSize: 12 }}>Begin →</button>
+          <ThemeToggle className="rr-theme-toggle lrr-nav-theme" />
+        </div>
+      </nav>
+
       {/* ============== HERO ============== */}
       <section className="lrr-hero">
-        <nav className="lrr-nav">
-          <Wordmark size={28} />
-          <div className="lrr-nav-links">
-            <a href="#how-it-works">How it works</a>
-            <a href="#archetypes">Archetypes</a>
-            <a href="#resonance">Resonance</a>
-            <a href="#manifesto">Manifesto</a>
-            <a href="#faq">FAQ</a>
-            <button className="btn ghost" onClick={onGetStarted} style={{ fontSize: 12 }}>Sign in</button>
-            <button className="btn" onClick={onGetStarted} style={{ fontSize: 12 }}>Begin →</button>
-            <ThemeToggle className="rr-theme-toggle" />
-          </div>
-        </nav>
-
         <div className="lrr-hero-grid">
           <div>
             <div className="lrr-hero-eyebrow">
@@ -214,9 +279,7 @@ export default function LandingPage({ onGetStarted }) {
               <div className="label">a private journal for readers who feel too much</div>
             </div>
             <h1 className="lrr-h1">
-              The emotional<br />
-              <em>fingerprint</em><br />
-              of your reading life.
+              The emotional <em>fingerprint</em> of your reading life.
             </h1>
             <p className="lrr-dek">
               Instead of giving a book stars, you record what it <em>did</em> to you —
@@ -224,9 +287,12 @@ export default function LandingPage({ onGetStarted }) {
               your shelf starts describing you back.
             </p>
             <div className="lrr-cta-row" ref={heroCtaRef}>
-              <button className="btn brass" onClick={onGetStarted} style={{ fontSize: 14, padding: "12px 22px" }}>
-                <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 17 }}>Discover</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.18em" }}>YOUR DNA</span>
+              <button
+                className="btn brass lrr-cta-btn"
+                onClick={() => onGetStarted("register")}
+                style={{ fontSize: 15, padding: "13px 24px", fontFamily: "var(--font-display)", fontStyle: "italic" }}
+              >
+                Discover your DNA →
               </button>
               <a className="lrr-link-italic" href="#how-it-works">see how it works ↓</a>
             </div>
@@ -307,13 +373,16 @@ export default function LandingPage({ onGetStarted }) {
         </div>
         <div className="lrr-arch-grid">
           {ARCHETYPES_PREVIEW.map((a, i) => (
-            <article key={a.id} className="card editorial lrr-arch-card" style={{ borderTop: `3px solid ${a.color}` }}>
-              <div className="lrr-arch-card-top">
-                <div className="label-sm">archetype no. {String(i + 1).padStart(2, "0")}</div>
-                <div className="lrr-arch-glyph" style={{ color: a.color }}>{a.glyph}</div>
+            <article key={a.id} className="lrr-arch-card" style={{ "--a-color": a.color }}>
+              <div className="lrr-arch-band">
+                <span className="lrr-arch-glyph" aria-hidden="true">{a.glyph}</span>
+                <span className="lrr-arch-no">{String(i + 1).padStart(2, "0")} / {ARCHETYPE_COUNT}</span>
+                <h3 className="lrr-arch-name">{a.name}</h3>
               </div>
-              <h3 className="lrr-arch-name">{a.name}</h3>
-              <p className="lrr-arch-blurb">{a.blurb}</p>
+              <div className="lrr-arch-body">
+                <p className="lrr-arch-pull">{a.pull}</p>
+                <p className="lrr-arch-blurb">{a.lead}</p>
+              </div>
               {/* A seven-bar strip of fixed values labelled "emotional
                   fingerprint" used to sit here. The real fingerprint is a bar
                   per feeling drawn from a reader's own tally, so this was a
@@ -396,12 +465,20 @@ export default function LandingPage({ onGetStarted }) {
         <div className="label" style={{ marginBottom: 10 }}>· questions ·</div>
         <h2 className="lrr-h2">Frequently <em>asked</em>.</h2>
         <div className="lrr-faq-list">
-          {FAQ.map((f) => (
-            <details key={f.q} className="lrr-faq-item">
-              <summary className="lrr-faq-q">{f.q}</summary>
-              <p className="lrr-faq-d">{f.d}</p>
-            </details>
-          ))}
+          {GROUP_ORDER.map((group) => {
+            const items = FAQ.filter((f) => f.g === group);
+            return (
+              <div key={group} className="lrr-faq-group">
+                <h3 className="lrr-faq-grouphead">{group}</h3>
+                {items.map((f, i) => (
+                  <details key={f.q} className="lrr-faq-item" open={i === 0}>
+                    <summary className="lrr-faq-q">{f.q}</summary>
+                    <p className="lrr-faq-d">{f.d}</p>
+                  </details>
+                ))}
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -416,9 +493,13 @@ export default function LandingPage({ onGetStarted }) {
         <p className="lrr-final-dek">
           {MIN_BOOKS} books is all it takes to start. Begin with the one you'd lend out reluctantly.
         </p>
-        <button ref={finalCtaRef} className="btn brass lrr-final-btn" onClick={onGetStarted} style={{ fontSize: 15, padding: "14px 28px" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 18 }}>Begin</span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em" }}>YOUR DNA</span>
+        <button
+          ref={finalCtaRef}
+          className="btn brass lrr-final-btn"
+          onClick={() => onGetStarted("register")}
+          style={{ fontSize: 16, padding: "15px 30px", fontFamily: "var(--font-display)", fontStyle: "italic" }}
+        >
+          Begin your reading DNA →
         </button>
 
         <footer className="lrr-footer">
@@ -445,9 +526,12 @@ export default function LandingPage({ onGetStarted }) {
           instead of leaving an invisible button over the footer. */}
       <div className={`lrr-stickycta ${showCta ? "is-shown" : ""}`}>
         <span className="lrr-stickycta-copy">{MIN_BOOKS} books to begin</span>
-        <button className="btn brass lrr-stickycta-btn" onClick={onGetStarted}>
-          <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 16 }}>Begin</span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em" }}>YOUR DNA</span>
+        <button
+          className="btn brass lrr-stickycta-btn"
+          onClick={() => onGetStarted("register")}
+          style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 15 }}
+        >
+          Begin →
         </button>
       </div>
     </div>

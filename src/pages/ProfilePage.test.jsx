@@ -75,25 +75,27 @@ describe("ProfilePage self-view [F2.8]", () => {
   it("renders the lines you kept, and expanding is reversible", async () => {
     getMyProfile.mockResolvedValue({
       ...profile,
-      margins: [
-        { entry_id: "m1", title: "Gilead", quote: "the first line", at: "2025-03-04", dominant_emotion: "awe" },
-        { entry_id: "m2", title: "Middlemarch", quote: "the second line", at: "2025-02-01", dominant_emotion: "grief" },
-        { entry_id: "m3", title: "Piranesi", quote: "the third line", at: "2025-01-01", dominant_emotion: "awe" },
-        { entry_id: "m4", title: "Beach Read", quote: "the fourth line", at: "2024-12-01", dominant_emotion: "comfort" },
-      ],
+      // Eight kept lines: six show, the last two wait behind "+2 more".
+      margins: Array.from({ length: 8 }, (_, i) => ({
+        entry_id: `m${i + 1}`,
+        title: `Book ${i + 1}`,
+        quote: `kept-line-${i + 1}`,
+        at: "2025-01-01",
+        dominant_emotion: "awe",
+      })),
     });
     render(<ProfilePage />);
     await waitFor(() => screen.getByText("Alice"));
 
-    expect(screen.getByText(/the first line/)).toBeInTheDocument();
-    expect(screen.queryByText(/the fourth line/)).not.toBeInTheDocument();
+    expect(screen.getByText(/kept-line-1/)).toBeInTheDocument();
+    expect(screen.queryByText(/kept-line-8/)).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /more from your margins/i }));
-    expect(screen.getByText(/the fourth line/)).toBeInTheDocument();
+    expect(screen.getByText(/kept-line-8/)).toBeInTheDocument();
 
     // …and back again. Expanding used to be a one-way door.
     await userEvent.click(screen.getByRole("button", { name: /show fewer/i }));
-    expect(screen.queryByText(/the fourth line/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/kept-line-8/)).not.toBeInTheDocument();
   });
 
   it("says nothing when the shelf has noticed nothing", async () => {

@@ -30,9 +30,20 @@ import "./ProfilePage.css";
 
 // How much each section shows before it offers the rest. Nothing here scrolls
 // inside itself: a section you can't Ctrl+F is a section you can't find things in.
-const CAP = { nowReading: 3, recent: 6, margins: 3 };
+const CAP = { nowReading: 3, recent: 6, margins: 6 };
+// "from your margins" can hold a lot of entries and each is a tall block, so it
+// reveals in steps — one tap that dumped all of them added five screens of page.
+const MARGINS_STEP = 6;
 
 const MONTH = { month: "long", year: "numeric" };
+
+/** First letter or digit of the name, for the masthead avatar. "·" when there's
+ *  nothing real to show — never a stranger's initial. */
+function initialOf(profile) {
+  const s = (profile.display_name || profile.handle || "").trim();
+  const ch = [...s].find((c) => /\p{L}|\p{N}/u.test(c));
+  return ch ? ch.toUpperCase() : "·";
+}
 
 function monthYear(iso) {
   if (!iso) return null;
@@ -283,7 +294,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [insight, setInsight] = useState(null);
   const [showAllRecent, setShowAllRecent] = useState(false);
-  const [showAllMargins, setShowAllMargins] = useState(false);
+  const [marginsCount, setMarginsCount] = useState(CAP.margins);
   const [showAllOpen, setShowAllOpen] = useState(false);
   const cardRef = useRef(null);
 
@@ -354,97 +365,119 @@ export default function ProfilePage() {
 
   const openShown = showAllOpen ? nowReading : nowReading.slice(0, CAP.nowReading);
   const recentShown = showAllRecent ? recent : recent.slice(0, CAP.recent);
-  const marginsShown = showAllMargins ? margins : margins.slice(0, CAP.margins);
+  const marginsShown = margins.slice(0, marginsCount);
 
   return (
     <div className="pf-page">
       <div className="pf-topbar">
         <button className="btn ghost" onClick={() => navigate("/")}>← back to shelf</button>
-        <div className="label pf-topbar-title">· your study ·</div>
-        <button className="pf-topbar-edit" onClick={() => navigate("/settings")}>edit</button>
       </div>
 
-      {/* ── Upper half: who you are, and what's open ── */}
-      <div className="pf-grid pf-grid--upper">
-        <div className="pf-col">
-          {/* 1. Identity strip — no counts, no rank, no reader number. */}
-          <section className="pf-identity">
-            {sinceRoman && <div className="pf-since">keeping this shelf since {sinceRoman}</div>}
-            <h1 className="pf-name">{profile.display_name || `@${profile.handle}`}</h1>
-            <div className="pf-idline">
-              <span className="pf-handle">@{profile.handle}</span>
-              {disposition && <><span className="pf-idline-dot" aria-hidden="true" /><span className="pf-disposition">{disposition}</span></>}
-            </div>
-            <BioEditor bio={profile.bio} onSave={saveBio} />
-          </section>
-
-          {/* 2. The figures. Each one is countable by hand from your own shelf —
-              so on an empty shelf there is nothing to count and no quad to draw. */}
-          {empty ? (
-            <EmptyStudy onStart={() => navigate("/")} />
-          ) : (
-            <section className="pf-figures">
+      {/* ── Masthead: a decorative band, the avatar straddling its edge, and an
+          identity row — figures on one side, name in the middle, the way into
+          the full reading on the other. A strong full-width header is what lets
+          the two-column body below read as a content area rather than as two
+          piles. ── */}
+      <header className="pf-masthead">
+        <div className="pf-band" aria-hidden="true" />
+        <div className="pf-mast-row">
+          {!empty ? (
+            <div className="pf-mast-figures">
               <Figure value={bookCount} label={bookCount === 1 ? "volume" : "volumes"} />
               <Figure value={profile.registers_felt} label="registers felt" />
               <Figure value={profile.avg_intensity} label="avg intensity" />
               <Figure value={profile.set_down} label="set down" quiet />
-            </section>
-          )}
+            </div>
+          ) : <div />}
 
-          {/* 3. Now */}
-          {nowReading.length > 0 && (
-            <section className="pf-section">
-              <SectionHead aside={nowReading.length > 1 ? `${nowReading.length} open at once` : null}>now reading</SectionHead>
-              <div className="pf-opens">
-                {openShown.map((b) => <OpenBook key={b.entry_id} book={b} />)}
-              </div>
-              <MoreToggle
-                open={showAllOpen}
-                onToggle={() => setShowAllOpen((v) => !v)}
-                hidden={nowReading.length - CAP.nowReading}
-                label="open"
-              />
-            </section>
-          )}
+          <div className="pf-mast-id">
+            <div className="pf-avatar" aria-hidden="true">{initialOf(profile)}</div>
+            <h1 className="pf-name">{profile.display_name || `@${profile.handle}`}</h1>
+            {disposition && <div className="pf-disposition">{disposition}</div>}
+            <div className="pf-handle">
+              <span>@{profile.handle}</span>
+              {sinceRoman && <span> · reading since {sinceRoman}</span>}
+            </div>
+          </div>
+
+          <div className="pf-mast-actions">
+            <button className="btn ghost" onClick={() => navigate("/settings")}>edit profile</button>
+            <button className="pf-says-link" onClick={() => navigate("/?view=dna")}>
+              read the full DNA →
+            </button>
+          </div>
         </div>
+      </header>
 
-        {/* 4. The signature — the one shareable artifact, kept beside you. */}
-        <div className="pf-rail">
-          {signature ? (
-            <section>
-              <SectionHead>your signature</SectionHead>
-              <div className="pf-signature">
-                {/* `small` is 372px — the width of this rail and of the rule
-                    above it. The default `large` (440px) overhung the column by
-                    ~46px each side and read as a misalignment. */}
-                <DNACard
-                  ref={cardRef}
-                  profile={signature}
-                  username={profile.handle}
-                  size="small"
-                  allowShare
-                  onSave={() => saveCardAsImage(cardRef.current, profile.handle)}
+      {empty ? (
+        <EmptyStudy onStart={() => navigate("/")} />
+      ) : (
+        <div className="pf-body">
+          {/* ── Left: who you are and what you've kept ── */}
+          <aside className="pf-aside">
+            <section className="pf-intro">
+              <SectionHead>introduction</SectionHead>
+              <BioEditor bio={profile.bio} onSave={saveBio} />
+              {/* The shelf's own observation — one quiet line. Null-able by contract. */}
+              {insight && <p className="pf-says-line">“{insight}”</p>}
+            </section>
+
+            {(signature || bookCount > 0) && (
+              <div className="pf-sig-card">
+                {signature ? (
+                  <DNACard
+                    ref={cardRef}
+                    profile={signature}
+                    username={profile.handle}
+                    size="small"
+                    allowShare
+                    onSave={() => saveCardAsImage(cardRef.current, profile.handle)}
+                  />
+                ) : <SignaturePending bookCount={bookCount} />}
+              </div>
+            )}
+
+          </aside>
+
+          {/* ── Right: what you're reading ── */}
+          <div className="pf-main">
+            {nowReading.length > 0 && (
+              <section className="pf-section pf-section--flush">
+                <SectionHead aside={nowReading.length > 1 ? `${nowReading.length} open at once` : null}>now reading</SectionHead>
+                <div className="pf-opens">
+                  {openShown.map((b) => <OpenBook key={b.entry_id} book={b} />)}
+                </div>
+                <MoreToggle
+                  open={showAllOpen}
+                  onToggle={() => setShowAllOpen((v) => !v)}
+                  hidden={nowReading.length - CAP.nowReading}
+                  label="open"
                 />
-              </div>
-            </section>
-          ) : !empty && <SignaturePending bookCount={bookCount} />}
-        </div>
-      </div>
+              </section>
+            )}
 
-      {/* ── Lower half: the shelf itself, and what it has noticed ── */}
-      <div className="pf-grid">
-        <div className="pf-col">
-          {/* 5. Collections — curated, editable for self. A shelf you can't put
-              a book on isn't worth offering, so this waits for the first entry. */}
-          {/* Collections OTHER people own that you joined. Outside the `!empty`
-              guard on purpose: a reader with no books of their own can still
-              have been invited into someone else's, and hiding this until they
-              log a book would leave them with no way back to it. [#5/#6] */}
-          <section className="pf-section">
-            <JoinedCollections />
-          </section>
+            {recent.length > 0 && (
+              <FoldSection
+                narrow={narrow}
+                className="pf-section"
+                title="recently shelved"
+                aside={<button className="pf-head-link" onClick={() => navigate("/")}>all {bookCount} →</button>}
+                phoneAside={`${bookCount}`}
+                defaultOpen
+              >
+                <div className="pf-shelf-grid">
+                  {recentShown.map((b) => <ShelfBook key={b.entry_id} book={b} onClick={() => navigate("/")} />)}
+                </div>
+                <MoreToggle
+                  open={showAllRecent}
+                  onToggle={() => setShowAllRecent((v) => !v)}
+                  hidden={recent.length - CAP.recent}
+                  label=""
+                />
+              </FoldSection>
+            )}
 
-          {!empty && (
+            {/* Collections you own and curate. */}
             <section className="pf-section">
               <SectionHead>collections</SectionHead>
               <CollectionsEditor
@@ -453,62 +486,28 @@ export default function ProfilePage() {
                 onChanged={load}
               />
             </section>
-          )}
 
-          {/* 6. Reading history (range + pattern, never a tally-as-status) */}
-          {/* Open by default on a phone: this is the one archive section you
-              browse rather than consult, and a wall of covers is the pleasure
-              of the page. "all 69 →" is dropped from the phone head — it goes
-              to the same place as the sticky "back to shelf" above it. */}
-          {recent.length > 0 && (
-            <FoldSection
-              narrow={narrow}
-              className="pf-section"
-              title="recently shelved"
-              aside={<button className="pf-head-link" onClick={() => navigate("/")}>all {bookCount} →</button>}
-              phoneAside={`${bookCount}`}
-              defaultOpen
-            >
-              <div className="pf-shelf-grid">
-                {recentShown.map((b) => <ShelfBook key={b.entry_id} book={b} onClick={() => navigate("/")} />)}
-              </div>
-              <MoreToggle
-                open={showAllRecent}
-                onToggle={() => setShowAllRecent((v) => !v)}
-                hidden={recent.length - CAP.recent}
-                label=""
-              />
-            </FoldSection>
-          )}
-        </div>
-
-        <div className="pf-rail">
-          {/* Milestones moved to the DNA tab's Register, which now carries them
-              alongside the DNA gates as one ledger — one place to see progress,
-              rather than a five-item rail list here and a "NOT YET" list there.
-              "the shelf says" below links across to it. */}
-
-          {/* 9. What the shelf noticed. Renders only when there is a real one. */}
-          {insight && (
-            <section className="pf-says">
-              <div className="label">the shelf says</div>
-              <p className="pf-says-text">{insight}</p>
-              {/* The DNA is a tab on the shelf, not its own route. [F1.6] */}
-              <button className="pf-says-link" onClick={() => navigate("/?view=dna")}>read the full DNA →</button>
+            {/* Collections OTHER people own that you joined — renders nothing
+                when you've joined none. [#5/#6] */}
+            <section className="pf-section pf-section--joined">
+              <JoinedCollections />
             </section>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* From your margins — the lines you kept. Owner-only by contract; the
-          backend sends [] to anyone else, so there is nothing to gate here.
+      {/* An empty shelf can still have joined someone else's collection. */}
+      {empty && (
+        <section className="pf-section pf-section--joined">
+          <JoinedCollections />
+        </section>
+      )}
 
-          Full width, below both columns, rather than inside the left one. Kept
-          lines run long — a paragraph someone copied out by hand — and in a
-          half-width column two of them tower over the rail beside them and leave
-          it visibly empty. Across the page they set in three, and the quotes
-          clamp so one very long passage can't set the height for the rest. */}
-      {margins.length > 0 && (
+      {/* From your margins — the lines you kept, one per book. Full width below
+          both columns: kept lines run long and there can be many, so in a
+          half-width column they tower over what's beside them. Owner-only by
+          contract (the backend sends [] to anyone else). Reveals in steps. */}
+      {!empty && margins.length > 0 && (
         <FoldSection
           narrow={narrow}
           className="pf-section pf-margins-section"
@@ -529,12 +528,13 @@ export default function ProfilePage() {
               );
             })}
           </div>
-          <MoreToggle
-            open={showAllMargins}
-            onToggle={() => setShowAllMargins((v) => !v)}
-            hidden={margins.length - CAP.margins}
-            label="from your margins"
-          />
+          {marginsShown.length < margins.length ? (
+            <button className="pf-more" onClick={() => setMarginsCount((c) => c + MARGINS_STEP)}>
+              +{Math.min(MARGINS_STEP, margins.length - marginsShown.length)} more from your margins →
+            </button>
+          ) : marginsCount > CAP.margins ? (
+            <button className="pf-more" onClick={() => setMarginsCount(CAP.margins)}>← show fewer</button>
+          ) : null}
         </FoldSection>
       )}
 

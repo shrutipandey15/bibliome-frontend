@@ -178,10 +178,6 @@ function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, ca
       <div className="rr-header-row">
         <div className="rr-brand">
           <div className="rr-logo">Biblio<em>me</em></div>
-          <div className="rr-brand-meta">
-            <div className="label rr-volume">vol. iv · {new Date().getFullYear()}</div>
-            <div className="rr-tagline">{user?.display_name || user?.username || "your"}'s reading journal</div>
-          </div>
         </div>
         <div className="rr-actions">
           {/* Wide screens only — below 640 this is the .rr-fab above the tab
@@ -197,10 +193,13 @@ function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, ca
           <button className="btn ghost rr-add-btn rr-wide-only" onClick={onShelveBook}>
             <span className="rr-add-btn-label">+ TO READ</span>
           </button>
+          {/* Shows only once the shelf clears the 5-book gate and the reader
+              hasn't opened DNA yet — so it isn't shouting at everyone. A quiet
+              brass link, not a foil slab: the single loud control on this page
+              is earned by nothing that lives here permanently. */}
           {showDNA && (
-            <button className="btn brass rr-dna-btn rr-wide-only" onClick={onRevealDNA} disabled={generating}>
-              <span className="rr-dna-btn-verb">{generating ? "Reading" : "Read"}</span>
-              <span className="rr-dna-btn-noun">DNA</span>
+            <button className="btn ghost rr-dna-btn rr-wide-only" onClick={onRevealDNA} disabled={generating}>
+              {generating ? "Reading your DNA…" : "Read your DNA →"}
             </button>
           )}
           {/* Resonance's whole entry point. Renders NOTHING unless the reader
@@ -334,26 +333,31 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
         </h1>
         {/* Countable, or nothing. The old dek asserted a mood ("keeping the lights
             on for a friend who isn't home yet") and a "spike of catharsis" that
-            were hardcoded, not derived — equally true of any reader. [F-DNA-1] */}
-        <p className="rr-hero-dek">
-          {top ? (
-            <>Most tagged:{" "}
-              <span style={{ color: top.color, fontWeight: 600 }}>{top.name}</span>
-              {" "}— {topCount} of {total} {total === 1 ? "book" : "books"}.
-            </>
-          ) : (
-            <>Begin with one book. The shelf grows with you. Each entry is a small confession in the margin of your year.</>
-          )}
-        </p>
+            were hardcoded, not derived — equally true of any reader. [F-DNA-1]
+            The most-tagged feeling is the one personal figure on this screen, so
+            it gets to BE a figure — its own colour, a rule, a real size —
+            instead of hiding in a sentence. */}
+        {top ? (
+          <div className="rr-hero-figure" style={{ "--emo-c": top.color }}>
+            <div className="rr-hero-figure-n">
+              {topCount}<span className="rr-hero-figure-of">/{total}</span>
+            </div>
+            <p className="rr-hero-figure-cap">
+              pulled <span style={{ color: top.color, fontWeight: 600 }}>{top.name}</span> —
+              the feeling your shelf reaches for most.
+            </p>
+          </div>
+        ) : (
+          <p className="rr-hero-dek">
+            Begin with one book. The shelf grows with you. Each entry is a small confession in the margin of your year.
+          </p>
+        )}
         <div className="rr-hero-cta">
           {canGenerate && (
             <button className="btn brass" onClick={onRevealDNA} disabled={generating} style={{ fontSize: 13 }}>
               <span style={{ fontStyle: "italic", fontFamily: "var(--font-display)" }}>Read</span> your DNA →
             </button>
           )}
-          <button className="btn ghost rr-browse-btn" style={{ fontSize: 12 }} onClick={() => document.querySelector(".rr-stacks")?.scrollIntoView({ behavior: "smooth" })}>
-            browse the stacks ↓
-          </button>
         </div>
         <div className="rr-hero-aside">
           <span className="quote">“</span>
@@ -1200,7 +1204,7 @@ export default function App() {
           element={
             authed
               ? <AuthedLayout />
-              : <LandingPage onGetStarted={() => navigate("/login")} />
+              : <LandingPage onGetStarted={(mode) => navigate(mode === "register" ? "/login?mode=register" : "/login")} />
           }
         >
           <Route index element={<Dashboard />} />

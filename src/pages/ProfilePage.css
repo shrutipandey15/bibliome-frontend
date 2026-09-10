@@ -1,59 +1,142 @@
-/* Profile self-view [F2.8 / §Feature 2] — the study: a wide desk and a rail. */
-.pf-page { max-width: 1260px; margin: 0 auto; padding: 32px 40px 80px; }
+/* Profile self-view [F2.8 / §Feature 2] — the study.
 
-.pf-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 44px; }
-.pf-topbar-title { color: var(--ink-faint); letter-spacing: 0.42em; }
-.pf-topbar-edit { border: none; background: none; cursor: pointer; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-quiet); padding: 4px 0; }
-.pf-topbar-edit:hover { color: var(--brass); }
+   A full-width masthead (a band, the avatar straddling it, an identity row with
+   the figures on one side and the way into the full reading on the other), then
+   a two-column body: what you are and what you've kept on the left, what you're
+   reading on the right. The strong header is what keeps the two columns reading
+   as a content area rather than as two piles with an empty second column — the
+   failure mode of every earlier version of this page. */
+.pf-page { max-width: 1080px; margin: 0 auto; padding: 28px 40px 80px; }
 
-/* The two columns. The rail is a fixed measure because the signature card is a
-   fixed artifact — it must not stretch to whatever the desk leaves over. */
-.pf-grid { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 64px; align-items: start; }
-.pf-grid--upper { padding-bottom: 52px; border-bottom: 1px solid var(--rule); margin-bottom: 52px; }
-.pf-col { min-width: 0; }
-.pf-rail { min-width: 0; display: flex; flex-direction: column; gap: 36px; }
+.pf-topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
 
-.pf-section { margin-top: 44px; }
+/* ── Masthead ── */
+.pf-masthead { position: relative; margin-bottom: 44px; }
+/* A decorative header sheet — a soft brass wash from one corner over the raised
+   card surface and the paper grain. Reads as a designed band in both themes
+   (where a flat --bg-vellum went nearly invisible against the dark page). */
+.pf-band {
+  height: 128px;
+  border-radius: 4px;
+  border: 1px solid var(--rule);
+  background-color: var(--bg-card);
+  background-image:
+    radial-gradient(150% 130% at 22% -30%, color-mix(in srgb, var(--brass) 16%, transparent), transparent 58%),
+    var(--paper-grain);
+  background-blend-mode: normal, multiply;
+}
+.pf-mast-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 24px;
+  padding: 14px 28px 0;
+}
+
+/* 2×2 so four figures don't wrap 3+1 in the masthead's side column. */
+.pf-mast-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; width: max-content; max-width: 100%; }
+.pf-mast-figures .pf-figure { min-width: 0; }
+.pf-mast-figures .pf-figure-n { font-size: 21px; }
+.pf-mast-figures .pf-figure-label {
+  font-size: 9px; letter-spacing: 0.14em; margin-top: 4px; line-height: 1.35;
+}
+
+/* Only the centre column lifts, so the avatar rises into the band and the side
+   columns stay put just below it. */
+.pf-mast-id {
+  margin-top: -58px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.pf-avatar {
+  width: 88px; height: 88px; border-radius: 50%;
+  border: 4px solid var(--bg-page);
+  background: linear-gradient(135deg, var(--oxblood), var(--plum));
+  color: #f5ecd2;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 600; font-size: 34px; line-height: 1;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 12px;
+}
+.pf-mast-id .pf-name { font-size: 34px; margin: 0; }
+.pf-mast-id .pf-disposition { margin-top: 4px; }
+.pf-mast-id .pf-handle { margin-top: 8px; }
+
+.pf-mast-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+
+/* ── Body: what you are (left) · what you're reading (right) ── */
+.pf-body {
+  display: grid;
+  grid-template-columns: 372px minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+/* Sticky: the aside (intro + card) is short, the reading column is long. Pinning
+   it means the empty space below it scrolls away with the page instead of
+   sitting there — the card stays with you as you read down the right column.
+   `align-self: start` stops the grid stretching it to the row's full height,
+   which would defeat the sticky. Falls back to normal flow when it's taller
+   than the viewport. */
+.pf-aside {
+  min-width: 0;
+  display: flex; flex-direction: column; gap: 26px;
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+.pf-main { min-width: 0; }
+/* The aside is short (intro + card); the reading column is long. Hairline heads
+   in the aside don't need a right-hand aside label crowding them. */
+.pf-aside .pf-head-aside { display: none; }
+
+.pf-intro .pf-bio { margin-top: 14px; }
+.pf-sig-card { display: flex; }
+
+.pf-section { margin-top: 40px; }
+.pf-section:first-child { margin-top: 0; }
 .pf-section--flush { margin-top: 0; }
+/* JoinedCollections renders nothing when you've joined none — don't leave its
+   40px of lead-in behind. */
+.pf-section--joined:empty { display: none; margin: 0; }
+/* In the aside these sit in the flex-gap stack, not on their own margin. */
+.pf-aside .pf-section { margin-top: 0; }
 
 .pf-head {
   display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
   padding-bottom: 11px; margin-bottom: 20px; border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--ink-quiet);
 }
-.pf-head-aside { color: var(--ink-faint); letter-spacing: 0.2em; }
+.pf-head-aside { color: var(--ink-quiet); letter-spacing: 0.2em; }
 .pf-head-link { border: none; background: none; cursor: pointer; padding: 0; font: inherit; letter-spacing: 0.2em; color: var(--brass); }
 .pf-head-link:hover { text-decoration: underline; }
 
 .pf-more { margin-top: 16px; border: none; background: none; cursor: pointer; padding: 4px 0; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass); }
 .pf-more:hover { text-decoration: underline; }
 
-/* ── Identity ── */
-.pf-since { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--ink-faint); }
-.pf-name { font-family: var(--font-display); font-size: 68px; font-weight: 300; font-style: italic; line-height: 1; letter-spacing: -0.03em; color: var(--ink); margin: 16px 0 0; }
-.pf-idline { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
-.pf-idline-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--brass); align-self: center; }
+/* ── Identity (rendered inside the masthead's centre column) ── */
+/* Was a 300-weight italic 68px wisp; a name is a person — roman, 500. */
+.pf-name { font-family: var(--font-display); font-weight: 500; line-height: 1.04; letter-spacing: -0.02em; color: var(--ink); }
+/* The archetype IS the identity — oxblood, the colour that carries identity
+   everywhere else on the page. */
+.pf-disposition { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--oxblood); }
 .pf-handle { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.12em; color: var(--ink-quiet); }
-.pf-disposition { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--brass); }
 
-.pf-bio { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; max-width: 56ch; }
-.pf-bio-text { font-family: var(--font-display); font-size: 19px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
-.pf-bio-empty { font-family: var(--font-display); font-style: italic; font-size: 16px; color: var(--ink-quiet); margin: 0; }
-.pf-bio-edit { align-self: flex-start; border: none; background: none; cursor: pointer; font-family: var(--font-mono); font-size: 11px; color: var(--brass); padding: 0; }
+/* Bio + its edit control on one line (wraps to its own line only while editing,
+   where the textarea takes the full width). The edit link used to sit on a line
+   of its own below the text and read as a loose fragment. */
+.pf-bio { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: 16px; max-width: 60ch; }
+.pf-bio-text { font-family: var(--font-display); font-size: 17px; line-height: 1.55; color: var(--ink-soft); margin: 0; }
+.pf-bio-empty { font-family: var(--font-display); font-style: italic; font-size: 15.5px; color: var(--ink-quiet); margin: 0; }
+.pf-bio-edit { border: none; background: none; cursor: pointer; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brass); padding: 0; }
 .pf-bio-edit:hover { text-decoration: underline; }
-.pf-bio-input { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-vellum); font-family: var(--font-display); font-size: 16px; color: var(--ink); resize: vertical; }
-.pf-bio-input:focus { border-color: var(--brass); outline: none; }
-.pf-bio-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.pf-bio-input { flex: 1 1 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-field); font-family: var(--font-display); font-size: 16px; color: var(--ink); resize: vertical; }
+.pf-bio-input:focus { border-color: var(--brass); outline: 2px solid var(--brass); outline-offset: 1px; }
+.pf-bio-actions { flex: 1 1 100%; display: flex; gap: 10px; justify-content: flex-end; }
 
-/* ── The figures. A hairline grid, so an absent figure leaves no hole. ── */
-.pf-figures {
-  display: flex; flex-wrap: wrap; gap: 1px; margin-top: 38px;
-  background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden;
-}
-.pf-figure { flex: 1 1 0; min-width: 120px; background: var(--bg-card); padding: 18px 20px; }
-.pf-figure-n { font-family: var(--font-mono); font-size: 26px; letter-spacing: -0.02em; color: var(--ink); }
+/* ── The figures (masthead, left column). Plain — number over label, no box. ── */
+.pf-figure { min-width: 0; }
+.pf-figure-n { font-family: var(--font-display); font-weight: 400; line-height: 1; letter-spacing: -0.02em; color: var(--ink); font-feature-settings: "lnum"; }
 .pf-figure--quiet .pf-figure-n { color: var(--ink-quiet); }
-.pf-figure-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin-top: 7px; }
+.pf-figure-label { font-family: var(--font-mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-quiet); margin-top: 6px; }
 
 /* ── Day one ── */
 .pf-empty { margin-top: 38px; padding: 26px 26px 24px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-card); max-width: 56ch; }
@@ -67,25 +150,28 @@
 
 /* ── Now reading ── */
 .pf-opens { display: flex; flex-direction: column; }
-.pf-open { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid var(--rule-soft); }
+/* Cover + meta on one row; the check-in note runs full width underneath rather
+   than marooned in a right-hand column (which is what it did on the old
+   two-column page and looked stranded once the page went full width). */
+.pf-open { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid var(--rule-soft); }
 .pf-open:last-child { border-bottom: none; }
 .pf-open-cover { width: 52px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 1px; box-shadow: 0 6px 18px -8px var(--shelf-shadow); }
 .pf-open-cover--none { display: block; opacity: 0.65; }
 .pf-open-meta { min-width: 0; }
 .pf-open-title { font-family: var(--font-display); font-size: 20px; color: var(--ink); line-height: 1.25; }
 .pf-open-author { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; color: var(--ink-quiet); margin-top: 5px; }
-.pf-open-progress { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.pf-open-progress { display: flex; align-items: center; gap: 12px; margin-top: 12px; max-width: 320px; }
 .pf-open-track { flex: 1; height: 2px; border-radius: 2px; background: var(--rule); overflow: hidden; }
 .pf-open-fill { display: block; height: 2px; border-radius: 2px; }
 .pf-open-pct { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink-faint); }
 
 .pf-open-weather { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-quiet); }
 .pf-open-when { font-style: normal; color: var(--ink-faint); }
-.pf-open-note { max-width: 22ch; text-align: right; font-family: var(--font-display); font-style: italic; font-size: 15px; line-height: 1.5; color: var(--ink-quiet); }
+.pf-open-note { grid-column: 1 / -1; max-width: 60ch; margin-top: 10px; font-family: var(--font-display); font-style: italic; font-size: 15px; line-height: 1.5; color: var(--ink-quiet); }
 .pf-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
 /* ── Recently shelved ── */
-.pf-shelf-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px 16px; }
+.pf-shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 20px 16px; }
 .pf-shelf-book { min-width: 0; display: flex; flex-direction: column; text-align: left; border: none; background: none; padding: 0; cursor: pointer; }
 .pf-shelf-book:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
 .pf-shelf-cover { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 2px; box-shadow: 0 10px 24px -12px var(--shelf-shadow); }
@@ -97,29 +183,40 @@
 /* ── From your margins ──
    Full page width, below both columns: kept lines run to a paragraph, and in a
    half-width column they tower over the rail beside them. */
+/* Kept lines — full width below both columns, three up. Each clamped to a few
+   lines so one long passage can't set the row height; the full line is always
+   on the book's own entry. */
 .pf-margins-section { margin-top: 52px; }
-.pf-margins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
-.pf-margin { margin: 0; padding: 22px 24px; border-left: 2px solid var(--brass); background: var(--bg-card); }
-/* One very long passage must not set the height of the whole row. The full line
-   is always on the book's own entry. */
+.pf-margins { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; align-items: start; }
+.pf-margin { margin: 0; padding: 20px 22px; border-left: 2px solid var(--brass); background: var(--bg-card); }
 .pf-margin-text {
-  font-family: var(--font-display); font-size: 19px; font-style: italic; line-height: 1.5; color: var(--ink-soft); margin: 0;
-  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical;
+  font-family: var(--font-display); font-size: 17px; font-style: italic; line-height: 1.5; color: var(--ink-soft); margin: 0;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
 }
-.pf-margin-cite { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-top: 14px; }
+.pf-margin-cite { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-quiet); margin-top: 14px; }
 
-/* ── The rail ── */
-/* The card, its actions and the "your signature" rule all share one left edge.
-   `.dna-wrapper` centres and pads itself for the standalone surfaces; in the
-   rail that padding is what breaks the alignment. */
-.pf-signature { display: flex; }
-.pf-signature .dna-wrapper { padding: 0; width: 100%; align-items: stretch; }
-.pf-signature .dna-card { width: 100%; }
+.pf-sig-card .dna-wrapper { padding: 0; width: 100%; }
+.pf-sig-card .dna-card { --card-w: 100%; }
+.pf-mast-actions .pf-says-link { margin-top: 0; }
 
-
-.pf-says { padding: 22px 22px 20px; border: 1px solid var(--rule); border-radius: 2px; background: var(--bg-card); }
-.pf-says-text { font-family: var(--font-display); font-size: 17.5px; line-height: 1.58; color: var(--ink-soft); margin: 12px 0 0; }
-.pf-says-link { display: inline-block; margin-top: 14px; border: none; background: none; cursor: pointer; padding: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass); }
+/* The shelf's observation — one italic line under the bio, then the link to the
+   full reading on its own line. Not a boxed panel stranded in an empty rail. */
+.pf-says-line {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-quiet);
+  max-width: 60ch;
+}
+.pf-says-link {
+  display: inline-block;
+  margin-top: 10px;
+  border: none; background: none; cursor: pointer; padding: 0;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--brass);
+}
 .pf-says-link:hover { text-decoration: underline; }
 
 .pf-footer {
@@ -160,25 +257,27 @@
   .pf-fold-chev { transition: none; }
 }
 
-/* ── The rail folds under the desk before the desk gets narrow ── */
-@media (max-width: 1080px) {
-  .pf-grid { grid-template-columns: minmax(0, 1fr); gap: 44px; }
-  .pf-grid--upper { padding-bottom: 40px; margin-bottom: 40px; }
-  .pf-rail { max-width: 372px; }
-  .pf-shelf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .pf-margins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1000px) {
+  /* Body stacks: the aside (intro + card) sits above the reading column, no
+     longer sticky. */
+  .pf-body { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .pf-aside { max-width: 420px; position: static; }
 }
 
 @media (max-width: 900px) {
   .pf-page { padding: 24px 18px 60px; }
-  .pf-name { font-size: 40px; }
-  .pf-shelf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pf-margins { grid-template-columns: minmax(0, 1fr); }
-  .pf-margin-text { -webkit-line-clamp: 6; }
-  /* The pull-quote stops being a margin note and becomes a line under the book. */
+  .pf-mast-id .pf-name { font-size: 30px; overflow-wrap: anywhere; }
   .pf-open { grid-template-columns: 44px minmax(0, 1fr); gap: 14px; }
   .pf-open-cover { width: 44px; }
-  .pf-open-note { grid-column: 1 / -1; max-width: none; text-align: left; }
+}
+
+@media (max-width: 820px) {
+  /* Masthead stacks: band, then avatar + name centred, then figures, then
+     the action links. The three-up row can't hold at a phone-ish width. */
+  .pf-mast-row { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 16px; padding: 0 16px; }
+  .pf-mast-id { order: -1; margin-top: -52px; }
+  .pf-mast-figures { justify-self: center; }
+  .pf-mast-actions { align-items: center; }
 }
 
 /* ── Phones ──
@@ -201,54 +300,40 @@
      Sticky, because this page runs seven screens on a phone and carries no tab
      bar: without it, "back to shelf" exists only at the very top, and the way
      out of a room should not be something you have to scroll to find. */
+  /* Sticky — this page carries no tab bar, so the way out shouldn't be
+     something you scroll to find. safe-area-inset rides on its padding. */
   .pf-topbar {
     position: sticky;
     top: 0;
     z-index: 20;
-    margin: 0 -18px 26px;
+    margin: 0 -18px 16px;
     padding: 10px 18px;
     padding-top: calc(10px + env(safe-area-inset-top, 0px));
-    gap: 12px;
     background: var(--bg-page);
     border-bottom: 1px solid var(--rule);
   }
-  .pf-topbar-title { display: none; }
   .pf-topbar .btn { white-space: nowrap; font-size: 12px; padding: 8px 12px; }
 
-  /* ── Identity ──
-     40px was still sized for a name of four letters. A real display name at that
-     size breaks across two lines and swamps the disposition under it; and a
-     single long unbroken handle had nothing to break on at all. */
-  .pf-name { font-size: 32px; margin-top: 12px; overflow-wrap: anywhere; }
-  .pf-since { font-size: 10px; letter-spacing: 0.18em; }
-  .pf-idline { gap: 10px; margin-top: 12px; }
-  .pf-disposition { font-size: 18px; }
-  .pf-bio { margin-top: 16px; }
+  .pf-band { height: 88px; }
+  .pf-mast-id { margin-top: -44px; }
+  .pf-avatar { width: 74px; height: 74px; font-size: 29px; }
+  .pf-mast-id .pf-name { font-size: 28px; }
+  .pf-mast-id .pf-disposition { font-size: 18px; }
+  .pf-mast-figures { gap: 12px 18px; }
+  .pf-mast-figures .pf-figure-n { font-size: 19px; }
+  .pf-masthead { margin-bottom: 32px; }
+
   .pf-bio-text { font-size: 17px; }
-  /* cancel/save were two small buttons floated right under a full-width
-     textarea; they split the row instead. */
   .pf-bio-actions .btn { flex: 1; justify-content: center; }
 
-  /* ── Rhythm ──
-     44px between sections plus 40px of gutter on each side of the upper rule
-     left ~130px of empty page between the signature's buttons and "collections"
-     — on a desk that is air, on a phone it is a screen you scroll past. */
-  .pf-grid { gap: 30px; }
-  .pf-grid--upper { padding-bottom: 26px; margin-bottom: 26px; }
-  .pf-rail { max-width: none; gap: 28px; }
-  .pf-section { margin-top: 30px; }
-  .pf-margins-section { margin-top: 30px; }
+  .pf-body { gap: 28px; }
+  .pf-aside { max-width: none; gap: 26px; }
+  .pf-section { margin-top: 28px; }
   .pf-footer { margin-top: 44px; flex-wrap: wrap; gap: 6px 20px; }
   .pf-head { font-size: 10px; letter-spacing: 0.2em; }
 
-  .pf-figures { margin-top: 28px; }
-  .pf-figure { padding: 14px 16px; }
-  .pf-figure-n { font-size: 23px; }
-
-  /* The rail is `max-width: none` above, so the card is now the only thing
-     holding a fixed measure in a fluid column. DNACard.css caps it at 340px,
-     which is 1px wider than a 375px screen's content box — belt and braces. */
-  .pf-signature .dna-card { max-width: 100%; }
+  /* DNACard.css caps itself at 340px; belt and braces against a 375px screen. */
+  .pf-sig-card .dna-card { max-width: 100%; }
 
   .pf-open { padding: 16px 0; }
   .pf-open-title { font-size: 18px; }
@@ -261,13 +346,11 @@
   .pf-margin { padding: 18px 18px 16px; }
   .pf-margin-text { font-size: 17px; -webkit-line-clamp: 5; }
 
-  .pf-says { padding: 18px; }
-  .pf-says-text { font-size: 16.5px; }
+  .pf-says-line { font-size: 15.5px; }
 }
 
 @media (max-width: 480px) {
-  .pf-shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 14px; }
-  .pf-figure { min-width: 45%; }
+  .pf-mast-figures { gap: 14px 24px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -282,7 +365,6 @@
    can simply grow — there is nothing beside them whose taps it could
    steal. `pointer: coarse` keeps the desk's typographic density intact. */
 @media (pointer: coarse) {
-  .pf-topbar-edit,
   .pf-bio-edit,
   .pf-more,
   .pf-says-link {

@@ -51,7 +51,6 @@ export default function TabBar({ active, shelfCount, barOnly = false, fab = null
             {t.id === "shelf" && shelfCount !== undefined && (
               <span className="rr-tab-count">{String(shelfCount).padStart(2, "0")}</span>
             )}
-            {on && <span className="rr-tab-mark">✦</span>}
           </button>
         );
       })}

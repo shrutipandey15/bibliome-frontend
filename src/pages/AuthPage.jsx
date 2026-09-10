@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import PasswordField from "../components/PasswordField";
 import { useHead } from "../hooks/useHead";
@@ -26,7 +26,10 @@ function passwordStrength(pw) {
 
 export default function AuthPage() {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState("login");
+  // The landing page's "Begin" sends ?mode=register so new readers land on the
+  // create-account form instead of the sign-in one and its extra toggle tap.
+  const [params] = useSearchParams();
+  const [mode, setMode] = useState(params.get("mode") === "register" ? "register" : "login");
 
   // /login is a real entry point people are sent to, so it stays indexable —
   // it just needs to describe itself instead of inheriting the landing copy. [#2]
