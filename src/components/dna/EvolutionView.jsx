@@ -80,18 +80,26 @@ export default function EvolutionView({ profiles, drift = 0, snapshotCount = nul
   // null = we never looked; only a real count of <2 means "no history".
   const noHistory = snapshotCount != null && snapshotCount < 2;
 
-  return (
-    <section className="evo" aria-labelledby="evo-title">
-      <h2 id="evo-title" className="dna-section-label">
-        <span className="dna-numeral">II</span> What has changed
-      </h2>
-
-      {noHistory && !moved ? (
+  // With only one snapshot, the "then / now" panels are the same shelf weighted
+  // two ways — near-identical for a small library, and the section reads as
+  // filler. Say the one true sentence and stop.
+  if (noHistory && !moved) {
+    return (
+      <section className="evo" aria-labelledby="evo-title">
+        <h2 id="evo-title" className="dna-section-label">What has changed</h2>
         <p className="evo-drift-summary evo-drift-summary--none">
           Not enough history yet — your reading has only been recorded once.
           Check back after more books, and this will show what moved.
         </p>
-      ) : moved ? (
+      </section>
+    );
+  }
+
+  return (
+    <section className="evo" aria-labelledby="evo-title">
+      <h2 id="evo-title" className="dna-section-label">What has changed</h2>
+
+      {moved ? (
         <div className="evo-drift">
           <div className="evo-drift-arrow">
             <span className="evo-drift-from" style={{ color: emoColor(fromTop) }}>{emoLabel(fromTop)}</span>

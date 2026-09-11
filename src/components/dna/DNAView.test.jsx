@@ -124,10 +124,8 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
   it("leads with the strongest insight and DEMOTES the archetype below it [F7.2]", async () => {
     await renderView({ profile: fullProfile, username: "alice" });
     const headline = screen.getByText(/2\.3 points higher/);
-    // The archetype is no longer duplicated in DNAView's own markup — the
-    // shorthand plate in the right-hand rail carries it, with the description
-    // beneath. Demotion is now a property of that rail's position: it follows
-    // the whole argument column in document order.
+    // The shorthand card sits in the right-hand rail with its description
+    // beneath, and the rail follows the whole argument column in document order.
     const rail = document.querySelector(".dna-aside");
     expect(rail).toContainElement(screen.getByTestId("dna-card"));
     expect(rail).toHaveTextContent("You read toward the ache.");

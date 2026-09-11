@@ -117,34 +117,10 @@ export function Heatmap({ data }) {
   const visibleBooks = ordered.slice(0, shown);
   const remaining = ordered.length - visibleBooks.length;
 
-  // NOTE: emoTotals, bestPair and untagged below stay computed over ALL books
-  // on purpose. They are aggregate facts about the shelf, not about the window —
-  // windowing them would make the row counts and "most often together" silently
-  // change every time someone pressed "show older".
-
-  let bestPair = null, bestCount = 0;
-  for (let i = 0; i < emos.length; i++) {
-    for (let j = i + 1; j < emos.length; j++) {
-      const a = emos[i], b = emos[j];
-      const n = books.filter((bk) => cellMap[`${bk.entry_id}-${a}`] && cellMap[`${bk.entry_id}-${b}`]).length;
-      if (n > bestCount) { bestCount = n; bestPair = [a, b]; }
-    }
-  }
-
-  const presentSet = new Set(emos);
-  // Every register this shelf hasn't touched yet — the whole list, in vocabulary
-  // order. This used to be `.slice(0, 3)` under the heading "blind spots", which
-  // was ranking by declaration order and calling it a finding: two readers with
-  // the same shelf size saw the same three names because it was just list
-  // position. Show all of them, and let the copy be honest about how little a
-  // gap means this early.
-  const untagged = EMO_LIST.filter(([id]) => !presentSet.has(id));
-
   return (
     <div className="hm-page paper">
       <div className="hm-masthead">
         <div>
-          <div className="label" style={{ marginBottom: 14 }}>fig. 02 · cross-reference</div>
           <h1 className="hm-h1">The <em>Heatmap</em>.</h1>
           {/* Was "Every book × every emotion you assigned to it" — no longer
               true once the matrix draws a window, and the corner caption saying
@@ -166,8 +142,7 @@ export function Heatmap({ data }) {
 
       <div className="rule-dbl" style={{ marginBottom: 26 }} />
 
-      <div className="hm-grid-wrap">
-        <div className="hm-matrix-wrap">
+      <div className="hm-matrix-wrap">
           {narrow ? <CompactMatrix books={visibleBooks} emos={emos} cellMap={cellMap} /> : (
           <div
             className="hm-matrix"
@@ -230,61 +205,32 @@ export function Heatmap({ data }) {
               ))}
             </div>
           </div>
-        </div>
-
-        <div className="hm-rail">
-          {/* "Most felt" used to be rendered here as well as in the Patterns
-              rail below — the same emotion, the same count, the same percentage,
-              derived from two different sources about 600px apart. The Patterns
-              copy is the one that survives, because that is where the other
-              headline figures live. */}
-          {bestPair && bestCount >= 2 && (
-            <div className="card editorial">
-              <div className="label" style={{ marginBottom: 10 }}>most often together</div>
-              <div className="hm-rail-pair">
-                <em style={{ color: EMOTIONS[bestPair[0]]?.color }}>{EMOTIONS[bestPair[0]]?.name}</em>
-                {" + "}
-                <em style={{ color: EMOTIONS[bestPair[1]]?.color }}>{EMOTIONS[bestPair[1]]?.name}</em>
-              </div>
-              <div className="hm-rail-sub">
-                you tagged both on the same book {bestCount} time{bestCount === 1 ? "" : "s"}, out of {books.length}
-              </div>
-              {/* No coefficient here. There used to be a "ρ 0.42" printed on this
-                  line, computed as co-occurrences ÷ books × 0.9 + 0.1 — a made-up
-                  number wearing the symbol for a real statistic. The DNA view
-                  won't call two feelings a pairing until 15 books; this is only a
-                  tally of what's landed together so far. */}
-              <div className="hm-rail-aside">
-                {books.length < 15
-                  ? "Could be a real pair, could just be a short shelf. Ask again in a few books."
-                  : "These two tend to arrive as a set."}
-              </div>
-            </div>
-          )}
-
-          {untagged.length > 0 && (
-            <div className="card editorial" style={{ borderTop: "3px solid var(--ink-faint)" }}>
-              <div className="label" style={{ marginBottom: 10 }}>not tagged yet</div>
-              <div className="hm-blind-list">
-                {untagged.map(([id, e]) => (
-                  <div className="hm-blind-row" key={id}>
-                    <span className="hm-blind-dot" style={{ background: e.color }} />
-                    <span className="hm-blind-name">{e.name}</span>
-                    <span className="hm-blind-count">0 / {books.length}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="hm-rail-aside">
-                {books.length < 10
-                  ? "Every feeling you haven't reached for yet. This early it mostly means you haven't hit that book — the DNA view waits for 10 before it reads anything into a gap."
-                  : "The feelings your shelf keeps stepping around."}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
+}
+
+/**
+ * Shelf-wide aggregates the Patterns page shows beside the ledger: the strongest
+ * co-occurring pair, and every register never once tagged. Computed over ALL
+ * books, not the heatmap's window — windowing them would make "most often
+ * together" silently change every time someone pressed "show older".
+ */
+export function heatmapAggregates(heatmap) {
+  if (!heatmap?.cells || !heatmap?.books) return { bestPair: null, bestCount: 0, untagged: [] };
+  const cellMap = {};
+  heatmap.cells.forEach((c) => { cellMap[`${c.entry_id}-${c.emotion_id}`] = c.intensity; });
+  const emos = [...(heatmap.active_emotions || [])];
+  let bestPair = null, bestCount = 0;
+  for (let i = 0; i < emos.length; i++) {
+    for (let j = i + 1; j < emos.length; j++) {
+      const a = emos[i], b = emos[j];
+      const n = heatmap.books.filter((bk) => cellMap[`${bk.entry_id}-${a}`] && cellMap[`${bk.entry_id}-${b}`]).length;
+      if (n > bestCount) { bestCount = n; bestPair = [a, b]; }
+    }
+  }
+  const present = new Set(emos);
+  return { bestPair, bestCount, untagged: EMO_LIST.filter(([id]) => !present.has(id)) };
 }
 
 // Patterns — the merged "what does my reading look like in aggregate?" view.
@@ -307,6 +253,8 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
 
   const top = EMOTIONS[stats.most_common_emotion];
   const hardest = stats.highest_intensity_book;
+  const { bestPair, bestCount, untagged } = heatmapAggregates(heatmap);
+  const heatBookCount = heatmap?.books?.length ?? 0;
   const counts = stats.emotion_counts || {};
   const ranked = EMO_LIST
     .map(([id, e]) => [id, e, counts[id] || 0])
@@ -379,7 +327,29 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
           })}
         </div>
 
+        {/* The small shelf-wide facts, stacked beside the ledger — the pairing
+            tally and never-tagged list moved here from a rail beside the heatmap
+            (one short card next to a 2000px matrix, all whitespace). */}
         <div className="st-rail">
+          {bestPair && bestCount >= 2 && (
+            <div className="card editorial">
+              <div className="label" style={{ marginBottom: 10 }}>most often together</div>
+              <div className="hm-rail-pair">
+                <em style={{ color: EMOTIONS[bestPair[0]]?.color }}>{EMOTIONS[bestPair[0]]?.name}</em>
+                {" + "}
+                <em style={{ color: EMOTIONS[bestPair[1]]?.color }}>{EMOTIONS[bestPair[1]]?.name}</em>
+              </div>
+              <div className="hm-rail-sub">
+                on the same book {bestCount} time{bestCount === 1 ? "" : "s"}, out of {heatBookCount}
+              </div>
+              <div className="hm-rail-aside">
+                {heatBookCount < 15
+                  ? "Could be a real pair, could just be a short shelf. Ask again in a few books."
+                  : "These two tend to arrive as a set."}
+              </div>
+            </div>
+          )}
+
           {top && (
             <div className="card editorial st-card-mostfelt">
               <div className="label" style={{ marginBottom: 12 }}>most felt emotion</div>
@@ -395,6 +365,7 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
               </div>
             </div>
           )}
+
           {/* Gated at 3: with two books "most intense read" is just "the higher
               of your two", which isn't worth a card. */}
           {hardest && totalBooks >= 3 && (
@@ -407,12 +378,26 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
               )}
             </div>
           )}
-          {/* A "shelf vibe" card used to sit here with one hardcoded sentence —
-              "A quiet shelf of patient, attentive readers, the kind who underline
-              in pencil" — shown identically to every reader regardless of what
-              was on their shelf. That's the exact fabricated-insight move the DNA
-              view exists to avoid, so it's gone. If it comes back, it has to be
-              computed from this reader's own tally. */}
+
+          {untagged.length > 0 && (
+            <div className="card editorial" style={{ borderTop: "3px solid var(--ink-faint)" }}>
+              <div className="label" style={{ marginBottom: 10 }}>not tagged yet</div>
+              <div className="hm-blind-list">
+                {untagged.map(([id, e]) => (
+                  <div className="hm-blind-row" key={id}>
+                    <span className="hm-blind-dot" style={{ background: e.color }} />
+                    <span className="hm-blind-name">{e.name}</span>
+                    <span className="hm-blind-count">0 / {heatBookCount}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="hm-rail-aside">
+                {heatBookCount < 10
+                  ? "Every feeling you haven't reached for yet. This early it mostly means you haven't hit that book."
+                  : "The feelings your shelf keeps stepping around."}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

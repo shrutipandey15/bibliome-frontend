@@ -5,7 +5,6 @@ import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
 import { JournalKeyProvider } from "./contexts/JournalKeyContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
-import useIsNarrow from "./hooks/useIsNarrow";
 import useFabHidden from "./hooks/useFabHidden";
 import { useHead } from "./hooks/useHead";
 import useAppUpdate from "./hooks/useAppUpdate";
@@ -690,20 +689,10 @@ function Dashboard() {
 
   const fabHidden = useFabHidden();
 
-  // Patterns is a whole second page below the DNA argument. On a phone it opens
-  // collapsed; on desktop there is room for it inline, so it starts open and its
-  // <summary> is hidden entirely. Re-synced on breakpoint crossings so a resize
-  // doesn't strand it closed on a wide screen with no way to open it.
-  const isNarrow = useIsNarrow();
-  const [patternsOpen, setPatternsOpen] = useState(!isNarrow);
-  // Re-sync on breakpoint crossings, so a resize can't strand the section closed
-  // on a wide screen where its <summary> is hidden and there'd be no way to open it.
-  useEffect(() => { setPatternsOpen(!isNarrow); }, [isNarrow]);
-  // The Register carries its own disclosure at every width (its summary is never
-  // hidden), so it only needs a sensible default: open on desktop, folded on a
-  // phone where it's a long list below the mirror.
-  const [registerOpen, setRegisterOpen] = useState(!isNarrow);
-  useEffect(() => { setRegisterOpen(!isNarrow); }, [isNarrow]);
+  // The DNA tab is one segmented view, not three stacked sections: the reading
+  // (DNAView), the Register (progress), the Patterns (raw counts). Each is its
+  // own long thing; showing one at a time keeps the tab from sprawling.
+  const [dnaSection, setDnaSection] = useState("read");
   // Built from data the DNA tab already holds: the shelf (for the five life
   // milestones) and the DNA payload's own `earned`/`locked` rows (for the
   // readings). No extra request — good for the installed PWA.
@@ -715,10 +704,12 @@ function Dashboard() {
   const dnaCardRef = useRef(null);
 
   useEffect(() => {
-    // The DNA tab now renders the mirror AND the aggregate patterns section, so
-    // it needs both payloads fresh.
-    if (tab === "dna") { ensureFresh("profile"); ensureFresh("patterns"); }
-  }, [tab, ensureFresh]);
+    if (tab !== "dna") return;
+    ensureFresh("profile");
+    // The patterns payload (stats + heatmap) is only needed once that section
+    // is opened — a reader who never leaves "the read" never pays for it.
+    if (dnaSection === "patterns") ensureFresh("patterns");
+  }, [tab, dnaSection, ensureFresh]);
 
   // Ask "what do you read for?" ONCE — at the moment the user first opens DNA,
   // a natural point of curiosity. Skippable, editable later in settings. [F7.7]
@@ -900,102 +891,69 @@ function Dashboard() {
         )}
 
         {tab === "dna" && (
-          <>
-            <ErrorBoundary name="DNA">
-              <DNAView
-                profile={analytics.profile}
-                username={user?.username}
-                onSave={handleSaveCard}
-                onEditReadFor={() => setShowReadFor(true)}
-                cardRef={dnaCardRef}
-                bookCount={entries.length}
-                stats={analytics.stats}
-              />
-            </ErrorBoundary>
-
-            {/* The Register — one ledger of what the shelf has earned and what's
-                still ahead: the five life milestones and the DNA gates together.
-                Replaces the old "NOT YET" list here and the milestones rail on
-                the profile. Its <summary> shows at every width, so it folds on
-                desktop too. Outside the 5-book gate for the same reason Patterns
-                is — the milestones are real from the first book. */}
-            {register && (
-              <ErrorBoundary name="Register">
-                <details
-                  className="reg-fold"
-                  open={registerOpen}
-                  onToggle={(e) => setRegisterOpen(e.currentTarget.open)}
+          <div className="dna-tab">
+            {/* One segmented view instead of three stacked sections. The read is
+                the interpretation; the register is progress; the patterns are
+                the raw counts behind both. Each is a long thing on its own.
+                The wrapper is the sticky strip on a phone (see App.css) — it
+                carries the page-ground backdrop and the status-bar inset so the
+                switcher stays in reach on the long "patterns" scroll. */}
+            <div className="dna-tabnav-wrap">
+            <nav className="dna-tabnav" aria-label="DNA sections">
+              {[
+                ["read", "The read"],
+                ...(register ? [["register", "The register"]] : []),
+                ["patterns", "The patterns"],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`dna-tabnav-btn ${dnaSection === id ? "active" : ""}`}
+                  aria-current={dnaSection === id ? "page" : undefined}
+                  onClick={() => setDnaSection(id)}
                 >
-                  <summary className="reg-fold-summary">
-                    <div className="reg-fold-text">
-                      <div className="label-sm reg-fold-fig">fig. 04 · the register</div>
-                      <div className="reg-fold-headrow">
-                        <span className="reg-fold-h">Your <em>Register</em>.</span>
-                        <span className="reg-fold-toggle">
-                          {registerOpen ? "Hide" : "Open"}
-                          <span className="reg-fold-chev" aria-hidden="true">⌄</span>
-                        </span>
-                      </div>
-                      {!registerOpen && (
-                        <p className="reg-fold-dek">
-                          {register.earned_count} of {register.total} earned — every
-                          milestone and reading, in one place.
-                        </p>
-                      )}
-                    </div>
-                  </summary>
-                  {registerOpen && <Register register={register} hideMasthead />}
-                </details>
+                  {label}
+                </button>
+              ))}
+            </nav>
+            </div>
+
+            {dnaSection === "read" && (
+              <ErrorBoundary name="DNA">
+                <DNAView
+                  profile={analytics.profile}
+                  username={user?.username}
+                  onSave={handleSaveCard}
+                  onEditReadFor={() => setShowReadFor(true)}
+                  cardRef={dnaCardRef}
+                  bookCount={entries.length}
+                  stats={analytics.stats}
+                />
               </ErrorBoundary>
             )}
 
-            {/* The aggregate, folded in below the mirror. Deliberately OUTSIDE the
-                DNA gate — patterns are real from the first book, so a reader under
-                the 5-book gate still gets their own numbers, not an empty tab. */}
-            <ErrorBoundary name="Patterns">
-              <details
-                className="rr-fold"
-                open={patternsOpen}
-                onToggle={(e) => setPatternsOpen(e.currentTarget.open)}
-              >
-                {/* Hidden above 640, where the section just runs inline as
-                    before. <details> rather than a hand-rolled toggle: it comes
-                    with the disclosure semantics, keyboard operation and
-                    find-in-page behaviour already correct. */}
-                <summary className="rr-fold-summary">
-                  {/* This heading stays put whether the fold is open or closed —
-                      only the toggle at its end relabels. <Patterns> is told
-                      `hideMasthead` whenever it mounts here, so opening never
-                      draws "Your Patterns." a second time a couple hundred
-                      pixels down. */}
-                  <div className="rr-fold-text">
-                    <div className="label-sm rr-fold-fig">fig. 03 · the patterns</div>
-                    <div className="rr-fold-headrow">
-                      <span className="rr-fold-h">Your <em>Patterns</em>.</span>
-                      <span className="rr-fold-toggle">
-                        {patternsOpen ? "Hide" : "Open"}
-                        <span className="rr-fold-chev" aria-hidden="true">⌄</span>
-                      </span>
-                    </div>
-                    {!patternsOpen && (
-                      <p className="rr-fold-dek">
-                        Straight counts from your first book — the heatmap and the
-                        full emotion ledger, no gate and no interpretation. The
-                        mirror above stays quiet until 5; this is just arithmetic.
-                      </p>
-                    )}
-                  </div>
-                </summary>
-                {/* Not rendered while collapsed. The heatmap is a 69 × 18 matrix
-                    — well over a thousand cells — so this is the difference
-                    between a folded section and a folded section that still
-                    costs everything it would have cost open. */}
-                {patternsOpen && (stale.stats || stale.heatmap
-                  ? <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Reading your patterns...</div></div>
-                  : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} embedded hideMasthead={isNarrow} />)}
-              </details>
-            </ErrorBoundary>
-          </>
+            {/* Everything the shelf has earned and what it's still short of —
+                the five life milestones and the DNA gates in one ledger. */}
+            {dnaSection === "register" && register && (
+              <ErrorBoundary name="Register">
+                <div className="dna-tab-panel">
+                  <Register register={register} hideMasthead />
+                </div>
+              </ErrorBoundary>
+            )}
+
+            {/* Straight counts off the shelf — the heatmap and the full emotion
+                ledger, no gate and no interpretation. */}
+            {dnaSection === "patterns" && (
+              <ErrorBoundary name="Patterns">
+                <div className="dna-tab-panel">
+                  {stale.stats || stale.heatmap
+                    ? <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Reading your patterns...</div></div>
+                    : <Patterns stats={analytics.stats} heatmap={analytics.heatmap} embedded hideMasthead />}
+                </div>
+              </ErrorBoundary>
+            )}
+          </div>
         )}
       </main>
 

@@ -85,9 +85,88 @@
    see the 640 tier for the full styling and why. */
 .rr-fab { display: none; }
 
-/* Above 640 the Patterns section runs inline exactly as it always has: the
-   disclosure control is hidden and the <details> is held open from App.jsx. */
-.rr-fold-summary { display: none; }
+/* ---------- DNA tab — one segmented view ----------
+   The read / the register / the patterns are three long things; a segmented
+   control shows one at a time instead of stacking all three (which sprawled to
+   ~5000px and read as three unrelated pages). */
+.dna-tab { max-width: 1000px; margin: 0 auto; padding: 0 40px; }
+
+/* A proper segmented control — a recessed track with the active section raised
+   on its own pill. Reads as a control, and distinct from the underline main nav
+   above it, so the hierarchy is clear. */
+.dna-tabnav {
+  display: inline-flex;
+  gap: 2px;
+  margin: 22px 0 32px;
+  padding: 3px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.dna-tabnav::-webkit-scrollbar { display: none; }
+.dna-tabnav-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--ink-quiet);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.dna-tabnav-btn:hover:not(.active) { color: var(--ink); }
+.dna-tabnav-btn.active {
+  background: var(--bg-card);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--rule), var(--shadow-sm);
+}
+.dna-tabnav-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .dna-tabnav-btn { transition: none; }
+}
+
+.dna-tabnav-wrap { display: block; }
+
+.dna-tab .dna-view { padding-left: 0; padding-right: 0; }
+.dna-tab-panel { padding-top: 26px; }
+/* Register and Patterns are standalone page components embedded here — strip
+   the page chrome (own padding, min-height, paper ground) so they sit in the
+   tab at the tab's own width instead of as narrower boxed islands. */
+.dna-tab-panel .st-page,
+.dna-tab-panel .hm-page {
+  padding: 0;
+  min-height: 0;
+  background: none;
+  background-image: none;
+}
+.dna-tab-panel .pf-register { max-width: 820px; }
+
+@media (max-width: 900px) {
+  .dna-tab { padding: 0 18px; }
+}
+@media (max-width: 640px) {
+  /* On a phone the "patterns" section is a long scroll — keep the section
+     switcher in reach by pinning the wrapper to the top, and let it carry the
+     page ground + the status-bar inset so nothing shows through behind it. */
+  .dna-tabnav-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    margin: 0 -18px;
+    padding: 14px 18px calc(14px);
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    background: var(--bg-page);
+  }
+  .dna-tabnav { display: flex; width: 100%; margin: 0; }
+  .dna-tabnav-btn { flex: 1; padding: 9px 10px; font-size: 14px; text-align: center; }
+}
 
 /* The header's two halves. Everything foldable carries .rr-wide-only; the `⋯`
    that replaces them carries .rr-more-btn. They are exact complements, so the
@@ -924,76 +1003,6 @@
     transition: transform .24s ease, opacity .24s ease, visibility 0s linear .24s;
   }
 
-  /* ---------- Collapsible section (mobile) ---------- */
-  /* A one-line "Your patterns ⌄" told the reader there was more, not what it
-     was. This is the same masthead <Patterns> renders once open — figure
-     number, heading, one line on what's inside — so closed and open show the
-     same claim about the section instead of a teaser and then a different
-     heading a tap later. */
-  .rr-fold-summary {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 20px 18px;
-    margin-top: 8px;
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-    color: var(--ink);
-    cursor: pointer;
-    /* Both are needed to drop the native disclosure triangle — the pseudo for
-       WebKit, `list-style` for Firefox. */
-    list-style: none;
-  }
-  .rr-fold-summary::-webkit-details-marker { display: none; }
-  .rr-fold-summary:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
-  .rr-fold-text { min-width: 0; width: 100%; }
-  .rr-fold-fig {
-    margin-bottom: 6px;
-    color: var(--ink-faint) !important;
-  }
-  /* Heading and toggle share one row and one baseline — "Open"/"Hide" reads as
-     part of the sentence ("Your Patterns. Open") rather than a control parked
-     on its own line with the rest of the row empty beside it. */
-  .rr-fold-headrow {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .rr-fold-h {
-    font-family: var(--font-display);
-    font-size: 21px;
-    font-weight: 400;
-    color: var(--ink);
-  }
-  /* Same colour <Patterns>'s own "Your Patterns." uses (`.st-h1 em`,
-     `--oxblood`) — this heading and that one are now the same claim shown at
-     two moments (before you open it, and while it's open), so they read as
-     one heading, not a yellow one that hands off to a red one once you tap. */
-  .rr-fold-h em { color: var(--oxblood); font-style: italic; }
-  .rr-fold-dek {
-    margin-top: 6px;
-    font-family: var(--font-display);
-    font-size: 13.5px;
-    line-height: 1.5;
-    color: var(--ink-quiet);
-  }
-  .rr-fold-toggle {
-    flex: none;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 44px;
-    padding: 0 2px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--brass);
-  }
-  .rr-fold-chev { color: var(--brass); font-size: 20px; transition: transform .2s ease; }
-  .rr-fold[open] .rr-fold-chev { transform: rotate(180deg); }
 
   /* ── Hero trims ──
      The aside is atmosphere and "browse the stacks ↓" is a button whose entire

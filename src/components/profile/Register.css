@@ -149,14 +149,16 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 12px;
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--ink-faint);
   padding-bottom: 8px;
   border-bottom: 1px solid var(--rule-soft);
 }
+.reg-band-count { flex: none; }
 .reg-band-count { font-variant-numeric: tabular-nums; }
 
 .reg-list { list-style: none; margin: 0; padding: 0; }

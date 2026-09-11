@@ -80,9 +80,7 @@ function Portrait({ counts, current, blindSpots = [] }) {
   useEffect(() => { if (!narrow) setOpen(true); }, [narrow]);
 
   const heading = (
-    <h2 id="dna-portrait-title" className="dna-section-label">
-      <span className="dna-numeral">III</span> The shape of you
-    </h2>
+    <h2 id="dna-portrait-title" className="dna-section-label">The shape of you</h2>
   );
 
   const list = (
@@ -152,10 +150,6 @@ function Portrait({ counts, current, blindSpots = [] }) {
   );
 }
 
-// The section rule between movements. Decorative only — the headings carry the
-// structure for anything that isn't looking at the page.
-const Divider = () => <div className="dna-divider" aria-hidden="true">◆ ◆ ◆</div>;
-
 export default function DNAView({ profile, username, onSave, onEditReadFor, cardRef, bookCount = 0, stats = null }) {
   const count = profile?.book_count ?? bookCount;
   const needed = profile?.needed ?? MIN_BOOKS;
@@ -208,7 +202,6 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
       .map((r) => ({ emotion_id: r.slug, count: Math.round(r.weight * 100) })),
   };
 
-  const narrow = useIsNarrow();
   const archetypeBody = !arch ? (
     <p className="dna-arch-none">
       Not enough tagged books to name a shorthand yet. The findings above
@@ -227,12 +220,6 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
       footer={arch.description && <p className="dna-arch-desc">{arch.description}</p>}
     />
   );
-  const archetypeHeading = (
-    <h2 id="dna-arch-title" className="dna-section-label">
-      <span className="dna-numeral">V</span> The shorthand
-    </h2>
-  );
-
   const evolution = (
     <EvolutionView profiles={profile.profiles} drift={profile.drift} snapshotCount={snapshotCount} />
   );
@@ -267,89 +254,43 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
         </p>
       )}
 
-      {/* The page is two columns: the argument, and the thing it argues toward.
-          Sections I–IV are read top to bottom; the shorthand is a plate that
-          stays beside them, because it is the summary of everything in the left
-          column and reading the evidence with the conclusion in view is the
-          whole point of the layout. */}
+      {/* Two columns: the argument on the left, the shorthand it argues toward
+          on the right. The card follows the reader down the evidence (sticky)
+          rather than sitting at the end of it. Headings carry the structure —
+          each section is marked by a brass rule + label (no more Roman numerals,
+          no ◆ ◆ ◆); the label carries the boundary, so there's no separate
+          hairline fighting it. */}
       <div className="dna-body">
         <div className="dna-col">
-
-          {/* I — THE HEADLINE INSIGHT. Lead with the strongest, most specific thing.
-              aria-live announces it without stealing focus. [F7.2 / F7.8] */}
           {headline && (
             <section className="dna-headline" aria-labelledby="dna-reading-title" aria-live="polite">
-              <h2 id="dna-reading-title" className="dna-section-label">
-                <span className="dna-numeral">I</span> What your reading says
-              </h2>
+              <h2 id="dna-reading-title" className="dna-section-label">What your reading says</h2>
               <Insight insight={headline} headline statedFor={readFor.map(emoLabel)} />
             </section>
           )}
 
-          <Divider />
-          {narrow ? (
-            <>
-              {portrait}
-              <Divider />
-              {evolution}
-            </>
-          ) : (
-            <>
-              {evolution}
-              <Divider />
-              {portrait}
-            </>
-          )}
+          {evolution}
+          {portrait}
 
-          <Divider />
-
-          {/* V, IN FLOW — phone only. See `archetypeBody` above for why. */}
-          {narrow && (
-            <>
-              <section aria-labelledby="dna-arch-title">
-                {archetypeHeading}
-                {archetypeBody}
-              </section>
-            </>
-          )}
-
-          {/* IV — OTHER FINDINGS, ranked by surprise. Basis on every one. [F7.2]
-              Its own Divider, rather than a border baked into `.dna-more` —
-              every section boundary on this page is one or the other, never
-              both, so nothing downstream can end up sitting between two
-              separators a `gap` apart. */}
           {rest.length > 0 && (
-            <>
-              <Divider />
-              <section className="dna-more" aria-labelledby="dna-more-title">
-                <h2 id="dna-more-title" className="dna-section-label">
-                  <span className="dna-numeral">IV</span> Other findings
-                </h2>
-                <ul className="dna-more-list">
-                  {rest.map((i) => (
-                    <li key={`${i.category}-${i.variant}`}><Insight insight={i} /></li>
-                  ))}
-                </ul>
-              </section>
-            </>
+            <section className="dna-more" aria-labelledby="dna-more-title">
+              <h2 id="dna-more-title" className="dna-section-label">Other findings</h2>
+              <ul className="dna-more-list">
+                {rest.map((i) => (
+                  <li key={`${i.category}-${i.variant}`}><Insight insight={i} /></li>
+                ))}
+              </ul>
+            </section>
           )}
-
-          {/* What's still locked lives in the Register fold directly below this
-              view (App's DNA tab) — one ledger, earned and not-yet together,
-              instead of a "NOT YET" list here and a milestones list on the
-              profile. This view keeps only what it can say today. */}
         </div>
 
-        {!narrow && (
-          <aside className="dna-aside" aria-labelledby="dna-arch-title">
-            {archetypeHeading}
-            {/* No archetype is a real answer, not a loading state: past the gate,
-                the reader's tally can still name nobody. Saying so is the whole
-                point — the alternative is the label the engine used to hand out
-                by list order to anyone who had tagged nothing. */}
-            {archetypeBody}
-          </aside>
-        )}
+        <aside className="dna-aside" aria-labelledby="dna-arch-title">
+          <h2 id="dna-arch-title" className="dna-section-label">The shorthand</h2>
+          {/* No archetype is a real answer, not a loading state — past the gate,
+              a reader's tally can still name nobody, and saying so beats the
+              label the engine used to hand out by list order. */}
+          {archetypeBody}
+        </aside>
       </div>
     </div>
   );

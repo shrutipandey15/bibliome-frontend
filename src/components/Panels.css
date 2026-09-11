@@ -24,19 +24,32 @@
 }
 .hm-corner { text-align: right; }
 
-.hm-grid-wrap {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 40px;
-  align-items: flex-start;
-}
-
-.hm-matrix-wrap { overflow-x: auto; }
+.hm-matrix-wrap { overflow-x: auto; overscroll-behavior-x: contain; }
 .hm-matrix {
   display: grid;
   gap: 2px;
   align-items: end;
   min-width: 600px;
+}
+/* The emotion column stays put on horizontal scroll — without this, scrolling
+   right to reach later books also carries the row names off-screen, so you lose
+   which feeling each row is. The top-left corner cell sticks too.
+   `align-self: stretch` overrides the matrix's `align-items: end` so each label
+   fills its whole row: otherwise it's only ~26px tall, bottom-aligned, and the
+   cells scrolling under it poke out above its short opaque strip. */
+.hm-matrix > div:first-child,
+.hm-matrix > .hm-row-label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  align-self: stretch;
+  background: var(--bg-page);
+}
+/* A short fade over the matrix edge, so the first column of cells reads as
+   passing *under* the sticky labels rather than butting against them. */
+.hm-matrix > .hm-row-label {
+  align-items: center;
+  box-shadow: 10px 0 12px -6px var(--bg-page);
 }
 .hm-col-head {
   font-family: var(--font-display);
@@ -285,7 +298,6 @@
 @media (max-width: 1080px) {
   .hm-page, .st-page { padding: 28px 28px 48px; }
   .hm-h1, .st-h1 { font-size: 44px; }
-  .hm-grid-wrap { grid-template-columns: 1fr; }
   .st-bottom { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {

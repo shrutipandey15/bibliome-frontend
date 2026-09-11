@@ -1,26 +1,29 @@
 /* Phase 7 — DNA / Insight presentation. Facts with confidence, no mysticism. */
 
 .dna-view {
-  max-width: 1180px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 8px 56px 96px;
+  padding: 8px 40px 88px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
-/* The argument, and the thing it argues toward. */
+/* The argument, and the shorthand it argues toward. */
 .dna-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 372px;
-  gap: 76px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 56px;
   align-items: start;
-  margin-top: 26px;
+  margin-top: 24px;
 }
-.dna-col { min-width: 0; display: flex; flex-direction: column; gap: 30px; }
+/* Generous gaps — with the dividers gone, the brass label + the air around it
+   are what mark the section boundary. */
+.dna-col { min-width: 0; display: flex; flex-direction: column; gap: 40px; }
 /* The plate follows you down the evidence rather than sitting at the end of it. */
-.dna-aside { position: sticky; top: 52px; }
-.dna-aside .dna-wrapper { align-items: flex-start; padding: 0; gap: 18px; }
+.dna-aside { position: sticky; top: 52px; min-width: 0; }
+.dna-aside .dna-wrapper { align-items: flex-start; padding: 0; gap: 14px; width: 100%; }
+.dna-aside .dna-card { --card-w: 100%; }
 .dna-aside .dna-actions { justify-content: flex-start; }
 
 /* Running head — a page header, not a stat card: two mono lines against a rule. */
@@ -35,14 +38,6 @@
   color: var(--ink-quiet);
 }
 
-/* The rule between movements. */
-.dna-divider {
-  text-align: center;
-  color: var(--ink-ghost);
-  letter-spacing: 1.4em;
-  font-size: 10.5px;
-  margin: 22px 0;
-}
 /* The standfirst: what you said you read for, in the page's own voice. It was
    set as a mono caption, which made the reader's own words look like metadata. */
 .dna-readfor-line {
@@ -65,25 +60,28 @@
 .dna-readfor-edit:hover { color: var(--ink); border-bottom-color: var(--ink); }
 .dna-readfor-edit:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
-/* Section labels — the quiet all-caps rubric above each block, in brass, with the
-   movement's numeral set ahead of it. */
+/* Section labels — a brass rubric with a short brass rule leading it, so each
+   one reads as a section boundary at a glance. They were `--ink-quiet` mono
+   with nothing before them, and once the ◆ ◆ ◆ dividers and the Roman numerals
+   were gone they stopped separating the sections at all. */
 .dna-section-label {
-  display: flex; align-items: baseline; gap: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 400;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--ink-faint);
-  margin: 0 0 18px;
-}
-/* The numeral is the only serif in the rubric — it reads as a movement number
-   rather than as part of the label. */
-.dna-numeral {
-  font-family: var(--font-display);
-  font-size: 15px;
-  letter-spacing: 0.04em;
   color: var(--brass);
+  margin: 0 0 16px;
+}
+.dna-section-label::before {
+  content: "";
+  flex: none;
+  width: 26px;
+  height: 2px;
+  background: var(--brass);
 }
 
 /* ── Insights ── */
@@ -346,8 +344,7 @@
 
 /* The rail folds under the argument; the plate stops following. */
 @media (max-width: 1080px) {
-  .dna-view { padding: 8px 32px 80px; }
-  .dna-body { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+  .dna-body { grid-template-columns: minmax(0, 1fr); gap: 44px; }
   .dna-aside { position: static; max-width: 372px; }
 }
 @media (max-width: 900px) {
@@ -359,7 +356,6 @@
   .evo-drift-arrow { font-size: 27px; }
   .insight--headline .insight-text { font-size: 23px; }
   .dna-gate-head { font-size: 36px; }
-  .dna-divider { letter-spacing: 0.9em; }
 }
 @media (max-width: 640px) {
   /* The running head is two mono strings at 11px with 0.26em tracking — about
