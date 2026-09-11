@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useContext, createContext } from "react";
+import { useState, useCallback, useEffect, useContext, createContext, useRef } from "react";
 import {
   getAllEntries, getDNAProfile, getPatterns, generateDNA,
   createEntry, updateEntry, deleteEntry, generateShareToken, finishEntry, addToTbr
@@ -26,8 +26,12 @@ export function JournalProvider({ children }) {
   // UI can show an honest error instead of "no books yet". null = no error. [F1.2]
   const [entriesError, setEntriesError] = useState(null);
 
-  // Fetches entries + profile. Called on mount and on visibility restore.
+  // Fetches entries + profile. Called on mount and on visibility restore — two
+  // overlapping calls (e.g. the tab is hidden/restored twice quickly) could
+  // otherwise let the first, slower response's entries overwrite the second's.
+  const loadSeq = useRef(0);
   const loadEntries = useCallback(async () => {
+    const seq = ++loadSeq.current;
     const cached = getCachedEntries();
     if (cached) {
       setEntries(cached);
@@ -38,10 +42,12 @@ export function JournalProvider({ children }) {
 
     try {
       const eData = await getAllEntries();
+      if (seq !== loadSeq.current) return;
       setEntries(eData.entries || []);
       setCachedEntries(eData.entries || []);
       setEntriesError(null);
     } catch (err) {
+      if (seq !== loadSeq.current) return;
       // Only surface the error when we have nothing to show. If cached entries
       // are on screen, keep them and stay silent rather than clobbering the shelf.
       console.error("Entries load failed:", err);
@@ -51,6 +57,7 @@ export function JournalProvider({ children }) {
     // Profile is secondary; its absence is an honest "not enough yet", not an error.
     try {
       const prof = await getDNAProfile();
+      if (seq !== loadSeq.current) return;
       if (prof) {
         setAnalytics(prev => ({ ...prev, profile: prof }));
         if (prof.share_token) setShareToken(prof.share_token);
@@ -59,7 +66,7 @@ export function JournalProvider({ children }) {
     } catch (err) {
       console.error("Profile load failed:", err);
     }
-    setLoading(false);
+    if (seq === loadSeq.current) setLoading(false);
   }, []);
 
   useEffect(() => {

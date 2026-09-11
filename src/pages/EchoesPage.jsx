@@ -78,18 +78,25 @@ export default function EchoesPage() {
   };
 
   // Load the first page for the current anchor. Resets the list.
+  // A rapid filter change can make an earlier request's response land after a
+  // later one's — `loadSeq` lets a resolving call check it's still the latest
+  // before touching state, so a slow "old" response can't overwrite a newer one.
+  const loadSeq = useRef(0);
   const loadFirst = useCallback(async (emo, onlyMine) => {
+    const seq = ++loadSeq.current;
     setLoading(true);
     setError(null);
     try {
       const data = await getEchoFeed({ emotion: emo || null, mine: onlyMine });
+      if (seq !== loadSeq.current) return;
       setEchoes(data.echoes || []);
       setCursor(data.next_cursor || null);
       setCaughtUp(!!data.caught_up);
     } catch (err) {
+      if (seq !== loadSeq.current) return;
       setError(err.kind ? err : { kind: "server" });
     }
-    setLoading(false);
+    if (seq === loadSeq.current) setLoading(false);
   }, []);
 
   useEffect(() => { loadFirst(emotion, mine); }, [emotion, mine, loadFirst]);

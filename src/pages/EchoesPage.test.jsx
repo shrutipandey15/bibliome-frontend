@@ -160,4 +160,30 @@ describe("EchoesPage feed [F3.3]", () => {
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
     expect(container.textContent).not.toMatch(/\d+\s*(likes?|replies|reactions?|underlined|added|echoes)/i);
   });
+
+  it("does not let a slow response for an earlier filter overwrite a faster one for the current filter", async () => {
+    // Tapping "grief" then "awe" fires two requests; if grief's response is
+    // slower, it must not land on top of awe's once awe is the active filter.
+    let resolveFirst;
+    const firstCall = new Promise((resolve) => { resolveFirst = resolve; });
+    const griefFeed = { echoes: [{ id: "g1", handle: "r", body: "grief echo", primary_emotion: "grief", created_at: "2026-07-01T10:00:00Z" }], next_cursor: null, caught_up: true };
+    const aweFeed = { echoes: [{ id: "a1", handle: "r", body: "awe echo", primary_emotion: "awe", created_at: "2026-07-02T10:00:00Z" }], next_cursor: null, caught_up: true };
+
+    getEchoFeed.mockResolvedValueOnce(feed); // initial mount load
+    render(<EchoesPage />);
+    await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
+
+    getEchoFeed.mockImplementationOnce(() => firstCall); // grief: doesn't resolve yet
+    await userEvent.click(screen.getByRole("button", { name: /^grief$/i }));
+
+    getEchoFeed.mockResolvedValueOnce(aweFeed); // awe: resolves immediately
+    await userEvent.click(screen.getByRole("button", { name: /^awe$/i }));
+    await waitFor(() => expect(screen.getByText("awe echo")).toBeInTheDocument());
+
+    resolveFirst(griefFeed); // the stale grief response finally lands
+    await waitFor(() => expect(getEchoFeed).toHaveBeenCalledTimes(3));
+
+    expect(screen.getByText("awe echo")).toBeInTheDocument();
+    expect(screen.queryByText("grief echo")).toBeNull();
+  });
 });

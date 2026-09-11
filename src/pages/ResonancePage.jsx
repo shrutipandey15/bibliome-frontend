@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getResonanceMatches, reachOut, respondToMatch } from "../services/api";
 import { markSeen } from "../components/resonance/signal";
@@ -34,20 +34,26 @@ export default function ResonancePage() {
   const [busyId, setBusyId] = useState(null);
   const [openThread, setOpenThread] = useState(null); // the connected match
 
+  // `load` fires both on mount and after closing a thread — a slow first
+  // response landing after the second call would otherwise clobber it.
+  const loadSeq = useRef(0);
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     setLoading(true);
     setError(null);
     try {
       const data = await getResonanceMatches();
+      if (seq !== loadSeq.current) return;
       const list = data?.matches || [];
       setMatches(list);
       setReachesLeft(data?.reaches_left_today ?? null);
       // Opening the page IS the acknowledgement — no "mark all read" button.
       markSeen(list);
     } catch (err) {
+      if (seq !== loadSeq.current) return;
       setError(err?.kind ? err : { kind: "server" });
     }
-    setLoading(false);
+    if (seq === loadSeq.current) setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
