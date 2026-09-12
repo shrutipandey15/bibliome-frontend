@@ -93,7 +93,10 @@ describe("CollectionChat — one room per collection [#6]", () => {
     await mount();
 
     getCollectionMessages.mockResolvedValue(page([msg({ id: "rt1", body: "pushed in" })]));
-    await act(async () => { await rtHandlers.at(-1)({ type: "notify", kind: "collection_message" }); });
+
+    await act(async () => {
+      await Promise.all(rtHandlers.map((h) => h({ type: "notify", kind: "collection_message" })));
+    });
 
     expect(await screen.findByText("pushed in")).toBeInTheDocument();
   });
@@ -164,12 +167,18 @@ describe("CollectionChat — one room per collection [#6]", () => {
     expect(input).toHaveValue("refused thing");
   });
 
+  it("only offers delete on your own messages", async () => {
+    await mount();
+    expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+  });
+
   it("surfaces a refused delete rather than dropping the row locally", async () => {
-    deleteCollectionMessage.mockRejectedValue(new Error("You can only delete your own messages"));
+    getCollectionMessages.mockResolvedValue(page([msg({ is_mine: true })]));
+    deleteCollectionMessage.mockRejectedValue(new Error("Couldn't delete that just now"));
     await mount();
 
-    await userEvent.click(screen.getByRole("button", { name: /delete message/i }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/only delete your own/i);
+    await userEvent.click(screen.getByRole("button", { name: /delete your message/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/couldn't delete/i);
     expect(screen.getByText("the statues")).toBeInTheDocument();
   });
 
@@ -178,6 +187,8 @@ describe("CollectionChat — one room per collection [#6]", () => {
     await mount();
 
     await userEvent.click(screen.getByRole("button", { name: /report this conversation/i }));
+    await userEvent.click(screen.getByRole("button", { name: /report: spam/i }));
+    expect(reportCollectionConversation).toHaveBeenCalledWith("c1", "spam");
     expect(await screen.findByText(/nothing here changes for anyone else/i)).toBeInTheDocument();
   });
 });

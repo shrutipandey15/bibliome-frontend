@@ -183,7 +183,10 @@
 .cc-compose-input {
   width: 100%;
   box-sizing: border-box;
-  resize: vertical;
+  /* Grows with content via JS (see composeRef in CollectionChat.jsx); a manual
+     resize handle doesn't exist on touch, so it isn't offered here either. */
+  resize: none;
+  overflow-y: auto;
   min-height: 46px;
   max-height: 30vh;
   background: var(--bg-sunken, rgba(0, 0, 0, 0.22));
@@ -232,6 +235,21 @@
   cursor: pointer;
 }
 .cc-plain:hover { color: var(--ink); }
+.cc-report { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Category choices need a real tap target, unlike the plain "report this
+   conversation" trigger above them — six bare underlined words wrapped
+   together would be nearly unhittable on a phone. */
+.cc-report-btn {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.cc-report-btn:hover { border-color: var(--danger, #c2705f); color: var(--danger, #c2705f); }
 
 @media (max-width: 560px) {
   .cc-msg-body { font-size: 0.92rem; padding: 9px 12px; }
@@ -241,6 +259,12 @@
   .cc-hint { display: none; }
   .cc-send { min-height: 44px; padding-left: 20px; padding-right: 20px; }
   .cc-filter { padding: 8px 0; }
+}
+
+@media (pointer: coarse) {
+  .cc-msg-del { min-width: 44px; min-height: 44px; }
+  .cc-report-btn { min-height: 44px; }
+  .cc-plain { min-height: 24px; display: inline-block; }
 }
 
 /* ── Presence + typing [realtime phases 2–3] ── */

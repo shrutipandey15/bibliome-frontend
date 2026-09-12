@@ -3,6 +3,7 @@ import {
   getThreadMessages, sendThreadMessage, blockThread, reportThread,
 } from "../../services/api";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
+import useRealtimeStatus from "../../hooks/useRealtimeStatus";
 import useScopePresence from "../../hooks/useScopePresence";
 
 /**
@@ -64,6 +65,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
   const [safety, setSafety] = useState(false);
+  const [stale, setStale] = useState(false);
 
   // ── Scroll ──
   // The transcript is not its own scroll container; the PAGE scrolls. So opening
@@ -75,12 +77,20 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   // Height of the document immediately before older letters are prepended, so
   // the restore below can put the viewport back where the reader's eyes were.
   const prependFromRef = useRef(null);
+  const latestRef = useRef(null);
+  const sendingRef = useRef(false);
+
+  const remember = (list) => {
+    const last = list[list.length - 1];
+    if (last) latestRef.current = last.created_at;
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getThreadMessages(threadId);
       setMessages(data.messages || []);
+      remember(data.messages || []);
       setBefore(data.next_before || null);
     } catch {
       setError("Couldn't open this conversation.");
@@ -99,16 +109,20 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
     if (document.visibilityState !== "visible") return;
     let data;
     try {
-      data = await getThreadMessages(threadId);
+      data = await getThreadMessages(threadId, { after: latestRef.current || undefined });
     } catch {
-      return; // something else retries
+      setStale(true); // poll retries next interval regardless
+      return;
     }
+    setStale(false);
     const incoming = data.messages || [];
+    if (!incoming.length) return;
     setMessages((prev) => {
       const have = new Set(prev.map((m) => m.id));
       const fresh = incoming.filter((m) => !have.has(m.id));
       return fresh.length ? [...prev, ...fresh] : prev;
     });
+    remember(incoming);
   }, [threadId]);
 
   // Realtime is the fast path — a reply pushes a "notify" event and this picks
@@ -118,6 +132,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   const { present, typing, notifyTyping } = useScopePresence(threadId ? `thread:${threadId}` : null);
   const partnerHere = !!handle && present.has(handle);
   const partnerTyping = !!handle && typing.has(handle);
+  const connected = useRealtimeStatus();
 
   useEffect(() => {
     const FALLBACK_MS = 45000;
@@ -165,18 +180,21 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
 
   const send = async () => {
     const text = body.trim();
-    if (!text || sending) return;
+    if (!text || sendingRef.current) return;
+    sendingRef.current = true;
     setError("");
     setSending(true);
     try {
       const saved = await sendThreadMessage(threadId, text);
       setMessages((prev) => [...prev, saved]);
+      remember([saved]);
       setBody("");
       // Your own letter should be the thing you're looking at after you send it.
       requestAnimationFrame(() => scrollToEnd(endRef.current, { behavior: "smooth", block: "end" }));
     } catch (err) {
       setError(err?.message || "Couldn't send that.");
     }
+    sendingRef.current = false;
     setSending(false);
   };
 
@@ -281,6 +299,12 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
         </div>
 
         {error && <div className="rt-error" role="alert">{error}</div>}
+        {!connected && !error && (
+          <div className="rt-error" role="status">Reconnecting… letters still arrive, just slower</div>
+        )}
+        {stale && !error && connected && (
+          <div className="rt-error" role="status">Trouble checking for new letters — retrying…</div>
+        )}
 
         <div className="rt-compose">
           <div className="rt-compose-label">write back</div>

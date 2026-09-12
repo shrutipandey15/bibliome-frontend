@@ -53,6 +53,7 @@ export default function BookCard({ entry, index = 0, onClick, width = 144, showC
           <img
             src={entry.cover_url}
             alt=""
+            loading="lazy"
             onLoad={handleImgLoad}
             onError={() => setImgFailed(true)}
             className="cover-img"

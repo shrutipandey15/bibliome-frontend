@@ -100,7 +100,7 @@ export default function TbrQuickAdd({ onClose }) {
                 disabled={state === "adding" || state === "added" || state === "already"}
               >
                 {book.cover_url
-                  ? <img className="tbr-quick-cover" src={book.cover_url} alt="" />
+                  ? <img className="tbr-quick-cover" src={book.cover_url} alt="" loading="lazy" />
                   : <span className="tbr-quick-cover tbr-quick-cover-blank" aria-hidden="true" />}
                 <span className="tbr-quick-meta">
                   <span className="tbr-quick-title">{book.title}</span>

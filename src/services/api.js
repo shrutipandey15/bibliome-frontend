@@ -702,8 +702,11 @@ export async function deleteCollectionMessage(collectionId, messageId) {
 // Reports the whole conversation, not one line — what is wrong is usually a
 // pattern. Does NOT hide the room: a private group can't be silenced on one
 // member's say-so. Blocking is the remedy the reporter holds themselves.
-export async function reportCollectionConversation(collectionId) {
-  const res = await apiFetch(`/collections/${collectionId}/report`, { method: "POST" });
+export async function reportCollectionConversation(collectionId, category = "other") {
+  const res = await apiFetch(`/collections/${collectionId}/report`, {
+    method: "POST",
+    body: JSON.stringify({ category }),
+  });
   if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't file that report");
   return res.json().catch(() => ({ status: "received" }));
 }
@@ -1054,9 +1057,10 @@ export async function respondToMatch(matchId, accept, note = null) {
 
 // A page of the transcript, oldest-first. → { messages, next_before }.
 // `before` pages BACKWARD from a timestamp (keyset, not offset).
-export async function getThreadMessages(threadId, { before = null, limit = 50 } = {}) {
+export async function getThreadMessages(threadId, { before = null, after = null, limit = 50 } = {}) {
   const params = new URLSearchParams();
   if (before) params.set("before", before);
+  if (after) params.set("after", after);
   params.set("limit", String(limit));
   return apiGet(`/threads/${threadId}/messages?${params.toString()}`);
 }

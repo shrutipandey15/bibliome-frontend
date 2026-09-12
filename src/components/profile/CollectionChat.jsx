@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import {
   getCollectionConversations,
   getCollectionMessages,
@@ -9,6 +9,7 @@ import {
 } from "../../services/api";
 import CrisisInterstitial from "../echo/CrisisInterstitial";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
+import useRealtimeStatus from "../../hooks/useRealtimeStatus";
 import useScopePresence from "../../hooks/useScopePresence";
 import "./CollectionChat.css";
 
@@ -18,6 +19,15 @@ function typingLabel(handles) {
   if (names.length === 2) return `@${names[0]} and @${names[1]} are typing…`;
   return "Several people are typing…";
 }
+
+const REPORT_CATEGORIES = [
+  { id: "harassment", label: "harassment" },
+  { id: "hate", label: "hate" },
+  { id: "spam", label: "spam" },
+  { id: "self_harm", label: "concern for their safety" },
+  { id: "pii", label: "personal information" },
+  { id: "other", label: "something else" },
+];
 
 const PAGE = 50;
 // The realtime socket is the fast path — a new message pushes a "notify" event
@@ -56,14 +66,22 @@ export default function CollectionChat({ collectionId, collection }) {
   const [refusal, setRefusal] = useState(null);
   const [crisis, setCrisis] = useState(null);
   const [reported, setReported] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const [sparks, setSparks] = useState([]);
+  const [stale, setStale] = useState(false);
 
   const bottomRef = useRef(null);
   const scrollerRef = useRef(null);
+  const composeRef = useRef(null);
   // Newest timestamp we hold, so the poll can ask "anything after this?" without
   // a stale-closure race inside the interval.
   const latestRef = useRef(null);
   const pinnedRef = useRef(true);
+  const sendingRef = useRef(false);
+  // Height of the scroller immediately before older messages are prepended, so
+  // the layout effect below can restore the exact spot the reader was at —
+  // otherwise prepending pushes everything they were looking at further down.
+  const prependFromRef = useRef(null);
 
   const remember = (list) => {
     const last = list[list.length - 1];
@@ -112,13 +130,15 @@ export default function CollectionChat({ collectionId, collection }) {
         return fresh.length ? [...prev, ...fresh] : prev;
       });
       remember(page.messages);
-    } catch { /* a failed catch-up is not worth surfacing; something retries */ }
+      setStale(false);
+    } catch { setStale(true); /* poll retries next interval regardless */ }
   }, [id, filter]);
 
   // ── Live: realtime first, poll as fallback, both visible-only ──
   useRealtimeEvent("notify", (ev) => { if (ev.kind === "collection_message") catchUp(); });
 
   const { present, typing, notifyTyping } = useScopePresence(id ? `collection:${id}` : null);
+  const connected = useRealtimeStatus();
 
   useEffect(() => {
     const timer = setInterval(catchUp, POLL_MS);
@@ -141,12 +161,33 @@ export default function CollectionChat({ collectionId, collection }) {
     pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   };
 
+  // Grow the box with what you're typing, up to the CSS max-height (which
+  // takes over with its own scrollbar). A fixed one-line box made every second
+  // message an exercise in scrolling inside a slit while you typed it.
+  useLayoutEffect(() => {
+    const el = composeRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
+
+  // Restore the reader's spot after older messages are prepended above it —
+  // same technique ResonanceThread uses for "read what came before".
+  useLayoutEffect(() => {
+    const el = scrollerRef.current;
+    const from = prependFromRef.current;
+    if (!el || from == null) return;
+    prependFromRef.current = null;
+    el.scrollTop += el.scrollHeight - from;
+  }, [messages]);
+
   const older = async () => {
     if (!cursor) return;
     const page = await getCollectionMessages(id, {
       ...cursor, bookId: filter || null, limit: PAGE,
     });
     pinnedRef.current = false;
+    prependFromRef.current = scrollerRef.current?.scrollHeight ?? null;
     setMessages((prev) => [...page.messages, ...prev]);
     setCursor(page.next_before
       ? { before: page.next_before, beforeId: page.next_before_id } : null);
@@ -155,7 +196,8 @@ export default function CollectionChat({ collectionId, collection }) {
   const send = async (e) => {
     e?.preventDefault();
     const body = draft.trim();
-    if (!body || sending) return;
+    if (!body || sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
     setRefusal(null);
     try {
@@ -170,6 +212,7 @@ export default function CollectionChat({ collectionId, collection }) {
       // A refusal is not a network hiccup. Keep the draft — it is still unsaid.
       setRefusal(err.message);
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   };
@@ -190,8 +233,8 @@ export default function CollectionChat({ collectionId, collection }) {
     } catch (err) { setRefusal(err.message); }
   };
 
-  const report = async () => {
-    try { await reportCollectionConversation(id); setReported(true); }
+  const report = async (category) => {
+    try { await reportCollectionConversation(id, category); setReported(true); setReporting(false); }
     catch (err) { setRefusal(err.message); }
   };
 
@@ -267,13 +310,15 @@ export default function CollectionChat({ collectionId, collection }) {
                   {m.book_title && <span className="cc-msg-book">on “{m.book_title}”</span>}
                   <div className="cc-msg-line">
                     <p className="cc-msg-body">{m.body}</p>
-                    <button
-                      className="cc-msg-del"
-                      onClick={() => remove(m.id)}
-                      aria-label={`Delete message from ${m.is_mine ? "you" : m.handle}`}
-                    >
-                      ×
-                    </button>
+                    {m.is_mine && (
+                      <button
+                        className="cc-msg-del"
+                        onClick={() => remove(m.id)}
+                        aria-label="Delete your message"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 </li>
               );
@@ -284,6 +329,8 @@ export default function CollectionChat({ collectionId, collection }) {
       </div>
 
       {typing.size > 0 && <p className="cc-typing" aria-live="polite">{typingLabel(typing)}</p>}
+      {!connected && <p className="cc-quiet" role="status">Reconnecting… messages still update every {POLL_MS / 1000}s</p>}
+      {stale && <p className="cc-quiet" role="status">Trouble checking for new messages — retrying…</p>}
 
       {crisis && <CrisisInterstitial crisis={crisis} onClose={() => setCrisis(null)} />}
 
@@ -292,6 +339,7 @@ export default function CollectionChat({ collectionId, collection }) {
           or wraps into something ragged. */}
       <form className="cc-compose" onSubmit={send}>
         <textarea
+          ref={composeRef}
           className="cc-compose-input"
           value={draft}
           onChange={(e) => { setDraft(e.target.value); setRefusal(null); notifyTyping(); }}
@@ -330,8 +378,17 @@ export default function CollectionChat({ collectionId, collection }) {
             Reported. A moderator will look. Nothing here changes for anyone else —
             block someone if you don’t want to see them.
           </span>
+        ) : reporting ? (
+          <div className="cc-report">
+            {REPORT_CATEGORIES.map((c) => (
+              <button key={c.id} className="cc-report-btn" onClick={() => report(c.id)}>
+                report: {c.label}
+              </button>
+            ))}
+            <button className="cc-plain" onClick={() => setReporting(false)}>never mind</button>
+          </div>
         ) : (
-          <button className="cc-plain" onClick={report}>report this conversation</button>
+          <button className="cc-plain" onClick={() => setReporting(true)}>report this conversation</button>
         )}
       </div>
     </div>
