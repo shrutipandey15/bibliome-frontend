@@ -68,7 +68,11 @@ body {
   --ink:        #1a140e;
   --ink-soft:   #3a2e22;
   --ink-quiet:  #6b5a48;
-  --ink-faint:  #9b8a73;
+  /* Was #9b8a73, ~2.6:1 on --bg-page — fails WCAG AA (4.5:1) for the ~30 files
+     of placeholder/hint/disabled text it backs. Minimal shift toward
+     --ink-quiet that clears AA everywhere it's used (4.56:1 worst case)
+     while staying visibly quieter than --ink-quiet's 5.14:1. */
+  --ink-faint:  #6f6352;
   --ink-ghost:  #c1b196;
 
   /* materials */
@@ -143,7 +147,9 @@ body {
   --ink:        #f0e3c4;
   --ink-soft:   #d8c69d;
   --ink-quiet:  #9a8867;
-  --ink-faint:  #6a5b42;
+  /* Was #6a5b42 (~2.8:1 on --bg-card) — still below WCAG AA. Lightened to
+     clear 4.5:1 against both --bg-page and --bg-card (4.54:1 worst case). */
+  --ink-faint:  #907c5a;
   /* Was #3a2f1f, which against --bg-card (#1a140c) is about 1.7:1 — below the
      point where text is text. It carries 30-odd placeholders and quiet hints,
      so "barely there" was rendering as "not there". Still the quietest ink in
