@@ -4,6 +4,7 @@ import {
   getCollectionMessages,
   sendCollectionMessage,
   deleteCollectionMessage,
+  reactToCollectionMessage,
   reportCollectionConversation,
   getCollectionSparks,
 } from "../../services/api";
@@ -11,6 +12,7 @@ import CrisisInterstitial from "../echo/CrisisInterstitial";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 import useRealtimeStatus from "../../hooks/useRealtimeStatus";
 import useScopePresence from "../../hooks/useScopePresence";
+import { REACTION_KINDS } from "../../lib/reactions";
 import "./CollectionChat.css";
 
 function typingLabel(handles) {
@@ -69,6 +71,9 @@ export default function CollectionChat({ collectionId, collection }) {
   const [reporting, setReporting] = useState(false);
   const [sparks, setSparks] = useState([]);
   const [stale, setStale] = useState(false);
+  const [newBelow, setNewBelow] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
+  const [justSent, setJustSent] = useState(false);
 
   const bottomRef = useRef(null);
   const scrollerRef = useRef(null);
@@ -78,6 +83,7 @@ export default function CollectionChat({ collectionId, collection }) {
   const latestRef = useRef(null);
   const pinnedRef = useRef(true);
   const sendingRef = useRef(false);
+  const messagesRef = useRef([]);
   // Height of the scroller immediately before older messages are prepended, so
   // the layout effect below can restore the exact spot the reader was at —
   // otherwise prepending pushes everything they were looking at further down.
@@ -88,6 +94,34 @@ export default function CollectionChat({ collectionId, collection }) {
     if (last) latestRef.current = last.created_at;
   };
 
+  const updateMessage = (mid, updater) => {
+    messagesRef.current = messagesRef.current.map((m) => (m.id === mid ? updater(m) : m));
+    setMessages(messagesRef.current);
+  };
+
+  const toggleReaction = async (m, kind) => {
+    const on = !(m.my_reactions || []).includes(kind);
+    const before = m;
+    updateMessage(m.id, (cur) => {
+      const counts = { ...cur.reaction_counts };
+      counts[kind] = (counts[kind] || 0) + (on ? 1 : -1);
+      if (counts[kind] <= 0) delete counts[kind];
+      return {
+        ...cur,
+        reaction_counts: counts,
+        my_reactions: on
+          ? [...(cur.my_reactions || []), kind]
+          : (cur.my_reactions || []).filter((k) => k !== kind),
+      };
+    });
+    try {
+      const r = await reactToCollectionMessage(id, m.id, kind, on);
+      updateMessage(m.id, (cur) => ({ ...cur, reaction_counts: r.reaction_counts, my_reactions: r.my_reactions }));
+    } catch {
+      updateMessage(m.id, () => before);
+    }
+  };
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -95,6 +129,7 @@ export default function CollectionChat({ collectionId, collection }) {
         limit: PAGE, bookId: filter || null,
       });
       setMessages(page.messages);
+      messagesRef.current = page.messages;
       remember(page.messages);
       setCursor(page.next_before
         ? { before: page.next_before, beforeId: page.next_before_id } : null);
@@ -122,13 +157,17 @@ export default function CollectionChat({ collectionId, collection }) {
         after: latestRef.current || undefined, bookId: filter || null, limit: PAGE,
       });
       if (!page.messages.length) return;
-      setMessages((prev) => {
-        // Our own send appends locally and this will see it again, so a dedupe
-        // by id is required, not defensive.
-        const have = new Set(prev.map((m) => m.id));
-        const fresh = page.messages.filter((m) => !have.has(m.id));
-        return fresh.length ? [...prev, ...fresh] : prev;
-      });
+
+      const have = new Set(messagesRef.current.map((m) => m.id));
+      // Our own send appends locally and this will see it again, so a dedupe
+      // by id is required, not defensive.
+      const fresh = page.messages.filter((m) => !have.has(m.id));
+      if (fresh.length) {
+        const next = [...messagesRef.current, ...fresh];
+        messagesRef.current = next;
+        setMessages(next);
+        if (!pinnedRef.current) setNewBelow(true);
+      }
       remember(page.messages);
       setStale(false);
     } catch { setStale(true); /* poll retries next interval regardless */ }
@@ -158,7 +197,15 @@ export default function CollectionChat({ collectionId, collection }) {
   const onScroll = () => {
     const el = scrollerRef.current;
     if (!el) return;
-    pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    const pinned = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    pinnedRef.current = pinned;
+    if (pinned) setNewBelow(false);
+  };
+
+  const jumpToLatest = () => {
+    pinnedRef.current = true;
+    setNewBelow(false);
+    bottomRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
   };
 
   // Grow the box with what you're typing, up to the CSS max-height (which
@@ -188,7 +235,8 @@ export default function CollectionChat({ collectionId, collection }) {
     });
     pinnedRef.current = false;
     prependFromRef.current = scrollerRef.current?.scrollHeight ?? null;
-    setMessages((prev) => [...page.messages, ...prev]);
+    messagesRef.current = [...page.messages, ...messagesRef.current];
+    setMessages(messagesRef.current);
     setCursor(page.next_before
       ? { before: page.next_before, beforeId: page.next_before_id } : null);
   };
@@ -201,12 +249,16 @@ export default function CollectionChat({ collectionId, collection }) {
     setSending(true);
     setRefusal(null);
     try {
-      const saved = await sendCollectionMessage(id, body, attach || null);
+      const saved = await sendCollectionMessage(id, body, attach || null, replyTo?.id || null);
       pinnedRef.current = true;
-      setMessages((prev) => [...prev, saved]);
+      messagesRef.current = [...messagesRef.current, saved];
+      setMessages(messagesRef.current);
       remember([saved]);
       setDraft("");
       setAttach("");
+      setReplyTo(null);
+      setJustSent(true);
+      setTimeout(() => setJustSent(false), 500);
       if (saved.crisis) setCrisis(saved.crisis);
     } catch (err) {
       // A refusal is not a network hiccup. Keep the draft — it is still unsaid.
@@ -229,7 +281,8 @@ export default function CollectionChat({ collectionId, collection }) {
   const remove = async (mid) => {
     try {
       await deleteCollectionMessage(id, mid);
-      setMessages((prev) => prev.filter((m) => m.id !== mid));
+      messagesRef.current = messagesRef.current.filter((m) => m.id !== mid);
+      setMessages(messagesRef.current);
     } catch (err) { setRefusal(err.message); }
   };
 
@@ -308,6 +361,14 @@ export default function CollectionChat({ collectionId, collection }) {
                     </div>
                   )}
                   {m.book_title && <span className="cc-msg-book">on “{m.book_title}”</span>}
+                  {m.reply_to && (
+                    <div className="cc-quote">
+                      <span className="cc-quote-who">
+                        {m.reply_to.handle ? `@${m.reply_to.handle}` : "a reader"}
+                      </span>
+                      <p className="cc-quote-body">{m.reply_to.body}</p>
+                    </div>
+                  )}
                   <div className="cc-msg-line">
                     <p className="cc-msg-body">{m.body}</p>
                     {m.is_mine && (
@@ -320,11 +381,40 @@ export default function CollectionChat({ collectionId, collection }) {
                       </button>
                     )}
                   </div>
+                  <div className="cc-msg-actions">
+                    {REACTION_KINDS.map((r) => {
+                      const count = m.reaction_counts?.[r.kind] || 0;
+                      const on = (m.my_reactions || []).includes(r.kind);
+                      return (
+                        <button
+                          key={r.kind}
+                          type="button"
+                          aria-pressed={on}
+                          className={`cc-react ${on ? "on" : ""}`}
+                          onClick={() => toggleReaction(m, r.kind)}
+                          aria-label={`${r.label}${count ? ` (${count})` : ""}`}
+                        >
+                          <span className="cc-react-mark" aria-hidden="true">{r.mark}</span>
+                          {count > 0 && <span className="cc-react-count">{count}</span>}
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      className="cc-reply-btn"
+                      onClick={() => setReplyTo({ id: m.id, handle: m.is_mine ? "yourself" : m.handle, body: m.body })}
+                    >
+                      reply
+                    </button>
+                  </div>
                 </li>
               );
             })}
             <div ref={bottomRef} />
           </ul>
+        )}
+        {newBelow && (
+          <button className="cc-jump" onClick={jumpToLatest}>↓ new messages</button>
         )}
       </div>
 
@@ -338,6 +428,19 @@ export default function CollectionChat({ collectionId, collection }) {
           row has no good phone layout — it either squeezes the box you type in
           or wraps into something ragged. */}
       <form className="cc-compose" onSubmit={send}>
+        {replyTo && (
+          <div className="cc-replying">
+            <div className="cc-replying-text">
+              <span className="cc-replying-who">
+                Replying to {replyTo.handle === "yourself" ? "yourself" : replyTo.handle ? `@${replyTo.handle}` : "a reader"}
+              </span>
+              <p className="cc-replying-body">{replyTo.body}</p>
+            </div>
+            <button type="button" className="cc-replying-cancel" onClick={() => setReplyTo(null)} aria-label="Cancel reply">
+              ×
+            </button>
+          </div>
+        )}
         <textarea
           ref={composeRef}
           className="cc-compose-input"
@@ -364,7 +467,7 @@ export default function CollectionChat({ collectionId, collection }) {
             </select>
           )}
           <span className="cc-hint">Enter to send</span>
-          <button className="btn brass cc-send" disabled={sending || !draft.trim()}>
+          <button className={`btn brass cc-send ${justSent ? "is-sent" : ""}`} disabled={sending || !draft.trim()}>
             {sending ? "…" : "send"}
           </button>
         </div>

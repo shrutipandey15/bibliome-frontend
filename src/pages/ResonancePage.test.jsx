@@ -16,6 +16,7 @@ vi.mock("../services/api", () => ({
   respondToMatch: vi.fn(),
   getThreadMessages: vi.fn(),
   sendThreadMessage: vi.fn(),
+  reactToThreadMessage: vi.fn(),
   blockThread: vi.fn(),
   reportThread: vi.fn(),
 }));
@@ -165,5 +166,59 @@ describe("ResonanceThread — read state stays private", () => {
 
     expect(container.textContent).not.toMatch(/delivered|read receipt|last active|✓✓|double tick/i);
     expect(container.textContent).not.toMatch(/\b(seen|opened|read)\s+(your|this|the)\s+(letter|message|note)/i);
+  });
+});
+
+describe("ResonancePage — the open-thread list stays visible", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("shows every open thread beside the one you're reading, and switches without closing", async () => {
+    getResonanceMatches.mockResolvedValue(list([
+      { ...suggested, match_id: "m1", status: "connected", handle: "wren", thread_id: "t1" },
+      { ...suggested, match_id: "m2", status: "connected", handle: "otto", thread_id: "t2" },
+    ]));
+    getThreadMessages.mockResolvedValue({
+      messages: [{ id: "x1", thread_id: "t1", handle: "wren", is_mine: false, body: "hello from wren", created_at: "2026-07-21T10:00:00Z" }],
+      next_before: null,
+    });
+    render(<ResonancePage />);
+
+    await userEvent.click((await screen.findAllByRole("button", { name: /open the letters/i }))[0]);
+    await waitFor(() => expect(screen.getByText("hello from wren")).toBeInTheDocument());
+
+    // The list is still there — both rows, not just the one we opened.
+    expect(screen.getByRole("button", { name: /open the letters with @wren/i })).toBeInTheDocument();
+    const ottoRow = screen.getByRole("button", { name: /open the letters with @otto/i });
+    expect(ottoRow).toBeInTheDocument();
+
+    getThreadMessages.mockResolvedValue({
+      messages: [{ id: "x2", thread_id: "t2", handle: "otto", is_mine: false, body: "hello from otto", created_at: "2026-07-21T10:05:00Z" }],
+      next_before: null,
+    });
+    await userEvent.click(ottoRow);
+
+    await waitFor(() => expect(getThreadMessages).toHaveBeenCalledWith("t2"));
+    expect(await screen.findByText("hello from otto")).toBeInTheDocument();
+  });
+
+  it("doesn't show a switcher when there's only one open thread, or wrap it in the two-column grid", async () => {
+    // Regression: CSS Grid places a lone child in the FIRST track (the 280px
+    // one meant for the list) when `ThreadList` renders nothing, crushing the
+    // whole letters pane into a sliver. The two-column wrapper must not be
+    // rendered at all when there's nothing to switch to — not just the list
+    // hidden inside it.
+    getResonanceMatches.mockResolvedValue(list([
+      { ...suggested, match_id: "m1", status: "connected", handle: "wren", thread_id: "t1" },
+    ]));
+    getThreadMessages.mockResolvedValue({
+      messages: [{ id: "x1", thread_id: "t1", handle: "wren", is_mine: false, body: "hello", created_at: "2026-07-21T10:00:00Z" }],
+      next_before: null,
+    });
+    const { container } = render(<ResonancePage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: /open the letters/i }));
+    await waitFor(() => expect(screen.getByText("hello")).toBeInTheDocument());
+    expect(screen.queryByRole("navigation", { name: /open letters/i })).not.toBeInTheDocument();
+    expect(container.querySelector(".rp-inbox")).not.toBeInTheDocument();
   });
 });

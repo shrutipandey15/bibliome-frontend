@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("../../services/api", () => ({
@@ -7,6 +7,7 @@ vi.mock("../../services/api", () => ({
   getCollectionMessages: vi.fn(),
   sendCollectionMessage: vi.fn(),
   deleteCollectionMessage: vi.fn(),
+  reactToCollectionMessage: vi.fn(),
   reportCollectionConversation: vi.fn(),
   getCollectionSparks: vi.fn(),
 }));
@@ -19,7 +20,7 @@ vi.mock("../../hooks/useRealtimeEvent", () => ({
 import CollectionChat from "./CollectionChat";
 import {
   getCollectionConversations, getCollectionMessages, sendCollectionMessage,
-  deleteCollectionMessage, reportCollectionConversation, getCollectionSparks,
+  deleteCollectionMessage, reactToCollectionMessage, reportCollectionConversation, getCollectionSparks,
 } from "../../services/api";
 
 const BOOKS = [
@@ -29,7 +30,8 @@ const BOOKS = [
 
 const msg = (o = {}) => ({
   id: "m1", book_id: null, book_title: null, handle: "mara", is_mine: false,
-  body: "the statues", created_at: new Date().toISOString(), crisis: null, ...o,
+  body: "the statues", created_at: new Date().toISOString(), crisis: null,
+  reply_to: null, reaction_counts: {}, my_reactions: [], ...o,
 });
 
 const page = (messages = [], over = {}) =>
@@ -73,7 +75,7 @@ describe("CollectionChat — one room per collection [#6]", () => {
     const input = await mount();
 
     await userEvent.type(input, "hello{Enter}");
-    await waitFor(() => expect(sendCollectionMessage).toHaveBeenCalledWith("c1", "hello", null));
+    await waitFor(() => expect(sendCollectionMessage).toHaveBeenCalledWith("c1", "hello", null, null));
   });
 
   it("can attach a book to a message", async () => {
@@ -84,7 +86,7 @@ describe("CollectionChat — one room per collection [#6]", () => {
     await userEvent.type(input, "about this one{Enter}");
 
     await waitFor(() => expect(sendCollectionMessage)
-      .toHaveBeenCalledWith("c1", "about this one", "b1"));
+      .toHaveBeenCalledWith("c1", "about this one", "b1", null));
   });
 
   it("catches up immediately on a realtime collection_message event", async () => {
@@ -99,6 +101,37 @@ describe("CollectionChat — one room per collection [#6]", () => {
     });
 
     expect(await screen.findByText("pushed in")).toBeInTheDocument();
+  });
+
+  it("shows a jump-to-latest pill for a message that arrives while scrolled up in history", async () => {
+    await mount();
+    const scroller = document.querySelector(".cc-messages");
+    Object.defineProperty(scroller, "scrollHeight", { value: 1000, configurable: true });
+    Object.defineProperty(scroller, "clientHeight", { value: 300, configurable: true });
+    Object.defineProperty(scroller, "scrollTop", { value: 0, configurable: true, writable: true });
+    fireEvent.scroll(scroller); // now reading history, not pinned to the bottom
+
+    getCollectionMessages.mockResolvedValue(page([msg({ id: "rt2", body: "while you were reading" })]));
+    await act(async () => {
+      await Promise.all(rtHandlers.map((h) => h({ type: "notify", kind: "collection_message" })));
+    });
+
+    await screen.findByRole("button", { name: /new messages/i });
+
+    // Scrolling back to the bottom yourself clears it just as tapping it would.
+    scroller.scrollTop = 700; // scrollHeight - clientHeight: fully caught up
+    fireEvent.scroll(scroller);
+    await waitFor(() => expect(screen.queryByRole("button", { name: /new messages/i })).not.toBeInTheDocument());
+
+    // Scroll away again and use the pill itself this time.
+    scroller.scrollTop = 0;
+    fireEvent.scroll(scroller);
+    getCollectionMessages.mockResolvedValue(page([msg({ id: "rt3", body: "one more while away" })]));
+    await act(async () => {
+      await Promise.all(rtHandlers.map((h) => h({ type: "notify", kind: "collection_message" })));
+    });
+    await userEvent.click(await screen.findByRole("button", { name: /new messages/i }));
+    expect(screen.queryByRole("button", { name: /new messages/i })).not.toBeInTheDocument();
   });
 
   it("still polls for other people's messages while visible (socket-down fallback)", async () => {
@@ -134,6 +167,45 @@ describe("CollectionChat — one room per collection [#6]", () => {
     expect(screen.getAllByText("@mara")).toHaveLength(1);
     expect(screen.getByText("one")).toBeInTheDocument();
     expect(screen.getByText("two")).toBeInTheDocument();
+  });
+
+  it("reacts optimistically and reconciles with the server's counts", async () => {
+    reactToCollectionMessage.mockResolvedValue({
+      my_reactions: ["resonated"], reaction_counts: { resonated: 3 },
+    });
+    await mount();
+
+    await userEvent.click(screen.getByRole("button", { name: /resonated/i }));
+    expect(reactToCollectionMessage).toHaveBeenCalledWith("c1", "m1", "resonated", true);
+    // Reconciled count from the server response, not just the optimistic +1.
+    expect(await screen.findByText("3")).toBeInTheDocument();
+  });
+
+  it("rolls back a reaction if the server refuses it", async () => {
+    reactToCollectionMessage.mockRejectedValue(new Error("nope"));
+    await mount();
+
+    const button = screen.getByRole("button", { name: /resonated/i });
+    await userEvent.click(button);
+    await waitFor(() => expect(button).toHaveAttribute("aria-pressed", "false"));
+  });
+
+  it("lets you reply to a message, shows the quote strip, and clears it on send", async () => {
+    sendCollectionMessage.mockResolvedValue(msg({
+      id: "m2", is_mine: true, body: "same here",
+      reply_to: { id: "m1", handle: "mara", body: "the statues" },
+    }));
+    const input = await mount();
+
+    await userEvent.click(screen.getByRole("button", { name: /^reply$/i }));
+    expect(screen.getByText(/replying to @mara/i)).toBeInTheDocument();
+
+    await userEvent.type(input, "same here{Enter}");
+    await waitFor(() => expect(sendCollectionMessage).toHaveBeenCalledWith("c1", "same here", null, "m1"));
+    expect(screen.queryByText(/replying to @mara/i)).not.toBeInTheDocument();
+
+    // The sent reply carries its quote into the transcript.
+    expect(await screen.findByText("the statues", { selector: ".cc-quote-body" })).toBeInTheDocument();
   });
 
   it("offers sparks when the room is empty, and they fill the box rather than posting", async () => {

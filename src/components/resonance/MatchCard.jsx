@@ -273,14 +273,19 @@ function MatchAction({ match, busy, onCompose, onDecline, onOpenThread }) {
  * arrived, and a timestamp in an inbox reads as recency. The API serves no
  * last-message field, so rather than print a misleading one this prints none.
  */
-export function ThreadRow({ match, onOpen }) {
+export function ThreadRow({ match, onOpen, active = false }) {
   const cover = match.cover_url;
   return (
     // Without a label the accessible name is a run-on of everything inside —
     // "@quiet_reader The Remains of the Day · Kazuo Ishiguro" — which names the
     // row's contents but never says what pressing it does. The action is the
     // name; the contents stay as visible text for everyone else.
-    <button className="rt-row" onClick={onOpen} aria-label={`Open the letters with @${match.handle || "your reader"}`}>
+    <button
+      className={`rt-row ${active ? "is-active" : ""}`}
+      onClick={onOpen}
+      aria-current={active || undefined}
+      aria-label={`Open the letters with @${match.handle || "your reader"}`}
+    >
       {cover
         ? <img className="rt-row-cover" src={cover} alt="" />
         : <span className="rt-row-cover rt-row-cover--blank" aria-hidden="true" />}

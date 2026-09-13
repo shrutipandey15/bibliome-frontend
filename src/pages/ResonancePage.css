@@ -9,8 +9,25 @@
    it darkens, or it would be invisible on paper.
    ============================================================ */
 .resonance-page {
-  --res-accent: #8a6a2e;
-  --res-accent-soft: color-mix(in srgb, #8a6a2e 18%, transparent);
+  --res-accent: #8a3b2e;
+  --res-accent-soft: color-mix(in srgb, #8a3b2e 16%, transparent);
+  --brass: #8a3b2e;
+  --foil: linear-gradient(135deg, #a85a44 0%, #c67a5c 18%, #8a3b2e 38%, #c2694d 60%, #6b2c21 82%, #a85a44 100%);
+  --bg-page: #f3ede2;
+  --bg-card: #fbf7ef;
+  --bg-sunken: #efe8da;
+  --bg-field: #f7f2e8;
+  --rule: #d8cdb8;
+  --rule-soft: #e4dac8;
+  --ink: #241f19;
+  --ink-soft: #3d352a;
+  --ink-quiet: #6f6656;
+  --ink-faint: #8d8474;
+  --ink-ghost: #a99e8d;
+  --font-display: "Spectral", "Cormorant Garamond", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --shadow-sm: 0 1px 2px rgba(60,45,25,.18), 0 1px 1px rgba(60,45,25,.08);
+  --shadow-md: 0 24px 48px -32px rgba(60,45,25,.45);
   background: var(--bg-page);
   min-height: 100vh; min-height: 100dvh;
   padding: calc(56px + env(safe-area-inset-top, 0px)) 56px 120px;
@@ -21,8 +38,23 @@
   color: var(--ink);
 }
 [data-theme="dark"] .resonance-page {
-  --res-accent: #c49a6c;
-  --res-accent-soft: color-mix(in srgb, #c49a6c 14%, transparent);
+  --res-accent: #d68a63;
+  --res-accent-soft: color-mix(in srgb, #d68a63 16%, transparent);
+  --brass: #d68a63;
+  --foil: linear-gradient(135deg, #b96a4a 0%, #e0967a 18%, #d68a63 38%, #e0967a 60%, #a8563a 82%, #d68a63 100%);
+  --bg-page: #18120c;
+  --bg-card: #221a12;
+  --bg-sunken: #100b07;
+  --bg-field: #2a2015;
+  --rule: #3a2c1c;
+  --rule-soft: #2c2114;
+  --ink: #f0e3cc;
+  --ink-soft: #d9c7a8;
+  --ink-quiet: #ab9573;
+  --ink-faint: #8f7a5c;
+  --ink-ghost: #5c4c37;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.6);
+  --shadow-md: 0 8px 24px -8px rgba(0,0,0,.7), 0 2px 6px rgba(0,0,0,.4);
 }
 
 /* ── Masthead ── */
@@ -459,6 +491,34 @@
 .res-composer-actions { display: flex; gap: 12px; align-items: center; margin-left: auto; }
 
 /* ============================================================
+   THE INBOX — the open thread, with everywhere else you could be.
+   ============================================================ */
+.rp-inbox {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.rp-thread-list {
+  position: sticky;
+  top: 56px;
+}
+.rp-thread-list-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+/* Same accent every other "this one is active/connected" signal in this file
+   already uses (`.rt-row:hover`, `.rm-connected`) — no new color introduced. */
+.rt-row.is-active {
+  border-color: var(--res-accent);
+  background: var(--res-accent-soft);
+}
+
+/* ============================================================
    THE LETTERS — a desk, not a chat window.
    ============================================================ */
 .rt {
@@ -549,7 +609,20 @@
 }
 .rt-quiet:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
-.rt-main { min-width: 0; max-width: 700px; }
+.rt-main { min-width: 0; max-width: 700px; position: relative; }
+.rt-main::before {
+  content: "";
+  position: absolute;
+  top: -30px; left: -6%; right: -6%;
+  height: 420px;
+  background:
+    radial-gradient(380px 260px at 12% 0%, color-mix(in srgb, var(--res-accent) 30%, transparent), transparent 70%),
+    radial-gradient(340px 240px at 88% 22%, color-mix(in srgb, var(--moss) 22%, transparent), transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: 0;
+}
+.rt-pace, .rt-scroll, .rt-compose, .rt-error { position: relative; z-index: 1; }
 .rt-pace {
   font-family: var(--font-display);
   font-style: italic;
@@ -562,15 +635,22 @@
   text-wrap: pretty;
 }
 
-.rt-safety {
-  margin-bottom: 26px;
-  padding: 18px 20px;
-  border: 1px solid var(--rule);
-  border-left: 2px solid var(--oxblood);
-  border-radius: 2px;
-  background: var(--bg-sunken);
+.rt-safety-modal { width: min(440px, 100%); padding: 26px 26px 24px; }
+.rt-safety-line { font-family: var(--font-display); font-size: 15px; line-height: 1.55; color: var(--ink-quiet); margin: 0 0 18px; }
+.rt-safety-modal .btn.oxblood { width: 100%; justify-content: center; }
+.rt-safety-report {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-soft);
 }
-.rt-safety-line { font-family: var(--font-display); font-size: 15px; color: var(--ink-quiet); margin-bottom: 14px; }
+.rt-safety-report-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
 .rt-safety-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .rt-report-btn {
   background: none;
@@ -599,32 +679,41 @@
 }
 .rt-earlier:hover { color: var(--res-accent); }
 
-/* Letters, not chat bubbles: full-width sheets with a signature line. Yours sits
-   flat on the desk; theirs arrived, so it has paper and a shadow. Neither is
-   right-aligned — a letter you have to read at the wrong margin is a bubble. */
 .rt-msg {
-  padding: 22px 26px 20px;
-  background: transparent;
-  background-image: var(--paper-grain);
-  background-blend-mode: multiply;
-  border: 1px solid var(--rule);
-  border-left: 2px solid var(--rule);
-  border-radius: 2px;
-}
-.rt-msg.theirs {
-  background-color: var(--bg-card);
-  border-left-color: var(--res-accent);
-  box-shadow: var(--shadow-sm);
+  padding: 20px 24px 18px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--bg-card) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  box-shadow:
+    0 14px 34px -20px rgba(0,0,0,.4),
+    inset 0 1px 0 color-mix(in srgb, #fff 35%, transparent);
 }
 .rt-msg-head {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--rule-soft);
+}
+.rt-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff6e8;
+  background: linear-gradient(155deg, var(--avatar-c), color-mix(in srgb, var(--avatar-c) 62%, #000));
+  box-shadow: 0 2px 6px -2px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.3);
 }
 .rt-msg-who {
+  flex: 1;
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.22em;
@@ -633,6 +722,7 @@
 }
 .rt-msg.theirs .rt-msg-who { color: var(--res-accent); }
 .rt-msg-date {
+  flex: none;
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.14em;
@@ -644,19 +734,147 @@
   font-size: 18px;
   line-height: 1.75;
   color: var(--ink);
-  margin-top: 14px;
+  margin-top: 6px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   text-wrap: pretty;
 }
 
+.rt-quote {
+  margin-top: 14px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border-left: 2px solid var(--rule);
+  background: color-mix(in srgb, var(--bg-sunken) 70%, transparent);
+}
+.rt-quote-who {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 3px;
+}
+.rt-quote-body {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-quiet);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Reactions + reply, one quiet row under every letter. */
+.rt-msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.rt-react {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-card) 45%, transparent);
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-quiet);
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease, color .15s ease;
+}
+.rt-react-mark {
+  font-family: Georgia, "Segoe UI Symbol", serif;
+  font-size: 14px;
+  line-height: 1;
+}
+.rt-react-count { font-family: var(--font-mono); font-size: 10.5px; }
+.rt-react:hover {
+  border-color: var(--res-accent);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.rt-react.on {
+  color: var(--res-accent);
+  border-color: var(--res-accent);
+  background: var(--res-accent-soft);
+}
+.rt-react:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.rt-reply-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  padding: 4px 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.rt-reply-btn:hover { color: var(--ink); }
+
+/* The "replying to…" strip above the compose field. */
+.rt-replying {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border-left: 2px solid var(--res-accent);
+  background: color-mix(in srgb, var(--bg-sunken) 70%, transparent);
+}
+.rt-replying-text { flex: 1; min-width: 0; }
+.rt-replying-who {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--res-accent);
+  margin-bottom: 3px;
+}
+.rt-replying-body {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--ink-quiet);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.rt-replying-cancel {
+  flex: none;
+  background: none;
+  border: none;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.rt-replying-cancel:hover { color: var(--ink); }
+
 .rt-error { font-family: var(--font-body); font-size: 13px; color: var(--oxblood); margin-top: 18px; }
 .rt-compose {
   margin-top: 34px;
-  background: var(--bg-field);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
+  background: color-mix(in srgb, var(--bg-field) 65%, transparent);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  border-radius: 20px;
   padding: 22px 24px 18px;
+  box-shadow: 0 14px 34px -22px rgba(0,0,0,.4), inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent);
 }
 .rt-compose-label {
   font-family: var(--font-mono);
@@ -686,6 +904,16 @@
   padding-top: 14px;
   border-top: 1px solid var(--rule-soft);
 }
+/* A brief acknowledgment on send — a small seal-stamp settle, not a feature. */
+@media (prefers-reduced-motion: no-preference) {
+  .rt-compose-foot .btn.is-sent { animation: rt-sent-seal 0.6s ease; }
+}
+@keyframes rt-sent-seal {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.94); }
+  60% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
 .rt-compose-note {
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -696,6 +924,11 @@
 
 /* ── responsive ── */
 @media (max-width: 1080px) {
+  /* Below this, the list can't sit beside the thread without squeezing both —
+     same tier `.rt` itself already collapses at. The old single-pane behavior
+     (thread only, its own back button) takes over unchanged. */
+  .rp-inbox { grid-template-columns: 1fr; gap: 0; }
+  .rp-thread-list { display: none; }
   .rt { grid-template-columns: 1fr; gap: 28px; }
   .rt-aside {
     position: static;
@@ -807,6 +1040,9 @@
 
 @media (pointer: coarse) {
   .rm-foot .btn, .rt-compose-foot .btn { min-height: 44px; }
+  /* Same standard as Echo's own reaction buttons (EchoThread.css). */
+  .rt-react, .rt-reply-btn { min-height: 44px; }
+  .rt-replying-cancel { min-width: 44px; min-height: 44px; }
 
   /* Both of these draw their affordance with a `border-bottom` on the button
      box and 2px of padding, so the rule sits directly under the words. Given a
@@ -891,35 +1127,12 @@
 }
 .rp-more:hover { border-color: var(--res-accent); color: var(--ink); }
 
-/* ============================================================
-   THE THREAD — turn-taking you can see without reading
-   ============================================================
-   Your own comment on the markup rejects right-alignment: "a letter you have to
-   read at the wrong margin is a bubble". That still holds — nothing here moves
-   to the right margin, and there are no receipts, no presence, no typing state.
-   What changes is that the two sides stop being the SAME object: yours is
-   inset and sits on a different ground, theirs keeps the accent margin. Enough
-   to see whose turn it was at a glance; not enough to become a chat app. */
-.rt-msg.mine {
-  margin-left: 8%;
-  /* background-COLOR, not the shorthand: `.rt-msg` paints `--paper-grain` as a
-     background-image, and the shorthand would reset it to none — stripping the
-     grain off your own letters and leaving them the one flat surface on a page
-     made of paper. `.theirs` sets its colour the same way, just above. */
-  background-color: var(--bg-sunken);
-}
-/* `.rt-msg.theirs` already carries the accent margin at line 595 — not
-   redeclared here. */
-
 @media (pointer: coarse) {
   .rt-row { min-height: 64px; }
   .rp-more { min-height: 44px; }
 }
 
 @media (max-width: 640px) {
-  /* 8% of a phone is not a margin you can see; a flat inset reads. */
-  .rt-msg.mine { margin-left: 22px; }
-
   /* ── Density ──
      A message was: 22px padding, a 10.5px signature, 12px of padding and a
      RULE under it, 14px before the body, the body, then 20px — about 114px of
@@ -931,10 +1144,13 @@
   .rt-msg { padding: 13px 15px 15px; }
   .rt-msg-head { padding-bottom: 0; border-bottom: 0; }
   .rt-msg-body { margin-top: 7px; font-size: 16.5px; line-height: 1.6; }
+  .rt-msg-actions { margin-top: 10px; }
+  .rt-quote { margin-top: 10px; padding: 6px 10px; }
 
   .rt-compose { margin-top: 20px; padding: 15px 15px 13px; }
   .rt-compose-field { margin-top: 8px; font-size: 16.5px; line-height: 1.6; }
   .rt-compose-foot { margin-top: 6px; padding-top: 10px; }
+  .rt-replying { padding: 7px 10px; margin-bottom: 10px; }
 }
 
 /* ── A folded match: nothing to do, so nothing shown until asked ── */

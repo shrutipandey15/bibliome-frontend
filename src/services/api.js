@@ -668,14 +668,26 @@ export async function getCollectionMessages(
 
 // 422 here means the message was REFUSED (a threat), not that the request was
 // malformed. The detail is written to be shown to the sender as-is.
-export async function sendCollectionMessage(collectionId, body, bookId = null) {
+export async function sendCollectionMessage(collectionId, body, bookId = null, replyToId = null) {
   const res = await apiFetch(`/collections/${collectionId}/messages`, {
     method: "POST",
-    body: JSON.stringify({ body, book_id: bookId }),
+    body: JSON.stringify({ body, book_id: bookId, reply_to_id: replyToId }),
   });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
     throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that");
+  }
+  return res.json();
+}
+
+export async function reactToCollectionMessage(collectionId, messageId, kind, on = true) {
+  const res = await apiFetch(`/collections/${collectionId}/messages/${messageId}/react`, {
+    method: "POST",
+    body: JSON.stringify({ kind, on }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't react to that");
   }
   return res.json();
 }
@@ -1065,14 +1077,26 @@ export async function getThreadMessages(threadId, { before = null, after = null,
   return apiGet(`/threads/${threadId}/messages?${params.toString()}`);
 }
 
-export async function sendThreadMessage(threadId, body) {
+export async function sendThreadMessage(threadId, body, replyToId = null) {
   const res = await apiFetch(`/threads/${threadId}/messages`, {
     method: "POST",
-    body: JSON.stringify({ body }),
+    body: JSON.stringify({ body, reply_to_id: replyToId }),
   });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
     throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that");
+  }
+  return res.json();
+}
+
+export async function reactToThreadMessage(threadId, messageId, kind, on = true) {
+  const res = await apiFetch(`/threads/${threadId}/messages/${messageId}/react`, {
+    method: "POST",
+    body: JSON.stringify({ kind, on }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't react to that");
   }
   return res.json();
 }

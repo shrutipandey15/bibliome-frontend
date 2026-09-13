@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react";
 import {
-  getThreadMessages, sendThreadMessage, blockThread, reportThread,
+  getThreadMessages, sendThreadMessage, reactToThreadMessage, blockThread, reportThread,
 } from "../../services/api";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 import useRealtimeStatus from "../../hooks/useRealtimeStatus";
 import useScopePresence from "../../hooks/useScopePresence";
+import { REACTION_KINDS } from "../../lib/reactions";
+import Modal from "../Modal";
 
 /**
  * The conversation, once both readers have said yes.
@@ -57,6 +59,13 @@ function letterDate(iso) {
   }
 }
 
+const AVATAR_COLORS = ["var(--res-accent)", "var(--moss)", "var(--plum)", "var(--ink-blue)", "var(--brass)"];
+function avatarColor(seed) {
+  let h = 0;
+  for (const ch of seed || "") h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
 export default function ResonanceThread({ threadId, bookTitle, handle, onClose, onEnded }) {
   const [messages, setMessages] = useState([]);
   const [before, setBefore] = useState(null);
@@ -66,6 +75,8 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   const [error, setError] = useState("");
   const [safety, setSafety] = useState(false);
   const [stale, setStale] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
+  const [justSent, setJustSent] = useState(false);
 
   // ── Scroll ──
   // The transcript is not its own scroll container; the PAGE scrolls. So opening
@@ -73,6 +84,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   // history and the reply box below. Every messaging surface ever built opens at
   // the newest message, and this one is a conversation whatever we style it as.
   const endRef = useRef(null);
+  const composeRef = useRef(null);
   const didLandRef = useRef(false);
   // Height of the document immediately before older letters are prepended, so
   // the restore below can put the viewport back where the reader's eyes were.
@@ -83,6 +95,33 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   const remember = (list) => {
     const last = list[list.length - 1];
     if (last) latestRef.current = last.created_at;
+  };
+
+  const updateMessage = (mid, updater) => {
+    setMessages((prev) => prev.map((m) => (m.id === mid ? updater(m) : m)));
+  };
+
+  const toggleReaction = async (m, kind) => {
+    const on = !(m.my_reactions || []).includes(kind);
+    const before = m;
+    updateMessage(m.id, (cur) => {
+      const counts = { ...cur.reaction_counts };
+      counts[kind] = (counts[kind] || 0) + (on ? 1 : -1);
+      if (counts[kind] <= 0) delete counts[kind];
+      return {
+        ...cur,
+        reaction_counts: counts,
+        my_reactions: on
+          ? [...(cur.my_reactions || []), kind]
+          : (cur.my_reactions || []).filter((k) => k !== kind),
+      };
+    });
+    try {
+      const r = await reactToThreadMessage(threadId, m.id, kind, on);
+      updateMessage(m.id, (cur) => ({ ...cur, reaction_counts: r.reaction_counts, my_reactions: r.my_reactions }));
+    } catch {
+      updateMessage(m.id, () => before);
+    }
   };
 
   const load = useCallback(async () => {
@@ -185,10 +224,15 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
     setError("");
     setSending(true);
     try {
-      const saved = await sendThreadMessage(threadId, text);
+      const saved = await sendThreadMessage(threadId, text, replyTo?.id || null);
       setMessages((prev) => [...prev, saved]);
       remember([saved]);
       setBody("");
+      setReplyTo(null);
+      // A brief acknowledgment, not a feature — a small seal-stamp flourish on
+      // "send the letter", not gamification.
+      setJustSent(true);
+      setTimeout(() => setJustSent(false), 600);
       // Your own letter should be the thing you're looking at after you send it.
       requestAnimationFrame(() => scrollToEnd(endRef.current, { behavior: "smooth", block: "end" }));
     } catch (err) {
@@ -207,6 +251,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   };
 
   return (
+    <>
     <div className="rt">
       {/* Who and what this is, held permanently in the left column, so no letter
           has to carry it and the transcript can be nothing but the letters. */}
@@ -235,8 +280,8 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
           no receipts, ever
         </div>
 
-        <button className="rt-quiet" onClick={() => setSafety((s) => !s)}>
-          {safety ? "never mind" : "close the letters"}
+        <button className="rt-quiet" onClick={() => setSafety(true)}>
+          close the letters
         </button>
       </aside>
 
@@ -247,28 +292,6 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
           You'll see when they're here and when they're writing. A letter being
           read is never reported — no receipts, no “seen”.
         </p>
-
-        {safety && (
-          <div className="rt-safety">
-            <p className="rt-safety-line">
-              Ending this is silent — they aren't told, the conversation just stops.
-            </p>
-            <div className="rt-safety-actions">
-              <button className="btn ghost" onClick={() => endIt(() => blockThread(threadId))}>
-                stop this conversation
-              </button>
-              {REPORT_CATEGORIES.map((c) => (
-                <button
-                  key={c.id}
-                  className="rt-report-btn"
-                  onClick={() => endIt(() => reportThread(threadId, c.id, true))}
-                >
-                  report: {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="rt-scroll">
           {loading ? (
@@ -286,10 +309,61 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
                   {/* Signature at the top, like a letter. Nothing is right-aligned:
                       a letter you have to read at the wrong margin is a bubble. */}
                   <div className="rt-msg-head">
+                    <span
+                      className="rt-avatar"
+                      style={{ "--avatar-c": m.is_mine ? "var(--ink)" : avatarColor(m.handle || "reader") }}
+                      aria-hidden="true"
+                    >
+                      {m.is_mine ? "Y" : (m.handle?.[0] || "?").toUpperCase()}
+                    </span>
                     <span className="rt-msg-who">{m.is_mine ? "you wrote" : `@${m.handle} wrote`}</span>
                     <span className="rt-msg-date">{letterDate(m.created_at)}</span>
                   </div>
+                  {m.reply_to && (
+                    <div className="rt-quote">
+                      <span className="rt-quote-who">
+                        {m.reply_to.handle ? `@${m.reply_to.handle} wrote` : "earlier"}
+                      </span>
+                      <p className="rt-quote-body">{m.reply_to.body}</p>
+                    </div>
+                  )}
                   <div className="rt-msg-body">{m.body}</div>
+                  <div className="rt-msg-actions">
+                    {REACTION_KINDS.map((r) => {
+                      const count = m.reaction_counts?.[r.kind] || 0;
+                      const on = (m.my_reactions || []).includes(r.kind);
+                      return (
+                        <button
+                          key={r.kind}
+                          type="button"
+                          aria-pressed={on}
+                          className={`rt-react ${on ? "on" : ""}`}
+                          onClick={() => toggleReaction(m, r.kind)}
+                          aria-label={`${r.label}${count ? ` (${count})` : ""}`}
+                          title={r.label}
+                        >
+                          <span className="rt-react-mark" aria-hidden="true">{r.mark}</span>
+                          {count > 0 && <span className="rt-react-count">{count}</span>}
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      className="rt-reply-btn"
+                      onClick={() => {
+                        setReplyTo({ id: m.id, handle: m.is_mine ? "yourself" : m.handle, body: m.body });
+                        // The compose box is below the fold on a long thread — without
+                        // this, "reply" silently attached a quote to a text field the
+                        // reader couldn't see, and looked like it had done nothing.
+                        requestAnimationFrame(() => {
+                          scrollToEnd(composeRef.current, { behavior: "smooth", block: "center" });
+                          composeRef.current?.focus();
+                        });
+                      }}
+                    >
+                      reply
+                    </button>
+                  </div>
                 </article>
               ))}
               {/* Scroll target for "open at the newest letter". */}
@@ -308,7 +382,21 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
 
         <div className="rt-compose">
           <div className="rt-compose-label">write back</div>
+          {replyTo && (
+            <div className="rt-replying">
+              <div className="rt-replying-text">
+                <span className="rt-replying-who">
+                  Replying to {replyTo.handle === "yourself" ? "yourself" : `@${replyTo.handle}`}
+                </span>
+                <p className="rt-replying-body">{replyTo.body}</p>
+              </div>
+              <button type="button" className="rt-replying-cancel" onClick={() => setReplyTo(null)} aria-label="Cancel reply">
+                ×
+              </button>
+            </div>
+          )}
           <textarea
+            ref={composeRef}
             className="rt-compose-field"
             value={body}
             onChange={(e) => { setBody(e.target.value); notifyTyping(); }}
@@ -321,12 +409,47 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
             <span className="rt-compose-note" aria-live="polite">
               {partnerTyping ? `@${handle} is writing…` : "sent once · no edits after"}
             </span>
-            <button className="btn brass" onClick={send} disabled={!body.trim() || sending}>
+            <button
+              className={`btn brass ${justSent ? "is-sent" : ""}`}
+              onClick={send}
+              disabled={!body.trim() || sending}
+            >
               {sending ? "sending…" : "send the letter"}
             </button>
           </div>
         </div>
       </div>
     </div>
+
+    {safety && (
+      <Modal
+        onClose={() => setSafety(false)}
+        title="End this conversation?"
+        className="rt-safety-modal"
+        backdropClassName="rr-modal-backdrop"
+      >
+        <p className="rt-safety-line">
+          Ending this is silent — they aren't told, the conversation just stops.
+        </p>
+        <button className="btn oxblood" onClick={() => endIt(() => blockThread(threadId))}>
+          stop this conversation
+        </button>
+        <div className="rt-safety-report">
+          <div className="rt-safety-report-label">or report a reason first</div>
+          <div className="rt-safety-actions">
+            {REPORT_CATEGORIES.map((c) => (
+              <button
+                key={c.id}
+                className="rt-report-btn"
+                onClick={() => endIt(() => reportThread(threadId, c.id, true))}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Modal>
+    )}
+    </>
   );
 }

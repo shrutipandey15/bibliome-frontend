@@ -101,24 +101,36 @@ export default function ResonancePage() {
     }
   };
 
-  if (openThread) {
-    return (
-      <div className="resonance-page">
-        <ResonanceThread
-          threadId={openThread.thread_id}
-          bookTitle={openThread.book_title}
-          handle={openThread.handle}
-          onClose={() => setOpenThread(null)}
-          onEnded={() => { setOpenThread(null); load(); }}
-        />
-      </div>
-    );
-  }
-
   const suggested = matches.filter((m) => m.status === "suggested");
   const waiting = matches.filter((m) => m.status === "pending");
   const connected = matches.filter((m) => m.status === "connected");
   const outOfReaches = reachesLeft === 0;
+
+  if (openThread) {
+    const thread = (
+      <ResonanceThread
+        threadId={openThread.thread_id}
+        bookTitle={openThread.book_title}
+        handle={openThread.handle}
+        onClose={() => setOpenThread(null)}
+        onEnded={() => { setOpenThread(null); load(); }}
+      />
+    );
+    return (
+      <div className="resonance-page">
+        {connected.length >= 2 ? (
+          <div className="rp-inbox">
+            <ThreadList
+              matches={connected}
+              activeId={openThread.match_id}
+              onSelect={setOpenThread}
+            />
+            {thread}
+          </div>
+        ) : thread}
+      </div>
+    );
+  }
 
   return (
     <div className="resonance-page">
@@ -247,5 +259,24 @@ function Section({ title, note, matches, variant, foldable, busyId, onReach, onA
         )}
       </div>
     </section>
+  );
+}
+
+function ThreadList({ matches, activeId, onSelect }) {
+  if (matches.length < 2) return null; // nothing to switch to
+  return (
+    <nav className="rp-thread-list" aria-label="Open letters">
+      <div className="rp-thread-list-title">open letters</div>
+      <div className="rp-cards-rows">
+        {matches.map((m) => (
+          <ThreadRow
+            key={m.match_id}
+            match={m}
+            active={m.match_id === activeId}
+            onOpen={() => onSelect(m)}
+          />
+        ))}
+      </div>
+    </nav>
   );
 }
