@@ -7,6 +7,20 @@
  * means you scroll to the end to type.
  */
 .ccp {
+  /* Same correspondence tokens as `.cc-room` (CollectionChat.css), repeated
+     here rather than inherited: custom properties only cascade DOWN, and
+     `.ccp-head` sits BESIDE `.cc-room`, not inside it, so it needs its own
+     copy to pick up the theme too. */
+  --res-accent: #8a3b2e;
+  --brass: #8a3b2e;
+  --bg-page: #f3ede2;
+  --rule: #d8cdb8;
+  --ink: #241f19;
+  --ink-faint: #8d8474;
+  --font-display: "Spectral", "Cormorant Garamond", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  background: var(--bg-page);
+  color: var(--ink);
   /* vh first as the floor, dvh second for engines that have it. Declared in
      this order on purpose: an engine that does not understand `dvh` discards
      that line and keeps the `vh` one, so the shell still fills the screen —
@@ -24,6 +38,14 @@
   padding: 0 20px;
   box-sizing: border-box;
 }
+[data-theme="dark"] .ccp {
+  --res-accent: #d68a63;
+  --brass: #d68a63;
+  --bg-page: #18120c;
+  --rule: #3a2c1c;
+  --ink: #f0e3cc;
+  --ink-faint: #8f7a5c;
+}
 /* Older Safari has no dvh; -webkit-fill-available is the equivalent there. */
 @supports (-webkit-touch-callout: none) {
   .ccp { height: -webkit-fill-available; }
@@ -35,14 +57,18 @@
   border-bottom: 1px solid var(--rule);
 }
 .ccp-back {
-  font-size: 0.8rem;
+  font-family: var(--font-mono, inherit);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--ink-faint);
   text-decoration: none;
 }
 .ccp-back:hover { color: var(--ink); text-decoration: underline; }
 .ccp-title {
-  margin: 6px 0 0;
-  font-size: 26px;
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-size: 28px;
   font-weight: 400;
   letter-spacing: -0.01em;
   line-height: 1.15;

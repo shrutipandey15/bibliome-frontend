@@ -259,7 +259,7 @@ describe("CollectionChat — one room per collection [#6]", () => {
     await mount();
 
     await userEvent.click(screen.getByRole("button", { name: /report this conversation/i }));
-    await userEvent.click(screen.getByRole("button", { name: /report: spam/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^spam$/i }));
     expect(reportCollectionConversation).toHaveBeenCalledWith("c1", "spam");
     expect(await screen.findByText(/nothing here changes for anyone else/i)).toBeInTheDocument();
   });

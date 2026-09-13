@@ -6,6 +6,7 @@ import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 import useRealtimeStatus from "../../hooks/useRealtimeStatus";
 import useScopePresence from "../../hooks/useScopePresence";
 import { REACTION_KINDS } from "../../lib/reactions";
+import { avatarColor } from "../../lib/avatar";
 import Modal from "../Modal";
 
 /**
@@ -59,12 +60,6 @@ function letterDate(iso) {
   }
 }
 
-const AVATAR_COLORS = ["var(--res-accent)", "var(--moss)", "var(--plum)", "var(--ink-blue)", "var(--brass)"];
-function avatarColor(seed) {
-  let h = 0;
-  for (const ch of seed || "") h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
 
 export default function ResonanceThread({ threadId, bookTitle, handle, onClose, onEnded }) {
   const [messages, setMessages] = useState([]);

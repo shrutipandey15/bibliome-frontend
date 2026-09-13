@@ -5,11 +5,70 @@
  * height comes from outside.
  */
 
+/* Same correspondence skin as Resonance (ResonancePage.css): warm paper in
+   light, ember lamplight in dark, Spectral serif for what people actually
+   wrote, IBM Plex Mono for the meta around it. Scoped locally rather than
+   touching the global tokens, so a book's room reads as the same place as its
+   one-to-one letters without recolouring the rest of the app. Duplicated onto
+   `.ccp` in CollectionChatPage.css for the standalone page, since CSS custom
+   properties only cascade down and that page's header sits beside, not
+   inside, `.cc-room`. */
 .cc-room {
+  --res-accent: #8a3b2e;
+  --res-accent-soft: color-mix(in srgb, #8a3b2e 16%, transparent);
+  --brass: #8a3b2e;
+  --foil: linear-gradient(135deg, #a85a44 0%, #c67a5c 18%, #8a3b2e 38%, #c2694d 60%, #6b2c21 82%, #a85a44 100%);
+  --bg-page: #f3ede2;
+  --bg-card: #fbf7ef;
+  --bg-sunken: #efe8da;
+  --bg-field: #f7f2e8;
+  --rule: #d8cdb8;
+  --rule-soft: #e4dac8;
+  --ink: #241f19;
+  --ink-soft: #3d352a;
+  --ink-quiet: #6f6656;
+  --ink-faint: #8d8474;
+  --ink-ghost: #a99e8d;
+  --font-display: "Spectral", "Cormorant Garamond", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color: var(--ink);
   display: flex;
   flex-direction: column;
   min-height: 0;          /* see .ccp — flex children must be allowed to shrink */
+  position: relative;
 }
+[data-theme="dark"] .cc-room {
+  --res-accent: #d68a63;
+  --res-accent-soft: color-mix(in srgb, #d68a63 16%, transparent);
+  --brass: #d68a63;
+  --foil: linear-gradient(135deg, #b96a4a 0%, #e0967a 18%, #d68a63 38%, #e0967a 60%, #a8563a 82%, #d68a63 100%);
+  --bg-page: #18120c;
+  --bg-card: #221a12;
+  --bg-sunken: #100b07;
+  --bg-field: #2a2015;
+  --rule: #3a2c1c;
+  --rule-soft: #2c2114;
+  --ink: #f0e3cc;
+  --ink-soft: #d9c7a8;
+  --ink-quiet: #ab9573;
+  --ink-faint: #8f7a5c;
+  --ink-ghost: #5c4c37;
+}
+/* Soft colour behind the glass bubbles — see ResonancePage.css's
+   `.rt-main::before` for why a frosted surface needs something to diffuse. */
+.cc-room::before {
+  content: "";
+  position: absolute;
+  top: -10px; left: -6%; right: -6%;
+  height: 320px;
+  background:
+    radial-gradient(320px 220px at 15% 0%, color-mix(in srgb, var(--res-accent) 26%, transparent), transparent 70%),
+    radial-gradient(280px 200px at 85% 18%, color-mix(in srgb, var(--moss) 18%, transparent), transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: 0;
+}
+.cc-filter, .cc-messages, .cc-compose, .cc-room-foot, .cc-here-strip, .cc-typing { position: relative; z-index: 1; }
 
 .cc-quiet {
   font-size: 0.88rem;
@@ -102,48 +161,70 @@
 
 .cc-msg-meta {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 3px;
+  margin-bottom: 5px;
+}
+.cc-avatar {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff6e8;
+  background: linear-gradient(155deg, var(--avatar-c), color-mix(in srgb, var(--avatar-c) 62%, #000));
+  box-shadow: 0 1px 4px -1px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.3);
 }
 .cc-msg-who {
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-.cc-msg.is-mine .cc-msg-who { color: var(--brass); }
-.cc-msg-when { font-size: 0.72rem; color: var(--ink-faint); opacity: 0.65; }
+.cc-msg.is-mine .cc-msg-who { color: var(--res-accent); }
+.cc-msg-when { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-ghost); margin-left: auto; }
 
 .cc-msg-book {
   display: inline-block;
   margin-bottom: 5px;
+  margin-left: 32px;
   padding: 2px 9px;
   border: 1px solid var(--rule);
   border-radius: 999px;
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
   color: var(--ink-faint);
 }
 
 .cc-quote {
   margin: 2px 0 5px;
+  margin-left: 32px;
   padding: 5px 10px;
   border-left: 2px solid var(--rule);
-  background: var(--bg-sunken, rgba(0, 0, 0, 0.14));
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg-sunken) 70%, transparent);
+  border-radius: 10px;
 }
 .cc-quote-who {
   display: block;
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-faint);
   margin-bottom: 2px;
 }
 .cc-quote-body {
   margin: 0;
-  font-size: 0.82rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.85rem;
   line-height: 1.4;
   color: var(--ink-quiet);
   overflow: hidden;
@@ -152,31 +233,29 @@
   -webkit-box-orient: vertical;
 }
 
-/* The body sits in a bubble so a wall of messages has edges to read against.
-   Mine is tinted; everyone else's is the sunken surface. */
-.cc-msg-line { display: flex; align-items: flex-start; gap: 6px; }
+/* Same glass-card recipe as ResonanceThread's `.rt-msg` — rounded, frosted,
+   equal for everyone's turn (no "mine is flat, theirs is bordered"), just
+   nudged in from the avatar column instead of full-width, since a room has
+   several speakers and a run of short lines rather than long letters. */
+.cc-msg-line { display: flex; align-items: flex-start; gap: 6px; margin-left: 32px; }
 .cc-msg-body {
   flex: 1;
   min-width: 0;
   margin: 0;
-  padding: 9px 13px;
-  border-radius: 12px;
-  border-top-left-radius: 3px;
-  background: var(--bg-sunken, rgba(0, 0, 0, 0.22));
-  font-size: 0.95rem;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-card) 55%, transparent);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+  box-shadow: 0 8px 20px -14px rgba(0,0,0,.4), inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent);
+  font-family: var(--font-display);
+  font-size: 1rem;
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;   /* a pasted URL must not widen the page */
 }
-.cc-msg.is-mine .cc-msg-body {
-  background: rgba(184, 148, 90, 0.13);
-  border-top-left-radius: 12px;
-  border-top-right-radius: 3px;
-}
-.cc-msg.is-grouped .cc-msg-body {
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-}
+.cc-msg.is-grouped .cc-msg-line { margin-left: 32px; }
 
 .cc-msg-del {
   flex: none;
@@ -197,29 +276,35 @@
 .cc-msg-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 4px;
+  gap: 5px;
+  margin-top: 5px;
+  margin-left: 32px;
 }
+/* Same glass-chip recipe as ResonanceThread's `.rt-react` — a visible border
+   and surface at rest, not a bare glyph with nothing to say it's a button.
+   The mark uses Georgia rather than `--font-mono` (IBM Plex Mono doesn't
+   carry ✻ ☞ ↻ ♡ and was falling back to a thin, inconsistent glyph). */
 .cc-react {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 7px;
-  border: 1px solid transparent;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
   border-radius: 999px;
-  background: transparent;
+  background: color-mix(in srgb, var(--bg-card) 45%, transparent);
   font: inherit;
   font-size: 0.76rem;
-  color: var(--ink-faint);
+  color: var(--ink-quiet);
   cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, color .15s ease;
 }
-.cc-react-mark { font-family: var(--font-mono, monospace); font-size: 0.78rem; opacity: 0.85; }
-.cc-react-count { font-family: var(--font-mono, monospace); font-size: 0.7rem; }
-.cc-react:hover { border-color: var(--rule); color: var(--ink); }
+.cc-react-mark { font-family: Georgia, "Segoe UI Symbol", serif; font-size: 0.85rem; line-height: 1; }
+.cc-react-count { font-family: var(--font-mono, monospace); font-size: 0.68rem; }
+.cc-react:hover { border-color: var(--res-accent); color: var(--ink); transform: translateY(-1px); }
 .cc-react.on {
-  color: var(--brass);
-  border-color: var(--brass);
-  background: color-mix(in srgb, var(--brass) 12%, transparent);
+  color: var(--res-accent);
+  border-color: var(--res-accent);
+  background: var(--res-accent-soft);
 }
 .cc-react:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
@@ -228,8 +313,10 @@
   background: none;
   border: none;
   padding: 3px 4px;
-  font: inherit;
-  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--ink-faint);
   cursor: pointer;
 }
@@ -240,23 +327,26 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 7px 10px;
-  border-left: 2px solid var(--brass);
-  background: var(--bg-sunken, rgba(0, 0, 0, 0.14));
-  border-radius: 4px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border-left: 2px solid var(--res-accent);
+  background: color-mix(in srgb, var(--bg-sunken) 70%, transparent);
 }
 .cc-replying-text { flex: 1; min-width: 0; }
 .cc-replying-who {
   display: block;
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--brass);
+  color: var(--res-accent);
   margin-bottom: 2px;
 }
 .cc-replying-body {
   margin: 0;
-  font-size: 0.82rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.85rem;
   line-height: 1.4;
   color: var(--ink-quiet);
   overflow: hidden;
@@ -281,31 +371,39 @@
 .cc-spark {
   width: 100%;
   text-align: left;
-  background: var(--bg-sunken, rgba(0, 0, 0, 0.18));
+  background: color-mix(in srgb, var(--bg-sunken) 70%, transparent);
   border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 11px 14px;
-  font: inherit;
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
   line-height: 1.5;
   color: var(--ink);
   cursor: pointer;
   min-height: 44px;
 }
-.cc-spark:hover { border-color: var(--brass); }
+.cc-spark:hover { border-color: var(--res-accent); }
 /* A fact is countable against this collection; a question is plainly a question.
    They read differently so nobody mistakes one for the other. */
 .cc-spark.is-fact { font-style: italic; color: var(--ink-faint); }
 
-/* ── Composer: welded to the bottom ── */
+/* ── Composer: welded to the bottom, same glass card as ResonanceThread's
+   `.rt-compose` ── */
 .cc-compose {
   flex: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--rule);
-  background: var(--bg-page);
+  padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  margin-top: 4px;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--bg-field) 65%, transparent);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  box-shadow: 0 12px 28px -20px rgba(0,0,0,.4), inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent);
+  position: relative;
+  z-index: 1;
 }
 .cc-compose-input {
   width: 100%;
@@ -316,16 +414,15 @@
   overflow-y: auto;
   min-height: 46px;
   max-height: 30vh;
-  background: var(--bg-sunken, rgba(0, 0, 0, 0.22));
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 12px 14px;
-  font: inherit;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  font-family: var(--font-display);
   font-size: 16px;         /* see .cc-select — prevents the iOS focus zoom */
   line-height: 1.5;
   color: inherit;
 }
-.cc-compose-input:focus { outline: none; border-color: var(--brass); }
+.cc-compose-input:focus { outline: none; }
 
 .cc-compose-row {
   display: flex;
@@ -354,7 +451,7 @@
   margin: 0 0 8px;
   font-size: 0.84rem;
   line-height: 1.55;
-  color: var(--danger, #c2705f);
+  color: var(--oxblood);
 }
 
 .cc-room-foot { flex: none; padding: 0 0 10px; }
@@ -362,29 +459,35 @@
   background: none;
   border: none;
   padding: 0;
-  font: inherit;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--ink-faint);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
 }
 .cc-plain:hover { color: var(--ink); }
-.cc-report { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-/* Category choices need a real tap target, unlike the plain "report this
-   conversation" trigger above them — six bare underlined words wrapped
+
+/* ── The report dialog. Same pattern as ResonanceThread's `.rt-safety-modal`
+   — <Modal> supplies the surface, this only styles what's inside it. ── */
+.cc-report-modal { width: min(440px, 100%); padding: 26px 26px 24px; }
+.cc-report-line { font-family: var(--font-display); font-size: 15px; line-height: 1.55; color: var(--ink-quiet); margin: 0 0 18px; }
+.cc-report-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Category choices need a real tap target — six bare underlined words wrapped
    together would be nearly unhittable on a phone. */
 .cc-report-btn {
   background: none;
   border: 1px solid var(--rule);
   border-radius: 999px;
   padding: 5px 12px;
-  font: inherit;
+  font-family: var(--font-body);
   font-size: 0.78rem;
   color: var(--ink-quiet);
   cursor: pointer;
 }
-.cc-report-btn:hover { border-color: var(--danger, #c2705f); color: var(--danger, #c2705f); }
+.cc-report-btn:hover { border-color: var(--oxblood); color: var(--oxblood); }
 
 @media (max-width: 560px) {
   .cc-msg-body { font-size: 0.92rem; padding: 9px 12px; }

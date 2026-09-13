@@ -13,6 +13,8 @@ import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 import useRealtimeStatus from "../../hooks/useRealtimeStatus";
 import useScopePresence from "../../hooks/useScopePresence";
 import { REACTION_KINDS } from "../../lib/reactions";
+import { avatarColor } from "../../lib/avatar";
+import Modal from "../Modal";
 import "./CollectionChat.css";
 
 function typingLabel(handles) {
@@ -292,6 +294,7 @@ export default function CollectionChat({ collectionId, collection }) {
   };
 
   return (
+    <>
     <div className="cc-room">
       {books.length > 0 && (
         <div className="cc-filter">
@@ -345,6 +348,13 @@ export default function CollectionChat({ collectionId, collection }) {
                 >
                   {!grouped && (
                     <div className="cc-msg-meta">
+                      <span
+                        className="cc-avatar"
+                        style={{ "--avatar-c": m.is_mine ? "var(--ink)" : avatarColor(m.handle || "reader") }}
+                        aria-hidden="true"
+                      >
+                        {m.is_mine ? "Y" : (m.handle?.[0] || "?").toUpperCase()}
+                      </span>
                       <span className="cc-msg-who">
                         {m.is_mine ? "you" : `@${m.handle || "a reader"}`}
                         {!m.is_mine && m.handle && present.has(m.handle) && (
@@ -481,20 +491,39 @@ export default function CollectionChat({ collectionId, collection }) {
             Reported. A moderator will look. Nothing here changes for anyone else —
             block someone if you don’t want to see them.
           </span>
-        ) : reporting ? (
-          <div className="cc-report">
-            {REPORT_CATEGORIES.map((c) => (
-              <button key={c.id} className="cc-report-btn" onClick={() => report(c.id)}>
-                report: {c.label}
-              </button>
-            ))}
-            <button className="cc-plain" onClick={() => setReporting(false)}>never mind</button>
-          </div>
         ) : (
           <button className="cc-plain" onClick={() => setReporting(true)}>report this conversation</button>
         )}
       </div>
     </div>
+
+    {reporting && (
+      // A modal, not an inline reveal at the bottom of a scrolled chat: the
+      // trigger is easy to lose track of once the panel unfolds somewhere
+      // else on a long room. Same fix, same reasoning, as ResonanceThread's
+      // "end this conversation" dialog — rendered as a sibling of `.cc-room`,
+      // not inside it, so no host page's own transform animation can turn an
+      // ancestor into a containing block that traps this fixed overlay.
+      <Modal
+        onClose={() => setReporting(false)}
+        title="Report this conversation?"
+        className="cc-report-modal"
+        backdropClassName="rr-modal-backdrop"
+      >
+        <p className="cc-report-line">
+          A moderator will take a look. Nothing changes here for anyone else —
+          block someone directly if you don't want to see them.
+        </p>
+        <div className="cc-report-actions">
+          {REPORT_CATEGORIES.map((c) => (
+            <button key={c.id} className="cc-report-btn" onClick={() => report(c.id)}>
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </Modal>
+    )}
+    </>
   );
 }
 
