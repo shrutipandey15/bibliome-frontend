@@ -6,10 +6,15 @@ vi.mock("../../services/api", () => ({
   getCollectionConversations: vi.fn(),
   getCollectionMessages: vi.fn(),
   sendCollectionMessage: vi.fn(),
+  sendCollectionImageMessage: vi.fn(),
   deleteCollectionMessage: vi.fn(),
   reactToCollectionMessage: vi.fn(),
   reportCollectionConversation: vi.fn(),
   getCollectionSparks: vi.fn(),
+  getCollectionMembers: vi.fn(),
+  getCollectionPinned: vi.fn(),
+  setCollectionPinned: vi.fn(),
+  getChatAttachmentBlobUrl: vi.fn(),
 }));
 
 let rtHandlers = [];
@@ -19,8 +24,9 @@ vi.mock("../../hooks/useRealtimeEvent", () => ({
 
 import CollectionChat from "./CollectionChat";
 import {
-  getCollectionConversations, getCollectionMessages, sendCollectionMessage,
+  getCollectionConversations, getCollectionMessages, sendCollectionMessage, sendCollectionImageMessage,
   deleteCollectionMessage, reactToCollectionMessage, reportCollectionConversation, getCollectionSparks,
+  getCollectionMembers, getCollectionPinned, setCollectionPinned, getChatAttachmentBlobUrl,
 } from "../../services/api";
 
 const BOOKS = [
@@ -49,6 +55,8 @@ describe("CollectionChat — one room per collection [#6]", () => {
     getCollectionConversations.mockResolvedValue(BOOKS);
     getCollectionSparks.mockResolvedValue({ sparks: [] });
     getCollectionMessages.mockResolvedValue(page([msg()]));
+    getCollectionMembers.mockResolvedValue([]);
+    getCollectionPinned.mockResolvedValue({ pinned: null });
   });
   afterEach(() => vi.useRealTimers());
 
@@ -78,11 +86,26 @@ describe("CollectionChat — one room per collection [#6]", () => {
     await waitFor(() => expect(sendCollectionMessage).toHaveBeenCalledWith("c1", "hello", null, null));
   });
 
+  it("closes the tools menu on outside click or Escape, without picking anything", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByRole("button", { name: /more options/i }));
+    expect(screen.getByRole("button", { name: /attach a photo/i })).toBeInTheDocument();
+
+    await userEvent.click(document.body);
+    expect(screen.queryByRole("button", { name: /attach a photo/i })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /more options/i }));
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("button", { name: /attach a photo/i })).not.toBeInTheDocument();
+  });
+
   it("can attach a book to a message", async () => {
     sendCollectionMessage.mockResolvedValue(msg({ id: "m2", is_mine: true }));
     const input = await mount();
 
-    await userEvent.selectOptions(screen.getByLabelText(/attach a book/i), "b1");
+    await userEvent.click(screen.getByRole("button", { name: /more options/i }));
+    await userEvent.click(screen.getByRole("button", { name: "Beach Read" }));
     await userEvent.type(input, "about this one{Enter}");
 
     await waitFor(() => expect(sendCollectionMessage)
@@ -181,6 +204,23 @@ describe("CollectionChat — one room per collection [#6]", () => {
     expect(await screen.findByText("3")).toBeInTheDocument();
   });
 
+  it("switching to a different reaction unsets the old one first", async () => {
+    getCollectionMessages.mockResolvedValue(page([
+      msg({ id: "m1", reaction_counts: { resonated: 1 }, my_reactions: ["resonated"] }),
+    ]));
+    reactToCollectionMessage.mockResolvedValue({
+      my_reactions: ["underlined"], reaction_counts: { underlined: 1 },
+    });
+    await mount();
+
+    await userEvent.click(screen.getByRole("button", { name: /underlined this/i }));
+    expect(reactToCollectionMessage).toHaveBeenNthCalledWith(1, "c1", "m1", "resonated", false);
+    expect(reactToCollectionMessage).toHaveBeenNthCalledWith(2, "c1", "m1", "underlined", true);
+    // The message body itself carries the new reaction's treatment.
+    expect(screen.getByText("the statues").closest("p")).toHaveClass("cc-msg-body--underlined");
+    expect(screen.getByText("the statues").closest("p")).not.toHaveClass("cc-msg-body--resonated");
+  });
+
   it("rolls back a reaction if the server refuses it", async () => {
     reactToCollectionMessage.mockRejectedValue(new Error("nope"));
     await mount();
@@ -262,5 +302,93 @@ describe("CollectionChat — one room per collection [#6]", () => {
     await userEvent.click(screen.getByRole("button", { name: /^spam$/i }));
     expect(reportCollectionConversation).toHaveBeenCalledWith("c1", "spam");
     expect(await screen.findByText(/nothing here changes for anyone else/i)).toBeInTheDocument();
+  });
+
+  it("offers a matching member and inserts the full handle on Enter", async () => {
+    getCollectionMembers.mockResolvedValue([
+      { user_id: "u1", handle: "mara", role: "owner" },
+      { user_id: "u2", handle: "marcus", role: "member" },
+    ]);
+    const input = await mount();
+    await waitFor(() => expect(getCollectionMembers).toHaveBeenCalled());
+
+    await userEvent.type(input, "hey @mar");
+    expect(await screen.findByRole("button", { name: "@mara" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "@marcus" })).toBeInTheDocument();
+
+    await userEvent.keyboard("{Enter}");
+    // The first match wins on Enter, and Enter here completes the mention
+    // rather than sending — sendCollectionMessage must not have fired.
+    expect(input).toHaveValue("hey @mara ");
+    expect(sendCollectionMessage).not.toHaveBeenCalled();
+  });
+
+  it("highlights an @mention of a real member but not a stray @word", async () => {
+    getCollectionMessages.mockResolvedValue(page([
+      msg({ id: "m1", body: "hey @mara look at this, also @nobody" }),
+    ]));
+    getCollectionMembers.mockResolvedValue([{ user_id: "u1", handle: "mara", role: "member" }]);
+    await mount();
+
+    await waitFor(() => expect(screen.getByText("@mara", { selector: ".cc-mention" })).toBeInTheDocument());
+    expect(screen.getByText(/also @nobody/)).not.toHaveClass("cc-mention");
+  });
+
+  it("filters the visible room by a search query", async () => {
+    getCollectionMessages.mockResolvedValue(page([
+      msg({ id: "m1", body: "let's talk about the ending" }),
+      msg({ id: "m2", body: "unrelated chatter" }),
+    ]));
+    await mount();
+
+    await userEvent.type(screen.getByLabelText(/search messages/i), "ending");
+    expect(screen.getByText("let's talk about the ending")).toBeInTheDocument();
+    expect(screen.queryByText("unrelated chatter")).not.toBeInTheDocument();
+  });
+
+  it("pins a message and shows it in the banner, then unpins it", async () => {
+    getCollectionMessages.mockResolvedValue(page([msg({ id: "m1", body: "the schedule" })]));
+    setCollectionPinned.mockResolvedValue({ pinned: { id: "m1", handle: "mara", body: "the schedule" } });
+    await mount();
+
+    await userEvent.click(screen.getByRole("button", { name: "pin" }));
+    expect(setCollectionPinned).toHaveBeenCalledWith("c1", "m1");
+    expect(await screen.findByText("the schedule", { selector: ".cc-pinned-body" })).toBeInTheDocument();
+
+    setCollectionPinned.mockResolvedValue({ pinned: null });
+    // Two "unpin" controls exist once pinned — the banner's clear button and
+    // the per-message toggle — click the banner's specifically.
+    await userEvent.click(document.querySelector(".cc-pinned-clear"));
+    expect(setCollectionPinned).toHaveBeenCalledWith("c1", null);
+    await waitFor(() => expect(screen.queryByText("the schedule", { selector: ".cc-pinned-body" })).not.toBeInTheDocument());
+  });
+
+  it("prepends a page citation to the draft without sending it", async () => {
+    const input = await mount();
+    vi.spyOn(window, "prompt").mockReturnValue("142");
+
+    await userEvent.click(screen.getByRole("button", { name: /more options/i }));
+    await userEvent.click(screen.getByRole("button", { name: /cite a page/i }));
+    expect(input).toHaveValue("p. 142 — ");
+    expect(sendCollectionMessage).not.toHaveBeenCalled();
+  });
+
+  it("attaches a photo and sends it through the image endpoint", async () => {
+    sendCollectionImageMessage.mockResolvedValue(msg({
+      id: "m2", is_mine: true, body: "look", attachment_url: "/collections/c1/messages/m2/attachment",
+    }));
+    getChatAttachmentBlobUrl.mockResolvedValue("blob:fake");
+    const input = await mount();
+
+    const file = new File(["fake"], "page.png", { type: "image/png" });
+    const fileInput = document.querySelector('input[type="file"]');
+    await userEvent.upload(fileInput, file);
+    expect(await screen.findByText(/page\.png/)).toBeInTheDocument();
+
+    await userEvent.type(input, "look{Enter}");
+
+    await waitFor(() => expect(sendCollectionImageMessage).toHaveBeenCalledWith("c1", "look", file, null, null));
+    expect(sendCollectionMessage).not.toHaveBeenCalled();
+    expect(await screen.findByAltText("Attached photo")).toBeInTheDocument();
   });
 });

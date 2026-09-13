@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react";
 import {
-  getThreadMessages, sendThreadMessage, reactToThreadMessage, blockThread, reportThread,
+  getThreadMessages, sendThreadMessage, sendThreadImageMessage, reactToThreadMessage, blockThread, reportThread,
 } from "../../services/api";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
 import useRealtimeStatus from "../../hooks/useRealtimeStatus";
@@ -8,6 +8,7 @@ import useScopePresence from "../../hooks/useScopePresence";
 import { REACTION_KINDS } from "../../lib/reactions";
 import { avatarColor } from "../../lib/avatar";
 import Modal from "../Modal";
+import ChatImage from "../ChatImage";
 
 /**
  * The conversation, once both readers have said yes.
@@ -72,6 +73,9 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   const [stale, setStale] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [justSent, setJustSent] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pendingImage, setPendingImage] = useState(null);
+  const [imageError, setImageError] = useState("");
 
   // ── Scroll ──
   // The transcript is not its own scroll container; the PAGE scrolls. So opening
@@ -80,6 +84,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
   // the newest message, and this one is a conversation whatever we style it as.
   const endRef = useRef(null);
   const composeRef = useRef(null);
+  const fileInputRef = useRef(null);
   const didLandRef = useRef(false);
   // Height of the document immediately before older letters are prepended, so
   // the restore below can put the viewport back where the reader's eyes were.
@@ -96,23 +101,30 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
     setMessages((prev) => prev.map((m) => (m.id === mid ? updater(m) : m)));
   };
 
+  // One reaction per person per message, like a tapback — picking a new kind
+  // replaces whatever this reader had here, it doesn't add a second one. The
+  // server has no "replace" verb, so a switch is two calls: unset the old
+  // kind, then set the new one.
   const toggleReaction = async (m, kind) => {
-    const on = !(m.my_reactions || []).includes(kind);
+    const mine = m.my_reactions || [];
+    const already = mine.includes(kind);
+    const prior = mine[0];
     const before = m;
+
     updateMessage(m.id, (cur) => {
       const counts = { ...cur.reaction_counts };
-      counts[kind] = (counts[kind] || 0) + (on ? 1 : -1);
-      if (counts[kind] <= 0) delete counts[kind];
-      return {
-        ...cur,
-        reaction_counts: counts,
-        my_reactions: on
-          ? [...(cur.my_reactions || []), kind]
-          : (cur.my_reactions || []).filter((k) => k !== kind),
-      };
+      if (prior) {
+        counts[prior] = (counts[prior] || 1) - 1;
+        if (counts[prior] <= 0) delete counts[prior];
+      }
+      if (!already) counts[kind] = (counts[kind] || 0) + 1;
+      return { ...cur, reaction_counts: counts, my_reactions: already ? [] : [kind] };
     });
     try {
-      const r = await reactToThreadMessage(threadId, m.id, kind, on);
+      if (prior && prior !== kind) {
+        await reactToThreadMessage(threadId, m.id, prior, false);
+      }
+      const r = await reactToThreadMessage(threadId, m.id, kind, !already);
       updateMessage(m.id, (cur) => ({ ...cur, reaction_counts: r.reaction_counts, my_reactions: r.my_reactions }));
     } catch {
       updateMessage(m.id, () => before);
@@ -214,16 +226,20 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
 
   const send = async () => {
     const text = body.trim();
-    if (!text || sendingRef.current) return;
+    if ((!text && !pendingImage) || sendingRef.current) return;
     sendingRef.current = true;
     setError("");
+    setImageError("");
     setSending(true);
     try {
-      const saved = await sendThreadMessage(threadId, text, replyTo?.id || null);
+      const saved = pendingImage
+        ? await sendThreadImageMessage(threadId, text || "(a photo)", pendingImage, replyTo?.id || null)
+        : await sendThreadMessage(threadId, text, replyTo?.id || null);
       setMessages((prev) => [...prev, saved]);
       remember([saved]);
       setBody("");
       setReplyTo(null);
+      setPendingImage(null);
       // A brief acknowledgment, not a feature — a small seal-stamp flourish on
       // "send the letter", not gamification.
       setJustSent(true);
@@ -237,6 +253,18 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
     setSending(false);
   };
 
+  const pickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow picking the same file again later
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      setImageError("Only PNG, JPEG or WEBP images are supported.");
+      return;
+    }
+    setImageError("");
+    setPendingImage(file);
+  };
+
   // Block and report both end the conversation silently — the other reader is
   // told nothing, it simply stops. So we close out to the list without a
   // confirmation flourish.
@@ -244,6 +272,11 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
     try { await fn(); onEnded?.(); }
     catch { setError("Couldn't do that just now."); }
   };
+
+  const searchTerm = searchQuery.trim().toLowerCase();
+  const visibleMessages = searchTerm
+    ? messages.filter((m) => m.body.toLowerCase().includes(searchTerm))
+    : messages;
 
   return (
     <>
@@ -288,18 +321,31 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
           read is never reported — no receipts, no “seen”.
         </p>
 
+        {messages.length > 0 && (
+          <input
+            type="search"
+            className="rt-search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search these letters…"
+            aria-label="Search letters"
+          />
+        )}
+
         <div className="rt-scroll">
           {loading ? (
             <div className="rt-loading">opening…</div>
+          ) : searchTerm && visibleMessages.length === 0 ? (
+            <p className="rt-loading">No letters match “{searchQuery.trim()}”.</p>
           ) : (
             <>
-              {before && (
+              {before && !searchTerm && (
                 <button className="rt-earlier" onClick={loadEarlier}>read what came before</button>
               )}
               {/* The first two messages are the notes you each wrote before you
                   knew who the other was — the server seeds the thread with them,
                   so the conversation starts where you left off. */}
-              {messages.map((m) => (
+              {visibleMessages.map((m) => (
                 <article key={m.id} className={`rt-msg ${m.is_mine ? "mine" : "theirs"}`}>
                   {/* Signature at the top, like a letter. Nothing is right-aligned:
                       a letter you have to read at the wrong margin is a bubble. */}
@@ -322,7 +368,10 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
                       <p className="rt-quote-body">{m.reply_to.body}</p>
                     </div>
                   )}
-                  <div className="rt-msg-body">{m.body}</div>
+                  <div className={`rt-msg-body ${Object.keys(m.reaction_counts || {}).map((k) => `rt-msg-body--${k}`).join(" ")}`}>
+                    {m.body}
+                  </div>
+                  {m.attachment_url && <ChatImage url={m.attachment_url} alt="Attached photo" />}
                   <div className="rt-msg-actions">
                     {REACTION_KINDS.map((r) => {
                       const count = m.reaction_counts?.[r.kind] || 0;
@@ -400,14 +449,36 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
             maxLength={MAX_MESSAGE}
             aria-label="Your message"
           />
+          {pendingImage && (
+            <div className="rt-pending-image">
+              <span>{pendingImage.name}</span>
+              <button type="button" onClick={() => setPendingImage(null)} aria-label="Remove photo">×</button>
+            </div>
+          )}
+          {imageError && <div className="rt-error" role="alert">{imageError}</div>}
           <div className="rt-compose-foot">
             <span className="rt-compose-note" aria-live="polite">
               {partnerTyping ? `@${handle} is writing…` : "sent once · no edits after"}
             </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={pickImage}
+              hidden
+            />
+            <button
+              type="button"
+              className="rt-tool-btn"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Attach a photo"
+            >
+              photo
+            </button>
             <button
               className={`btn brass ${justSent ? "is-sent" : ""}`}
               onClick={send}
-              disabled={!body.trim() || sending}
+              disabled={(!body.trim() && !pendingImage) || sending}
             >
               {sending ? "sending…" : "send the letter"}
             </button>

@@ -680,6 +680,22 @@ export async function sendCollectionMessage(collectionId, body, bookId = null, r
   return res.json();
 }
 
+// A message with a photo attached — same reasoning and shape as
+// sendThreadImageMessage, a separate multipart endpoint from the JSON one.
+export async function sendCollectionImageMessage(collectionId, body, file, bookId = null, replyToId = null) {
+  const fd = new FormData();
+  fd.append("body", body);
+  if (bookId) fd.append("book_id", bookId);
+  if (replyToId) fd.append("reply_to_id", replyToId);
+  fd.append("file", file);
+  const res = await apiFetch(`/collections/${collectionId}/messages/image`, { method: "POST", body: fd });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that image");
+  }
+  return res.json();
+}
+
 export async function reactToCollectionMessage(collectionId, messageId, kind, on = true) {
   const res = await apiFetch(`/collections/${collectionId}/messages/${messageId}/react`, {
     method: "POST",
@@ -721,6 +737,27 @@ export async function reportCollectionConversation(collectionId, category = "oth
   });
   if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't file that report");
   return res.json().catch(() => ({ status: "received" }));
+}
+
+// The one message currently pinned above the room, if any — `{ pinned: ReplyPreview | null }`.
+export async function getCollectionPinned(collectionId) {
+  const res = await apiFetch(`/collections/${collectionId}/pinned`);
+  if (!res.ok) return { pinned: null };
+  return res.json();
+}
+
+// Pin a message (replacing whatever was pinned), or pass null to clear it.
+// Any member may — there's no moderation weight to a "what we're discussing" marker.
+export async function setCollectionPinned(collectionId, messageId) {
+  const res = await apiFetch(`/collections/${collectionId}/pinned`, {
+    method: "PUT",
+    body: JSON.stringify({ message_id: messageId }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't pin that");
+  }
+  return res.json();
 }
 
 // ── Mirror: insights + resurfaced memories [F2.5 / B2.6] ──
@@ -1087,6 +1124,32 @@ export async function sendThreadMessage(threadId, body, replyToId = null) {
     throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that");
   }
   return res.json();
+}
+
+// A letter with a photo attached — a page, a margin note. Multipart, a
+// separate endpoint from the plain JSON one (same reasoning as importLibrary:
+// apiFetch strips Content-Type for FormData so the browser sets the boundary).
+export async function sendThreadImageMessage(threadId, body, file, replyToId = null) {
+  const fd = new FormData();
+  fd.append("body", body);
+  if (replyToId) fd.append("reply_to_id", replyToId);
+  fd.append("file", file);
+  const res = await apiFetch(`/threads/${threadId}/messages/image`, { method: "POST", body: fd });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, errorKind(res.status), d.detail || "Couldn't send that image");
+  }
+  return res.json();
+}
+
+// A message's attachment is Bearer-authenticated, not a plain public URL, so
+// it can't be dropped straight into <img src>. Fetch it through apiFetch and
+// hand back an object URL the caller is responsible for revoking.
+export async function getChatAttachmentBlobUrl(attachmentUrl) {
+  const res = await apiFetch(attachmentUrl);
+  if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't load that image");
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
 }
 
 export async function reactToThreadMessage(threadId, messageId, kind, on = true) {

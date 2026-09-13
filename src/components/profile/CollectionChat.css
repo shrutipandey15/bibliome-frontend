@@ -121,6 +121,70 @@
 }
 .cc-older:hover { color: var(--ink); }
 
+/* ── Search: filters the room client-side, over what's already loaded ── */
+.cc-search { flex: none; margin-bottom: 8px; }
+.cc-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--bg-sunken, #000) 60%, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 16px; /* see .cc-select — prevents the iOS focus zoom */
+  color: inherit;
+  min-height: 40px;
+}
+.cc-search-input:focus { outline: none; border-color: var(--res-accent, var(--brass)); }
+
+/* ── The pinned message — one at a time, above the transcript ── */
+.cc-pinned {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border-left: 2px solid var(--res-accent, var(--brass));
+  background: color-mix(in srgb, var(--bg-sunken, #000) 60%, transparent);
+}
+.cc-pinned-text { flex: 1; min-width: 0; }
+.cc-pinned-who {
+  display: block;
+  font-family: var(--font-mono, inherit);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--res-accent, var(--brass));
+  margin-bottom: 2px;
+}
+.cc-pinned-body {
+  margin: 0;
+  font-family: var(--font-display, inherit);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-quiet);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cc-pinned-clear {
+  flex: none;
+  background: none;
+  border: none;
+  font-family: var(--font-mono, inherit);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.cc-pinned-clear:hover { color: var(--ink); }
+
 /* ── The transcript: the one scrolling region ── */
 .cc-messages {
   flex: 1;
@@ -255,6 +319,22 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;   /* a pasted URL must not widen the page */
 }
+
+/* A reaction changes how the message itself reads, not just a tally under
+   it — "underlined" underlines, "quotable" sets it off like a pull-quote.
+   Only `border-*`/`text-*` longhands here, never `background`/`border`
+   shorthand: the base glass card already owns those, and a modifier
+   replacing the shorthand would blank out the blur. Several can be true of
+   one message at once (different readers reacting differently), so these
+   compose rather than switch on each other. */
+.cc-msg-body--underlined { text-decoration: underline; text-decoration-color: var(--res-accent, var(--brass)); text-underline-offset: 3px; }
+.cc-msg-body--reconsidered { text-decoration: underline; text-decoration-style: dashed; text-decoration-color: var(--ink-faint); text-underline-offset: 3px; }
+.cc-msg-body--quotable { font-style: italic; border-left-width: 2px; border-left-color: var(--res-accent, var(--brass)); }
+.cc-msg-body--resonated { border-color: color-mix(in srgb, var(--res-accent, var(--brass)) 55%, transparent); }
+.cc-msg-body--warm { border-color: color-mix(in srgb, var(--brass) 55%, transparent); }
+.cc-msg-body--noted { border-left-width: 2px; border-left-color: var(--ink-faint); }
+.cc-msg-body--chills { letter-spacing: 0.01em; text-shadow: 0 0 10px color-mix(in srgb, var(--res-accent, var(--brass)) 35%, transparent); }
+
 .cc-msg.is-grouped .cc-msg-line { margin-left: 32px; }
 
 .cc-msg-del {
@@ -276,6 +356,7 @@
 .cc-msg-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 5px;
   margin-top: 5px;
   margin-left: 32px;
@@ -321,6 +402,28 @@
   cursor: pointer;
 }
 .cc-reply-btn:hover { color: var(--ink); }
+
+.cc-pin-btn {
+  background: none;
+  border: none;
+  padding: 3px 4px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.cc-pin-btn:hover { color: var(--ink); }
+.cc-pin-btn.on { color: var(--res-accent, var(--brass)); }
+
+/* A real member's handle inside a message body — not a link (no profile to
+   go to from inside a room), just enough weight to say "this was aimed at
+   someone". A stray "@word" that matches no member never gets this class. */
+.cc-mention {
+  color: var(--res-accent, var(--brass));
+  font-weight: 600;
+}
 
 /* ── The "replying to…" strip above the compose box ── */
 .cc-replying {
@@ -405,6 +508,142 @@
   position: relative;
   z-index: 1;
 }
+.cc-compose-field-wrap { position: relative; }
+/* Anchored to the compose box rather than the caret — simpler, and the box is
+   already at the bottom of the screen so a menu above it stays reachable. */
+.cc-mention-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-width: 220px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px -16px rgba(0,0,0,.5);
+}
+.cc-mention-menu li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.cc-mention-menu li button:hover,
+.cc-mention-menu li button:focus-visible {
+  background: var(--res-accent-soft, color-mix(in srgb, var(--brass) 15%, transparent));
+  outline: none;
+}
+/* ── The "+" tools menu: photo, page citation, book tag — one control
+   instead of a row of buttons competing with send/hint for space. ── */
+.cc-tools { position: relative; flex: none; }
+.cc-tool-toggle {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  font-family: var(--font-display, inherit);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-quiet);
+  cursor: pointer;
+}
+.cc-tool-toggle:hover,
+.cc-tool-toggle[aria-expanded="true"] {
+  border-color: var(--res-accent, var(--brass));
+  color: var(--res-accent, var(--brass));
+}
+.cc-tools-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  min-width: 180px;
+  max-width: 240px;
+  max-height: 260px;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px -16px rgba(0,0,0,.5);
+}
+.cc-tools-menu > li > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.cc-tools-menu > li > button:hover,
+.cc-tools-menu > li > button:focus-visible {
+  background: var(--res-accent-soft, color-mix(in srgb, var(--brass) 15%, transparent));
+  outline: none;
+}
+.cc-tools-books {
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule-soft, var(--rule));
+}
+.cc-tools-books-label {
+  display: block;
+  padding: 4px 10px 2px;
+  font-family: var(--font-mono, inherit);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.cc-tools-books button.on { color: var(--res-accent, var(--brass)); }
+
+.cc-msg-image { margin-left: 32px; margin-top: 2px; }
+
+.cc-pending-image {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-sunken) 60%, transparent);
+  font-size: 0.82rem;
+  color: var(--ink-quiet);
+}
+.cc-pending-image button {
+  background: none;
+  border: none;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.cc-pending-image button:hover { color: var(--ink); }
+
 .cc-compose-input {
   width: 100%;
   box-sizing: border-box;

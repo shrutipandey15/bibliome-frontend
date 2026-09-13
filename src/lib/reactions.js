@@ -3,4 +3,7 @@ export const REACTION_KINDS = [
   { kind: "noted", mark: "☞", label: "noted" },
   { kind: "reconsidered", mark: "↻", label: "stayed with me" },
   { kind: "warm", mark: "♡", label: "grateful" },
+  { kind: "underlined", mark: "✒", label: "underlined this" },
+  { kind: "quotable", mark: "❝", label: "keeping this line" },
+  { kind: "chills", mark: "✦", label: "gave me chills" },
 ];

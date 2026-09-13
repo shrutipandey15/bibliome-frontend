@@ -3,10 +3,14 @@ import {
   getCollectionConversations,
   getCollectionMessages,
   sendCollectionMessage,
+  sendCollectionImageMessage,
   deleteCollectionMessage,
   reactToCollectionMessage,
   reportCollectionConversation,
   getCollectionSparks,
+  getCollectionMembers,
+  getCollectionPinned,
+  setCollectionPinned,
 } from "../../services/api";
 import CrisisInterstitial from "../echo/CrisisInterstitial";
 import useRealtimeEvent from "../../hooks/useRealtimeEvent";
@@ -14,7 +18,9 @@ import useRealtimeStatus from "../../hooks/useRealtimeStatus";
 import useScopePresence from "../../hooks/useScopePresence";
 import { REACTION_KINDS } from "../../lib/reactions";
 import { avatarColor } from "../../lib/avatar";
+import { splitMentions, activeMentionQuery, insertMention } from "../../lib/mentions";
 import Modal from "../Modal";
+import ChatImage from "../ChatImage";
 import "./CollectionChat.css";
 
 function typingLabel(handles) {
@@ -76,10 +82,19 @@ export default function CollectionChat({ collectionId, collection }) {
   const [newBelow, setNewBelow] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [justSent, setJustSent] = useState(false);
+  const [members, setMembers] = useState([]);
+  const [mentionQuery, setMentionQuery] = useState(null);
+  const [pinned, setPinned] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pendingImage, setPendingImage] = useState(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const toolsRef = useRef(null);
+  const [imageError, setImageError] = useState("");
 
   const bottomRef = useRef(null);
   const scrollerRef = useRef(null);
   const composeRef = useRef(null);
+  const fileInputRef = useRef(null);
   // Newest timestamp we hold, so the poll can ask "anything after this?" without
   // a stale-closure race inside the interval.
   const latestRef = useRef(null);
@@ -101,23 +116,30 @@ export default function CollectionChat({ collectionId, collection }) {
     setMessages(messagesRef.current);
   };
 
+  // One reaction per person per message, like a tapback — picking a new kind
+  // replaces whatever this reader had here, it doesn't add a second one. The
+  // server has no "replace" verb, so a switch is two calls: unset the old
+  // kind, then set the new one.
   const toggleReaction = async (m, kind) => {
-    const on = !(m.my_reactions || []).includes(kind);
+    const mine = m.my_reactions || [];
+    const already = mine.includes(kind);
+    const prior = mine[0];
     const before = m;
+
     updateMessage(m.id, (cur) => {
       const counts = { ...cur.reaction_counts };
-      counts[kind] = (counts[kind] || 0) + (on ? 1 : -1);
-      if (counts[kind] <= 0) delete counts[kind];
-      return {
-        ...cur,
-        reaction_counts: counts,
-        my_reactions: on
-          ? [...(cur.my_reactions || []), kind]
-          : (cur.my_reactions || []).filter((k) => k !== kind),
-      };
+      if (prior) {
+        counts[prior] = (counts[prior] || 1) - 1;
+        if (counts[prior] <= 0) delete counts[prior];
+      }
+      if (!already) counts[kind] = (counts[kind] || 0) + 1;
+      return { ...cur, reaction_counts: counts, my_reactions: already ? [] : [kind] };
     });
     try {
-      const r = await reactToCollectionMessage(id, m.id, kind, on);
+      if (prior && prior !== kind) {
+        await reactToCollectionMessage(id, m.id, prior, false);
+      }
+      const r = await reactToCollectionMessage(id, m.id, kind, !already);
       updateMessage(m.id, (cur) => ({ ...cur, reaction_counts: r.reaction_counts, my_reactions: r.my_reactions }));
     } catch {
       updateMessage(m.id, () => before);
@@ -145,7 +167,59 @@ export default function CollectionChat({ collectionId, collection }) {
   useEffect(() => {
     getCollectionConversations(id).then(setBooks).catch(() => setBooks([]));
     getCollectionSparks(id).then((r) => setSparks(r.sparks || [])).catch(() => {});
+    getCollectionMembers(id).then(setMembers).catch(() => setMembers([]));
+    getCollectionPinned(id).then((r) => setPinned(r.pinned || null)).catch(() => setPinned(null));
   }, [id]);
+
+  const memberHandles = members.map((m) => m.handle).filter(Boolean);
+  const mentionMatches = mentionQuery === null
+    ? []
+    : memberHandles.filter((h) => h.toLowerCase().startsWith(mentionQuery.toLowerCase())).slice(0, 6);
+
+  const pickMention = (handle) => {
+    const el = composeRef.current;
+    const caret = el ? el.selectionStart : draft.length;
+    const { text, caret: nextCaret } = insertMention(draft, caret, handle);
+    setDraft(text);
+    setMentionQuery(null);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(nextCaret, nextCaret);
+    });
+  };
+
+  const togglePin = async (messageId) => {
+    const next = pinned?.id === messageId ? null : messageId;
+    try {
+      const r = await setCollectionPinned(id, next);
+      setPinned(r.pinned || null);
+    } catch (err) { setRefusal(err.message); }
+  };
+
+  const citePage = () => {
+    const n = window.prompt("Which page (or chapter)?");
+    if (!n || !n.trim()) return;
+    const cite = `p. ${n.trim()} — `;
+    setDraft((d) => (d && !d.endsWith("\n") && !d.endsWith(" ") ? `${d} ${cite}` : `${d}${cite}`));
+    composeRef.current?.focus();
+  };
+
+  // The "+" tools menu closes on a click outside it or Escape — without this
+  // it only ever closed by picking one of its own options, so a reader who
+  // opened it just to look had no way back out except reloading the page.
+  useEffect(() => {
+    if (!toolsOpen) return;
+    const onPointerDown = (e) => {
+      if (!toolsRef.current?.contains(e.target)) setToolsOpen(false);
+    };
+    const onKeyDown = (e) => { if (e.key === "Escape") setToolsOpen(false); };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [toolsOpen]);
 
   // Pull anything that has arrived since the newest message we hold. Shared by
   // the realtime handler, the poll, and the tab-focus catch-up.
@@ -246,12 +320,14 @@ export default function CollectionChat({ collectionId, collection }) {
   const send = async (e) => {
     e?.preventDefault();
     const body = draft.trim();
-    if (!body || sendingRef.current) return;
+    if ((!body && !pendingImage) || sendingRef.current) return;
     sendingRef.current = true;
     setSending(true);
     setRefusal(null);
     try {
-      const saved = await sendCollectionMessage(id, body, attach || null, replyTo?.id || null);
+      const saved = pendingImage
+        ? await sendCollectionImageMessage(id, body || "(a photo)", pendingImage, attach || null, replyTo?.id || null)
+        : await sendCollectionMessage(id, body, attach || null, replyTo?.id || null);
       pinnedRef.current = true;
       messagesRef.current = [...messagesRef.current, saved];
       setMessages(messagesRef.current);
@@ -259,6 +335,7 @@ export default function CollectionChat({ collectionId, collection }) {
       setDraft("");
       setAttach("");
       setReplyTo(null);
+      setPendingImage(null);
       setJustSent(true);
       setTimeout(() => setJustSent(false), 500);
       if (saved.crisis) setCrisis(saved.crisis);
@@ -269,6 +346,18 @@ export default function CollectionChat({ collectionId, collection }) {
       sendingRef.current = false;
       setSending(false);
     }
+  };
+
+  const pickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      setImageError("Only PNG, JPEG or WEBP images are supported.");
+      return;
+    }
+    setImageError("");
+    setPendingImage(file);
   };
 
   const onKeyDown = (e) => {
@@ -320,7 +409,32 @@ export default function CollectionChat({ collectionId, collection }) {
         </p>
       )}
 
-      {cursor && (
+      {messages.length > 0 && (
+        <div className="cc-search">
+          <input
+            type="search"
+            className="cc-search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search this room…"
+            aria-label="Search messages"
+          />
+        </div>
+      )}
+
+      {pinned && (
+        <div className="cc-pinned">
+          <div className="cc-pinned-text">
+            <span className="cc-pinned-who">pinned · {pinned.handle ? `@${pinned.handle}` : "a reader"}</span>
+            <p className="cc-pinned-body">{pinned.body}</p>
+          </div>
+          <button type="button" className="cc-pinned-clear" onClick={() => togglePin(pinned.id)}>
+            unpin
+          </button>
+        </div>
+      )}
+
+      {cursor && !searchQuery && (
         <button className="cc-older" onClick={older}>load earlier messages</button>
       )}
 
@@ -329,13 +443,22 @@ export default function CollectionChat({ collectionId, collection }) {
           <p className="cc-quiet">Loading…</p>
         ) : messages.length === 0 ? (
           <Empty sparks={sparks} onUse={setDraft} />
-        ) : (
+        ) : (() => {
+          const q = searchQuery.trim().toLowerCase();
+          const visible = q ? messages.filter((m) => m.body.toLowerCase().includes(q)) : messages;
+          if (q && visible.length === 0) {
+            return <p className="cc-quiet">No messages match “{searchQuery.trim()}”.</p>;
+          }
+          return (
           <ul className="cc-list-msgs">
-            {messages.map((m, i) => {
-              const prev = messages[i - 1];
+            {visible.map((m, i) => {
+              const prev = visible[i - 1];
               // A book label always starts a fresh block — it is a change of
-              // subject, and hiding it under a grouped run would lose it.
+              // subject, and hiding it under a grouped run would lose it. A
+              // search result never groups: adjacent matches weren't
+              // necessarily adjacent in the real conversation.
               const grouped =
+                !q &&
                 prev &&
                 prev.handle === m.handle &&
                 prev.is_mine === m.is_mine &&
@@ -380,7 +503,13 @@ export default function CollectionChat({ collectionId, collection }) {
                     </div>
                   )}
                   <div className="cc-msg-line">
-                    <p className="cc-msg-body">{m.body}</p>
+                    <p className={`cc-msg-body ${Object.keys(m.reaction_counts || {}).map((k) => `cc-msg-body--${k}`).join(" ")}`}>
+                      {splitMentions(m.body, memberHandles).map((part, pi) =>
+                        part.mention
+                          ? <span key={pi} className="cc-mention">{part.text}</span>
+                          : <span key={pi}>{part.text}</span>
+                      )}
+                    </p>
                     {m.is_mine && (
                       <button
                         className="cc-msg-del"
@@ -391,6 +520,11 @@ export default function CollectionChat({ collectionId, collection }) {
                       </button>
                     )}
                   </div>
+                  {m.attachment_url && (
+                    <div className="cc-msg-image">
+                      <ChatImage url={m.attachment_url} alt="Attached photo" />
+                    </div>
+                  )}
                   <div className="cc-msg-actions">
                     {REACTION_KINDS.map((r) => {
                       const count = m.reaction_counts?.[r.kind] || 0;
@@ -416,13 +550,21 @@ export default function CollectionChat({ collectionId, collection }) {
                     >
                       reply
                     </button>
+                    <button
+                      type="button"
+                      className={`cc-pin-btn ${pinned?.id === m.id ? "on" : ""}`}
+                      onClick={() => togglePin(m.id)}
+                    >
+                      {pinned?.id === m.id ? "unpin" : "pin"}
+                    </button>
                   </div>
                 </li>
               );
             })}
             <div ref={bottomRef} />
           </ul>
-        )}
+          );
+        })()}
         {newBelow && (
           <button className="cc-jump" onClick={jumpToLatest}>↓ new messages</button>
         )}
@@ -451,33 +593,106 @@ export default function CollectionChat({ collectionId, collection }) {
             </button>
           </div>
         )}
-        <textarea
-          ref={composeRef}
-          className="cc-compose-input"
-          value={draft}
-          onChange={(e) => { setDraft(e.target.value); setRefusal(null); notifyTyping(); }}
-          onKeyDown={onKeyDown}
-          placeholder="Say something…"
-          rows={1}
-          maxLength={2000}
-          aria-label="Your message"
-        />
-        <div className="cc-compose-row">
-          {books.length > 0 && (
-            <select
-              className="cc-select cc-attach"
-              value={attach}
-              onChange={(e) => setAttach(e.target.value)}
-              aria-label="Attach a book to this message"
-            >
-              <option value="">＋ tag a book</option>
-              {books.map((b) => (
-                <option key={b.book_id} value={b.book_id}>{b.title}</option>
+        <div className="cc-compose-field-wrap">
+          <textarea
+            ref={composeRef}
+            className="cc-compose-input"
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              setRefusal(null);
+              notifyTyping();
+              setMentionQuery(activeMentionQuery(e.target.value, e.target.selectionStart));
+            }}
+            onKeyDown={(e) => {
+              if (mentionQuery !== null && mentionMatches.length && (e.key === "Enter" || e.key === "Tab")) {
+                e.preventDefault();
+                pickMention(mentionMatches[0]);
+                return;
+              }
+              if (e.key === "Escape" && mentionQuery !== null) { setMentionQuery(null); return; }
+              onKeyDown(e);
+            }}
+            placeholder="Say something… (@ to mention someone)"
+            rows={1}
+            maxLength={2000}
+            aria-label="Your message"
+          />
+          {mentionQuery !== null && mentionMatches.length > 0 && (
+            <ul className="cc-mention-menu" role="listbox">
+              {mentionMatches.map((h) => (
+                <li key={h}>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); pickMention(h); }}>
+                    @{h}
+                  </button>
+                </li>
               ))}
-            </select>
+            </ul>
           )}
+        </div>
+        {pendingImage && (
+          <div className="cc-pending-image">
+            <span>{pendingImage.name}</span>
+            <button type="button" onClick={() => setPendingImage(null)} aria-label="Remove photo">×</button>
+          </div>
+        )}
+        {attach && (
+          <div className="cc-pending-image">
+            <span>about “{books.find((b) => b.book_id === attach)?.title}”</span>
+            <button type="button" onClick={() => setAttach("")} aria-label="Remove book tag">×</button>
+          </div>
+        )}
+        {imageError && <p className="cc-refusal" role="alert">{imageError}</p>}
+        <div className="cc-compose-row">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={pickImage}
+            hidden
+          />
+          <div className="cc-tools" ref={toolsRef}>
+            <button
+              type="button"
+              className="cc-tool-toggle"
+              onClick={() => setToolsOpen((v) => !v)}
+              aria-expanded={toolsOpen}
+              aria-label="More options"
+            >
+              +
+            </button>
+            {toolsOpen && (
+              <ul className="cc-tools-menu" role="menu">
+                <li>
+                  <button type="button" onClick={() => { fileInputRef.current?.click(); setToolsOpen(false); }}>
+                    attach a photo
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => { citePage(); setToolsOpen(false); }}>
+                    cite a page
+                  </button>
+                </li>
+                {books.length > 0 && (
+                  <li className="cc-tools-books">
+                    <span className="cc-tools-books-label">tag a book</span>
+                    {books.map((b) => (
+                      <button
+                        key={b.book_id}
+                        type="button"
+                        className={attach === b.book_id ? "on" : ""}
+                        onClick={() => { setAttach(attach === b.book_id ? "" : b.book_id); setToolsOpen(false); }}
+                      >
+                        {b.title}
+                      </button>
+                    ))}
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
           <span className="cc-hint">Enter to send</span>
-          <button className={`btn brass cc-send ${justSent ? "is-sent" : ""}`} disabled={sending || !draft.trim()}>
+          <button className={`btn brass cc-send ${justSent ? "is-sent" : ""}`} disabled={sending || (!draft.trim() && !pendingImage)}>
             {sending ? "…" : "send"}
           </button>
         </div>
