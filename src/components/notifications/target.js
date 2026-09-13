@@ -13,6 +13,8 @@
  *   chat_reaction       app/routers/threads.py,   → { thread_id } or { collection_id, message_id, kind, actors, count }
  *                       app/routers/profile.py
  *   chat_mention        app/routers/profile.py    → { collection_id, message_id, actors, count }
+ *   collection_joined   app/routers/profile.py    → { collection_id, actors, count }
+ *   collection_deleted  app/routers/profile.py    → { title } — the room is gone, there is nowhere to land
  *   dna_shifted         app/services/dna_service  → { old, new }
  *   weekly_digest       app/services/digest_svc   → { period, books_this_week, memory }
  *   tier 0 (security)   app/routers/auth.py       → { message }
@@ -59,7 +61,11 @@ export function notificationTarget(n) {
       // resonance_message above.
       return p.thread_id ? "/resonance" : (p.collection_id ? `/collections/${p.collection_id}/discussion` : null);
     case "chat_mention":
+    case "collection_joined":
       return p.collection_id ? `/collections/${p.collection_id}/discussion` : null;
+    case "collection_deleted":
+      // The room no longer exists — there is nowhere honest to send a click.
+      return null;
     case "dna_shifted":
       return "/?view=dna";
     case "weekly_digest":

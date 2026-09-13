@@ -24,7 +24,10 @@
   opacity: 0.8;
 }
 
-.col-share-members { list-style: none; margin: 0 0 16px; padding: 0; }
+/* Capped and internally scrolled, same treatment as `.col-books` in the drawer
+   above it — a shelf with 30 members shouldn't push "shared with" (and the
+   invite controls under it) further down every time someone joins. */
+.col-share-members { list-style: none; margin: 0 0 16px; padding: 0; max-height: 26vh; overflow-y: auto; }
 .col-share-member {
   display: flex;
   align-items: baseline;

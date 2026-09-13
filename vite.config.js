@@ -45,9 +45,19 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // `ws: true` matters here: src/services/realtime.js opens
+      // ws(s)://<host>/api/realtime/ws, under the same /api path as every
+      // REST call. Without it, Vite's dev proxy silently never upgrades the
+      // connection — no error, just an immediate close — so a local `npm run
+      // dev` session always looked like it was on the polling fallback,
+      // never the realtime path it's actually meant to exercise. Production
+      // nginx (deploy/bibliome.nginx.conf) already has the equivalent
+      // Upgrade/Connection headers on its own /api/realtime/ws location;
+      // this brings local dev in line with it.
       "/api": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
+        ws: true,
       },
     },
   },

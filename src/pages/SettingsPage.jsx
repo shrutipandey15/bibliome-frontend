@@ -518,15 +518,6 @@ export default function SettingsPage() {
                       onChange={(e) => setPrefs({ ...prefs, timezone: e.target.value })}
                     />
                   </div>
-
-                  <div className="rule" style={{ margin: "20px 0" }} />
-                  <button
-                    className="btn ghost"
-                    disabled={prefsBusy}
-                    onClick={() => savePrefs({ reply_enabled: false, digest_enabled: true })}
-                  >
-                    ◔ fewer notifications — weekly digest only
-                  </button>
                 </>
               )}
             </div>

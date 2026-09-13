@@ -250,7 +250,15 @@ export default function CollectionChat({ collectionId, collection }) {
   }, [id, filter]);
 
   // ── Live: realtime first, poll as fallback, both visible-only ──
-  useRealtimeEvent("notify", (ev) => { if (ev.kind === "collection_message") catchUp(); });
+  useRealtimeEvent("notify", (ev) => {
+    if (ev.kind === "collection_message") catchUp();
+    // A quiet nudge (never a stored notification — see the backend's
+    // publish_scope call) so a pin/unpin another member makes shows up here
+    // live instead of waiting for the next poll or a reload.
+    if (ev.kind === "collection_pinned") {
+      getCollectionPinned(id).then((r) => setPinned(r.pinned || null)).catch(() => {});
+    }
+  });
 
   const { present, typing, notifyTyping } = useScopePresence(id ? `collection:${id}` : null);
   const connected = useRealtimeStatus();
@@ -526,23 +534,28 @@ export default function CollectionChat({ collectionId, collection }) {
                     </div>
                   )}
                   <div className="cc-msg-actions">
-                    {REACTION_KINDS.map((r) => {
-                      const count = m.reaction_counts?.[r.kind] || 0;
-                      const on = (m.my_reactions || []).includes(r.kind);
-                      return (
-                        <button
-                          key={r.kind}
-                          type="button"
-                          aria-pressed={on}
-                          className={`cc-react ${on ? "on" : ""}`}
-                          onClick={() => toggleReaction(m, r.kind)}
-                          aria-label={`${r.label}${count ? ` (${count})` : ""}`}
-                        >
-                          <span className="cc-react-mark" aria-hidden="true">{r.mark}</span>
-                          {count > 0 && <span className="cc-react-count">{count}</span>}
-                        </button>
-                      );
-                    })}
+                    <input type="checkbox" id={`cc-react-open-${m.id}`} className="cc-react-toggle" />
+                    <div className="cc-react-row">
+                      {REACTION_KINDS.map((r) => {
+                        const count = m.reaction_counts?.[r.kind] || 0;
+                        const on = (m.my_reactions || []).includes(r.kind);
+                        return (
+                          <button
+                            key={r.kind}
+                            type="button"
+                            aria-pressed={on}
+                            className={`cc-react ${on ? "on" : ""} ${count > 0 ? "has-count" : ""}`}
+                            onClick={() => toggleReaction(m, r.kind)}
+                            aria-label={`${r.label}${count ? ` (${count})` : ""}`}
+                          >
+                            <span className="cc-react-mark" aria-hidden="true">{r.mark}</span>
+                            {count > 0 && <span className="cc-react-count">{count}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <label htmlFor={`cc-react-open-${m.id}`} className="cc-react-summary more">tap to react</label>
+                    <label htmlFor={`cc-react-open-${m.id}`} className="cc-react-summary less">done</label>
                     <button
                       type="button"
                       className="cc-reply-btn"

@@ -85,7 +85,7 @@ describe("SettingsPage visibility control [F2.8 / B2.1]", () => {
     await waitFor(() => expect(screen.getByRole("radio", { name: /Public \(retired\)/i })).toBeChecked());
   });
 
-  it("persists notification preferences and the one-tap 'fewer' shortcut [F4.3]", async () => {
+  it("persists notification preferences [F4.3]", async () => {
     render(<SettingsPage />);
     await userEvent.click(screen.getByRole("button", { name: /Notifications/i }));
 
@@ -95,9 +95,13 @@ describe("SettingsPage visibility control [F2.8 / B2.1]", () => {
     await userEvent.click(replySwitch);
     expect(updateNotificationPrefs).toHaveBeenCalledWith({ reply_enabled: false });
 
-    // One-tap "fewer notifications" = digest only.
-    await userEvent.click(screen.getByRole("button", { name: /fewer notifications/i }));
-    expect(updateNotificationPrefs).toHaveBeenCalledWith({ reply_enabled: false, digest_enabled: true });
+    // Weekly digest toggles independently — the individual switches already
+    // cover any combination, so there is no separate "fewer notifications"
+    // shortcut duplicating them.
+    const digestSwitch = await screen.findByRole("switch", { name: /weekly reading digest/i });
+    await userEvent.click(digestSwitch);
+    expect(updateNotificationPrefs).toHaveBeenCalledWith({ digest_enabled: false });
+    expect(screen.queryByRole("button", { name: /fewer notifications/i })).not.toBeInTheDocument();
   });
 
   it("changes the pseudonymous handle [F3.1 / B3.1]", async () => {

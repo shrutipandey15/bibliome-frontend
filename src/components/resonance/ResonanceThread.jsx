@@ -373,24 +373,32 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
                   </div>
                   {m.attachment_url && <ChatImage url={m.attachment_url} alt="Attached photo" />}
                   <div className="rt-msg-actions">
-                    {REACTION_KINDS.map((r) => {
-                      const count = m.reaction_counts?.[r.kind] || 0;
-                      const on = (m.my_reactions || []).includes(r.kind);
-                      return (
-                        <button
-                          key={r.kind}
-                          type="button"
-                          aria-pressed={on}
-                          className={`rt-react ${on ? "on" : ""}`}
-                          onClick={() => toggleReaction(m, r.kind)}
-                          aria-label={`${r.label}${count ? ` (${count})` : ""}`}
-                          title={r.label}
-                        >
-                          <span className="rt-react-mark" aria-hidden="true">{r.mark}</span>
-                          {count > 0 && <span className="rt-react-count">{count}</span>}
-                        </button>
-                      );
-                    })}
+                    {/* Collapsed to "tap to react" on a phone — a checkbox hack, no JS
+                        state needed. Reactions already in use stay visible either way;
+                        the checkbox only reveals the rest of the palette. */}
+                    <input type="checkbox" id={`rt-react-open-${m.id}`} className="rt-react-toggle" />
+                    <div className="rt-react-row">
+                      {REACTION_KINDS.map((r) => {
+                        const count = m.reaction_counts?.[r.kind] || 0;
+                        const on = (m.my_reactions || []).includes(r.kind);
+                        return (
+                          <button
+                            key={r.kind}
+                            type="button"
+                            aria-pressed={on}
+                            className={`rt-react ${on ? "on" : ""} ${count > 0 ? "has-count" : ""}`}
+                            onClick={() => toggleReaction(m, r.kind)}
+                            aria-label={`${r.label}${count ? ` (${count})` : ""}`}
+                            title={r.label}
+                          >
+                            <span className="rt-react-mark" aria-hidden="true">{r.mark}</span>
+                            {count > 0 && <span className="rt-react-count">{count}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <label htmlFor={`rt-react-open-${m.id}`} className="rt-react-summary more">tap to react</label>
+                    <label htmlFor={`rt-react-open-${m.id}`} className="rt-react-summary less">done</label>
                     <button
                       type="button"
                       className="rt-reply-btn"

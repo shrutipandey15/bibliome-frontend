@@ -88,3 +88,15 @@ describe("chat_reaction and chat_mention", () => {
     expect(notificationTarget(n("chat_mention", {}))).toBeNull();
   });
 });
+
+// ── Membership lifecycle ──
+describe("collection_joined and collection_deleted", () => {
+  it("sends a join notice to the room it happened in", () => {
+    expect(notificationTarget(n("collection_joined", { collection_id: "c1", actors: ["mara"], count: 1 })))
+      .toBe("/collections/c1/discussion");
+  });
+
+  it("never links a deletion notice — the room is already gone", () => {
+    expect(notificationTarget(n("collection_deleted", { title: "Doomed Room" }))).toBeNull();
+  });
+});

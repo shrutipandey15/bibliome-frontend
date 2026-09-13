@@ -106,6 +106,18 @@ function itemText(n) {
     const who = count === 1 && actors[0] ? `@${actors[0]}` : `${count} readers`;
     return <>{who} mentioned you in a collection room.</>;
   }
+  if (n.kind === "dna_shifted") {
+    return <>Your reading DNA shifted — from <em>{p.old}</em> to <em>{p.new}</em>.</>;
+  }
+  if (n.kind === "collection_joined") {
+    const actors = p.actors || [];
+    const count = p.count || actors.length || 1;
+    const who = count === 1 && actors[0] ? `@${actors[0]}` : `${count} readers`;
+    return <>{who} joined a room you're in.</>;
+  }
+  if (n.kind === "collection_deleted") {
+    return <>The room <em>{p.title}</em> was closed by its owner.</>;
+  }
   if (p.message) return p.message; // security + generic
   return n.kind.replace(/_/g, " ");
 }

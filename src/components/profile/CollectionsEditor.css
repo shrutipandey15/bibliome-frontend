@@ -122,7 +122,20 @@
   .col-picker-opt { min-height: 44px; }
 }
 
-.col-drawer-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--rule-soft); }
+/* The drawer's body (books, add-book, discussion link, shared-with) can grow
+   past the modal's own 92vh cap, at which point `.modal-card` scrolls — but
+   that scrolled the footer's delete/done away with everything else. Sticking
+   it to the bottom of that same scroll container keeps it reachable no matter
+   how much the sections above it grow. Negative margin cancels the card's own
+   24px padding so the footer sits flush with the card edge instead of leaving
+   a see-through gap under it. */
+.col-drawer-foot {
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+  margin: 20px -24px -24px; padding: 14px 24px 24px;
+  border-top: 1px solid var(--rule-soft);
+  position: sticky; bottom: -24px;
+  background: var(--bg-card);
+}
 .col-drawer-warn { flex: 1; font-family: var(--font-display); font-size: 14px; color: var(--ink-quiet); }
 .col-del { border: none; background: none; cursor: pointer; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); padding: 4px 0; margin-right: auto; }
 .col-del:hover:not(:disabled) { color: var(--oxblood); }

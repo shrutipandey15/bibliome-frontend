@@ -126,6 +126,21 @@ describe("CollectionChat — one room per collection [#6]", () => {
     expect(await screen.findByText("pushed in")).toBeInTheDocument();
   });
 
+  it("refetches the pinned banner on a realtime collection_pinned nudge", async () => {
+    // This event is never a stored notification (see the backend test) — it's
+    // a live-only nudge so another open tab doesn't wait ~20s for the poll or
+    // need a reload to see a pin someone else just set.
+    await mount();
+    expect(getCollectionPinned).toHaveBeenCalledTimes(1);
+
+    getCollectionPinned.mockResolvedValue({ pinned: { id: "m9", handle: "mara", body: "read this by Friday" } });
+    await act(async () => {
+      await Promise.all(rtHandlers.map((h) => h({ type: "notify", kind: "collection_pinned" })));
+    });
+
+    expect(await screen.findByText("read this by Friday", { selector: ".cc-pinned-body" })).toBeInTheDocument();
+  });
+
   it("shows a jump-to-latest pill for a message that arrives while scrolled up in history", async () => {
     await mount();
     const scroller = document.querySelector(".cc-messages");

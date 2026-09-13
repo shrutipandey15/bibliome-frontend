@@ -85,6 +85,53 @@ describe("NotificationCenter [F4.1 / F4.2 / F3.8]", () => {
     expect(await screen.findByText(/@mara mentioned you in a collection room/i)).toBeInTheDocument();
   });
 
+  it("names both archetypes on a DNA shift, rather than the raw kind string", async () => {
+    // Before this case existed this fell through to the generic fallback and
+    // rendered literally as "dna shifted" — dead text, same bug class as the
+    // other kinds documented above.
+    getNotifications.mockResolvedValue({
+      unread_count: 1,
+      notifications: [
+        { id: "n7", tier: 1, kind: "dna_shifted", read: false, created_at: new Date().toISOString(),
+          payload: { old: "Grief Romantic", new: "Midnight Arsonist" } },
+      ],
+    });
+    render(<NotificationCenter />);
+    await userEvent.click(await screen.findByRole("button", { name: /notifications/i }));
+    expect(await screen.findByText(/Grief Romantic/)).toBeInTheDocument();
+    expect(screen.getByText(/Midnight Arsonist/)).toBeInTheDocument();
+    expect(screen.queryByText(/^dna shifted$/i)).not.toBeInTheDocument();
+  });
+
+  it("shows who joined a room, as a clickable link into it", async () => {
+    markNotificationsRead.mockResolvedValue(undefined);
+    getNotifications.mockResolvedValue({
+      unread_count: 1,
+      notifications: [
+        { id: "n8", tier: 1, kind: "collection_joined", read: false, created_at: new Date().toISOString(),
+          payload: { collection_id: "c1", actors: ["ines"], count: 1 } },
+      ],
+    });
+    render(<NotificationCenter />);
+    await userEvent.click(await screen.findByRole("button", { name: /notifications/i }));
+    await userEvent.click(await screen.findByText(/@ines joined a room you're in/i));
+    expect(navigate).toHaveBeenCalledWith("/collections/c1/discussion");
+  });
+
+  it("names the deleted room without turning it into a dead-end button", async () => {
+    getNotifications.mockResolvedValue({
+      unread_count: 1,
+      notifications: [
+        { id: "n9", tier: 1, kind: "collection_deleted", read: false, created_at: new Date().toISOString(),
+          payload: { title: "Doomed Room" } },
+      ],
+    });
+    render(<NotificationCenter />);
+    await userEvent.click(await screen.findByRole("button", { name: /notifications/i }));
+    const row = await screen.findByText(/Doomed Room/);
+    expect(row.closest("button")).toBeNull(); // no target — plain text, not a control
+  });
+
   it("marks all read", async () => {
     getNotifications.mockResolvedValue(data);
     markNotificationsRead.mockResolvedValue(undefined);
