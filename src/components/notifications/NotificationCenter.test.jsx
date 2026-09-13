@@ -46,6 +46,45 @@ describe("NotificationCenter [F4.1 / F4.2 / F3.8]", () => {
     expect(screen.getByText(/shelved/i)).toBeInTheDocument();
   });
 
+  it("names the reactor and the reaction when exactly one person reacted", async () => {
+    getNotifications.mockResolvedValue({
+      unread_count: 1,
+      notifications: [
+        { id: "n4", tier: 1, kind: "chat_reaction", read: false, created_at: new Date().toISOString(),
+          payload: { thread_id: "t1", message_id: "m1", kind: "underlined", actors: ["quiet_reader"], count: 1 } },
+      ],
+    });
+    render(<NotificationCenter />);
+    await userEvent.click(await screen.findByRole("button", { name: /notifications/i }));
+    expect(await screen.findByText(/@quiet_reader underlined your letter/i)).toBeInTheDocument();
+  });
+
+  it("stays vague about which reaction once several people have picked different ones", async () => {
+    getNotifications.mockResolvedValue({
+      unread_count: 1,
+      notifications: [
+        { id: "n5", tier: 1, kind: "chat_reaction", read: false, created_at: new Date().toISOString(),
+          payload: { collection_id: "c1", message_id: "m1", kind: "chills", actors: ["a", "b"], count: 2 } },
+      ],
+    });
+    render(<NotificationCenter />);
+    await userEvent.click(await screen.findByRole("button", { name: /notifications/i }));
+    expect(await screen.findByText(/2 readers reacted to your message/i)).toBeInTheDocument();
+  });
+
+  it("renders a mention", async () => {
+    getNotifications.mockResolvedValue({
+      unread_count: 1,
+      notifications: [
+        { id: "n6", tier: 1, kind: "chat_mention", read: false, created_at: new Date().toISOString(),
+          payload: { collection_id: "c1", message_id: "m1", actors: ["mara"], count: 1 } },
+      ],
+    });
+    render(<NotificationCenter />);
+    await userEvent.click(await screen.findByRole("button", { name: /notifications/i }));
+    expect(await screen.findByText(/@mara mentioned you in a collection room/i)).toBeInTheDocument();
+  });
+
   it("marks all read", async () => {
     getNotifications.mockResolvedValue(data);
     markNotificationsRead.mockResolvedValue(undefined);

@@ -66,3 +66,25 @@ describe("collection_message", () => {
     expect(notificationTarget({ kind: "collection_message", payload: {} })).toBeNull();
   });
 });
+
+// ── Reactions + mentions ──
+describe("chat_reaction and chat_mention", () => {
+  it("sends a thread reaction to the resonance room", () => {
+    expect(notificationTarget(n("chat_reaction", { thread_id: "t1" }))).toBe("/resonance");
+  });
+
+  it("sends a collection reaction to that room's discussion", () => {
+    expect(notificationTarget(n("chat_reaction", { collection_id: "c1", message_id: "m1", kind: "underlined" })))
+      .toBe("/collections/c1/discussion");
+  });
+
+  it("sends a mention to the collection it happened in", () => {
+    expect(notificationTarget(n("chat_mention", { collection_id: "c1", message_id: "m1" })))
+      .toBe("/collections/c1/discussion");
+  });
+
+  it("stays unclickable without an id to land on", () => {
+    expect(notificationTarget(n("chat_reaction", {}))).toBeNull();
+    expect(notificationTarget(n("chat_mention", {}))).toBeNull();
+  });
+});

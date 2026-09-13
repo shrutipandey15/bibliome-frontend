@@ -10,6 +10,9 @@
  *   resonance_connected app/routers/resonance.py  → { match_id, thread_id }
  *   resonance_message   app/routers/threads.py    → { thread_id }
  *   collection_message  app/routers/profile.py    → { collection_id, book_id }
+ *   chat_reaction       app/routers/threads.py,   → { thread_id } or { collection_id, message_id, kind, actors, count }
+ *                       app/routers/profile.py
+ *   chat_mention        app/routers/profile.py    → { collection_id, message_id, actors, count }
  *   dna_shifted         app/services/dna_service  → { old, new }
  *   weekly_digest       app/services/digest_svc   → { period, books_this_week, memory }
  *   tier 0 (security)   app/routers/auth.py       → { message }
@@ -49,6 +52,13 @@ export function notificationTarget(n) {
         return `/collections/${p.collection_id}/discussion/${p.book_id}`;
       }
       // Batched payloads can merge several books; fall back to the book list.
+      return p.collection_id ? `/collections/${p.collection_id}/discussion` : null;
+    case "chat_reaction":
+      // Shared by both chat surfaces — the payload shape tells them apart.
+      // Neither carries enough to deep-link a single letter/message, same as
+      // resonance_message above.
+      return p.thread_id ? "/resonance" : (p.collection_id ? `/collections/${p.collection_id}/discussion` : null);
+    case "chat_mention":
       return p.collection_id ? `/collections/${p.collection_id}/discussion` : null;
     case "dna_shifted":
       return "/?view=dna";

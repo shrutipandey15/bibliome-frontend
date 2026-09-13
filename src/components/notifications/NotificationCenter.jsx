@@ -7,6 +7,16 @@ import { notificationTarget } from "./target";
 import Modal from "../Modal";
 import "./NotificationCenter.css";
 
+const CHAT_REACTION_VERB = {
+  resonated: "felt what you felt in",
+  noted: "marked",
+  reconsidered: "keeps coming back to",
+  warm: "felt grateful for",
+  underlined: "underlined",
+  quotable: "wants to keep a line from",
+  chills: "got chills from",
+};
+
 /**
  * The notification center — the in-app source of truth. [F4.1 / B4.1]
  *
@@ -76,6 +86,26 @@ function itemText(n) {
   // Deliberately does not quote the message: the notification list is read in
   // public as often as the app is, and the room is where the words belong.
   if (n.kind === "collection_message") return <>Someone wrote in a collection you're in.</>;
+  if (n.kind === "chat_reaction") {
+    const actors = p.actors || [];
+    const count = p.count || actors.length || 1;
+    const who = count === 1 && actors[0] ? `@${actors[0]}` : `${count} readers`;
+    const where = p.thread_id ? "your letter" : "your message";
+    // Named only when it's unambiguous — one person, one reaction. A batch of
+    // several people may have picked different kinds, so naming one there
+    // would just be wrong for the others. Phrased as its own verb, not the
+    // reaction chip's tooltip label (REACTION_KINDS' `label`), which reads as
+    // a first-person hover caption ("underlined this") and doesn't fit a
+    // third-person sentence the same way.
+    const verb = count === 1 ? CHAT_REACTION_VERB[p.kind] : null;
+    return verb ? <>{who} {verb} {where}.</> : <>{who} reacted to {where}.</>;
+  }
+  if (n.kind === "chat_mention") {
+    const actors = p.actors || [];
+    const count = p.count || actors.length || 1;
+    const who = count === 1 && actors[0] ? `@${actors[0]}` : `${count} readers`;
+    return <>{who} mentioned you in a collection room.</>;
+  }
   if (p.message) return p.message; // security + generic
   return n.kind.replace(/_/g, " ");
 }
