@@ -745,9 +745,14 @@ function Dashboard() {
   // a natural point of curiosity. Skippable, editable later in settings. [F7.7]
   useEffect(() => {
     if (tab !== "dna") return;
+    // Wait for the profile: `reads_for` lives on it, so asking before it lands
+    // means asking every reader who HAS answered but whose localStorage flag is
+    // gone (new device, cleared storage, reinstalled PWA) — the `answered`
+    // guard below can only work once there is a profile to read it from.
+    if (!analytics.profile) return;
     let asked = true;
     try { asked = !!localStorage.getItem("bibliome_readfor_asked"); } catch { /* ignore */ }
-    const answered = (analytics.profile?.reads_for || []).length > 0;
+    const answered = (analytics.profile.reads_for || []).length > 0;
     if (!asked && !answered) setShowReadFor(true);
   }, [tab, analytics.profile]);
 

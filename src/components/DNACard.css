@@ -193,7 +193,12 @@
 .dna-fp-top {
   position: relative;
   list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
+  /* `auto`, not `1fr`: equal fifths are ~58px on the small card, narrower than
+     "recognition" or "indifference", so the longest register names snapped
+     mid-word ("recognitio / n") on a card people share. Sized to content and
+     spread instead — the five names together still fit the card at both sizes,
+     and the bars above are 18 of them, so nothing was ever column-aligned. */
+  display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 3px;
 }
 .dna-fp-cell {
   min-width: 0;
@@ -211,9 +216,13 @@
   font-size: 12px;
   line-height: 14px;
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
   color: rgba(245, 236, 210, 0.66);
 }
+/* The narrow variant: five of the longest register names at once
+   ("indifference devastation recognition tenderness amusement") just overrun
+   372px at 12px. Same step the phone breakpoint below already takes. */
+.dna-card--small .dna-fp-name { font-size: 11px; }
 
 .dna-blinds {
   position: relative;

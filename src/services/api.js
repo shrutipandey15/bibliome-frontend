@@ -339,8 +339,8 @@ export async function deleteEntry(id) {
 //     // meaning; do not compare it against any threshold you find in old code.
 //     margin: number,
 //     // The name it was nearly instead. The backend sends this exactly when it
-//     // decided to hedge (its own `HEDGE_ARCHETYPE_GAP`, currently 0.05 and being
-//     // retuned). Treat its PRESENCE as the decision — never re-derive the hedge
+//     // decided to hedge (its own `HEDGE_ARCHETYPE_GAP` — 0.012 at the time of
+//     // writing, retuned more than once). Treat its PRESENCE as the decision — never re-derive the hedge
 //     // from `margin`, or the threshold lives in two places and drifts apart.
 //     runner_up: string | null,
 //     basis: { counts: [{ emotion, books, of }], top_rated_emotions: string[] } | null,
