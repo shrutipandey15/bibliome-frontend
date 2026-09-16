@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><rect x="0" y="0" width="512" height="512" rx="0" fill="#0f0d0a"/><path fill-rule="evenodd" fill="#c49a6c" d="M120,112 H258 A58,58 0 0 1 258,228 H262 A86,86 0 0 1 262,400 H120 Z M172,140 H250 A30,30 0 0 1 250,200 H172 Z M172,256 H254 A58,58 0 0 1 254,372 H172 Z"/>
+<path fill="#c49a6c" d="M88,150 C92,166 98,172 112,176 C98,180 92,186 88,202 C84,186 78,180 64,176 C78,172 84,166 88,150 Z"/>
+<g fill="#c49a6c" stroke="#0f0d0a" stroke-width="18" stroke-linejoin="round" paint-order="stroke">
+<path d="M330,232 C306,258 300,320 304,412 H444 C450,320 440,258 416,234 C398,250 348,250 330,232 Z"/>
+<circle cx="374" cy="192" r="36"/>
+<circle cx="358" cy="150" r="22"/>
+</g>
+<path fill="#0f0d0a" d="M310,292 C332,280 356,282 374,294 L374,348 C356,336 332,334 310,346 Z"/>
+<path fill="#0f0d0a" d="M438,292 C416,280 392,282 374,294 L374,348 C392,336 416,334 438,346 Z"/>
+<path stroke="#c49a6c" stroke-width="6" stroke-linecap="round" d="M374,296 V346"/></svg>

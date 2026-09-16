@@ -31,8 +31,14 @@
     <meta name="twitter:description" content="Map the emotional fingerprint of your reading life. Discover if you're a Grief Romantic, a Midnight Arsonist, or something else entirely." />
     <meta name="twitter:image" content="https://bibliome.app/og-image.png" />
 
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
+    <!-- SVG first: every current browser prefers it and it is 1KB that stays
+         sharp on a retina tab strip and at any OS zoom. The PNG is the fallback
+         for the ones that don't, at the size a tab actually draws — the file
+         here used to be a single 1024x1024, 327KB image doing duty as the
+         favicon, the apple-touch-icon AND both manifest sizes, so every visitor
+         downloaded a third of a megabyte to paint 16 pixels. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500;1,6..72,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -109,7 +115,12 @@
          theme-color rather than the page sliding under a translucent one. -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Bibliome" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
+    <!-- 180x180 is what iOS asks for; it upscales anything smaller and
+         downscales anything larger on every home-screen paint. This link was
+         also declared a second time up beside the favicon, both pointing at the
+         1024px file — iOS takes the last one, so the duplicate was dead markup
+         that only made the two disagree when one was edited. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   </head>
   <body>
     <div id="root"></div>

@@ -18,8 +18,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Bibliome";
   const options = {
     body: data.body || "Something happened in your library.",
-    icon: "/favicon.png",
-    badge: "/favicon.png",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
     // Collapses repeats about the same conversation into one notification,
     // matching how the server coalesces them.
     tag: data.tag || "bibliome",
