@@ -6,9 +6,9 @@ const NUMERALS = [
 /**
  * A year set like a bookplate — MMXXVI.
  *
- * Lives here rather than on DNACard because two surfaces need it (the plate's
- * year of issue and the study's "keeping this shelf since"), and a page should
- * not have to import a component to format a date.
+ * Used by the study's "keeping this shelf since" line. The DNA card's year of
+ * issue used to read this too and no longer does: that line sits beside a real
+ * figure the reader is meant to check, so it is set in Arabic numerals.
  */
 export function romanYear(year = new Date().getFullYear()) {
   let n = Math.max(0, Math.floor(year));
