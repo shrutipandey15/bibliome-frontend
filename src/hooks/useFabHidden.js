@@ -21,9 +21,16 @@ export default function useFabHidden() {
     // coming to bring it back — scrolling up is the only documented way out, and
     // on a long page a reader can sit still without ever doing that. So idling
     // after a downward scroll counts as "done reading past it" too.
+    //
+    // The timer restarts on every scroll frame, so it only begins once momentum
+    // has actually stopped — which is why it can be short. It was 900ms, and on
+    // top of the button's own .24s slide that left more than a second of empty
+    // corner after the page came to rest: long enough to read as broken rather
+    // than as deference. This is the pause before it returns, not the return.
+    const IDLE_REVEAL_MS = 300;
     const scheduleIdleReveal = () => {
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => setHidden(false), 900);
+      idleTimer = setTimeout(() => setHidden(false), IDLE_REVEAL_MS);
     };
     const onScroll = () => {
       if (queued) return;

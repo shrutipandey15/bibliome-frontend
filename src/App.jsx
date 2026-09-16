@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
-import { Settings, MoreHorizontal, Sun, Moon, User, Sparkles, Plus, ChevronDown } from "lucide-react";
+import { Settings, MoreHorizontal, Sun, Moon, User, Sparkles, Plus, ChevronDown, LayoutGrid, Rows3 } from "lucide-react";
 import { Routes, Route, useParams, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
@@ -465,8 +465,15 @@ function ReadingRoomFilterBar({ entries, filter, onFilter, sort, onSort, view, o
         className="rr-filter-trigger"
         onClick={() => setSheetOpen(true)}
         aria-haspopup="dialog"
+        aria-label="Filter by feeling"
       >
-        <span className="rr-filter-trigger-label">filter by feeling</span>
+        {/* "feeling", not "filter by feeling". This control is phone-only and now
+            shares a row with the sort field, so its label is a column heading
+            beside "sort" rather than a sentence — and at this width the longer
+            phrase wrapped to two lines of tiny caps above the value. The sheet
+            it opens is still titled "Filter by feeling", and so is this button's
+            `aria-label`, so the full phrase is what a screen reader hears. */}
+        <span className="rr-filter-trigger-label">feeling</span>
         <span className="rr-filter-trigger-value">
           {activeEmotion ? (
             <>
@@ -478,18 +485,41 @@ function ReadingRoomFilterBar({ entries, filter, onFilter, sort, onSort, view, o
         </span>
       </button>
 
-      <div className="rr-filter-sort">
-        <span className="label">sort</span>
+      {/* A field, not a loose label beside a control: on a phone this sits in the
+          same row as the feeling trigger and has to read as the same object —
+          tiny caps label over the current value, one bordered box, one tap
+          target. On desktop it collapses back to the inline "sort <select>" it
+          has always been. */}
+      <label className="rr-filter-sort">
+        <span className="rr-field-label">sort</span>
         <select className="rr-sort-select" value={sort} onChange={(e) => onSort(e.target.value)}>
           <option value="date">most recent</option>
           <option value="intensity">most intense</option>
           <option value="title">alphabetical</option>
         </select>
-        <div className="rr-view-toggle">
-          {["cover", "spine"].map((v) => (
-            <button key={v} className={view === v ? "active" : ""} onClick={() => onView(v)}>{v}</button>
-          ))}
-        </div>
+      </label>
+      {/* A sibling of the sort field rather than its child, so the phone grid can
+          place the three controls in one row. It is a view MODE, not a filter,
+          which is why it stays a segmented control instead of becoming a third
+          dropdown.
+          Both the glyph and the word are always in the DOM and the tier picks
+          one: the word is the clearer label and desktop has room for it, while
+          on a phone two words would take 148px of a 334px row and squeeze the
+          two fields beside them below their own content. `aria-label` carries
+          the word either way, so nothing is lost when it is not drawn. */}
+      <div className="rr-view-toggle" role="group" aria-label="Shelf view">
+        {[["cover", LayoutGrid], ["spine", Rows3]].map(([v, Icon]) => (
+          <button
+            key={v}
+            className={view === v ? "active" : ""}
+            onClick={() => onView(v)}
+            aria-label={`${v} view`}
+            aria-pressed={view === v}
+          >
+            <Icon size={15} aria-hidden="true" />
+            <span className="rr-view-toggle-word">{v}</span>
+          </button>
+        ))}
       </div>
 
       {sheetOpen && (

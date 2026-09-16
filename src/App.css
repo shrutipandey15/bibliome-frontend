@@ -465,7 +465,18 @@
   gap: 10px;
   margin-top: 12px;
 }
+/* Desktop: the inline "sort <select>" this has always been. `.rr-field-label`
+   is the same tiny-caps `.label` treatment, spelled out here because the field
+   restyles itself on a phone and a shared utility class would have dragged
+   every other `.label` on the page along with it. */
 .rr-filter-sort { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.rr-field-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
 .rr-sort-select {
   background: var(--bg-card);
   border: 1px solid var(--rule);
@@ -498,6 +509,9 @@
   cursor: pointer;
 }
 .rr-view-toggle button.active { background: var(--ink); color: var(--bg-page); }
+.rr-view-toggle button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+/* Desktop reads the word; the phone tier swaps in the glyph. */
+.rr-view-toggle svg { display: none; }
 
 /* ---------- Cover grid (main shelf) ---------- */
 .rr-stacks {
@@ -1025,43 +1039,71 @@
   .rr-stacks { padding-top: 26px; }
   .rr-cover-grid { grid-template-columns: repeat(2, 1fr); gap: 22px 14px; }
 
-  /* ── Filter bar: one wrapping block → a column ── */
+  /* ── Filter bar: three stacked rows → search over one row of three ──
+     The column stacked search / feeling / sort+view, which cost ~150px of a
+     phone screen before a single book and gave the three controls three
+     different shapes: a full-width bordered row, a bare label beside a select,
+     and a segmented toggle floating on a line of its own. A grid puts the
+     search across the top and the three controls in one row beneath it, where
+     feeling and sort are the same object at the same size and the view toggle
+     takes only the width its two glyphs need. */
   .rr-filterbar {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
     align-items: stretch;
     gap: 10px;
     padding-top: 12px;
     padding-bottom: 12px;
   }
+  .rr-search { grid-column: 1 / -1; }
   /* The inline chips and their label give way to one trigger. A scrolling row
      was the first attempt and the wrong shape: it lengthens every time the
      reader unlocks another register, and picking one means scrubbing sideways
-     past the rest with no idea how many remain. The label goes too — the
-     trigger says "filter by feeling" on its own face. */
+     past the rest with no idea how many remain. The separate `.rr-filter-label`
+     goes too — the trigger carries its own. */
   .rr-filter-label { display: none; }
   .rr-chiprow { display: none; }
   .rr-filter-trigger { display: flex; }
-  /* Keep the row clear of the FAB's column. The FAB is fixed at right:18px and
-     56px wide, so anything flush to the right edge passes under it — and the
-     cover/spine toggle sat exactly there, 55 of its 75px covered by the button
-     and effectively untappable.
-     `wrap` is doing real work, not decoration: the row's three items plus the
-     reserved 86px come to 416px, wider than a 390px phone, and an overflowing
-     row makes the browser widen the layout viewport (measured: 390 → 434) which
-     silently shrinks the whole page. Wrapping lets the toggle drop to its own
-     line instead, so nothing overflows and nothing hides under the FAB. */
+  /* Feeling and sort are one field shape: tiny caps label over the current
+     value, in a box the same height as its neighbour. At this width the
+     trigger's old label-left/value-right split left ~40px for the value and
+     clipped "most recent"; stacked, each field needs only its widest line. */
+  .rr-filter-trigger,
   .rr-filter-sort {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 52px;
     margin-left: 0;
-    /* `space-between` across the whole row shoved the select away from its own
-       "sort" label to hug the opposite edge — a wide dead gap between a label
-       and its control that every other row on this bar keeps pinned together.
-       Only the view-toggle (the item that actually needs to drop to its own
-       line to clear the FAB) gets pushed, via its own margin-left: auto. */
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    padding-right: 86px;
+    padding: 7px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
   }
-  .rr-filter-sort .rr-view-toggle { margin-left: auto; }
+  /* The chevron sat at the far end of a space-between row; stacked, it belongs
+     on the value line it actually opens. */
+  .rr-filter-trigger { justify-content: center; }
+  .rr-filter-trigger-value,
+  .rr-filter-sort .rr-sort-select { max-width: 100%; min-width: 0; }
+  .rr-filter-trigger-value { overflow: hidden; }
+  /* The select carries the field's own border, so it drops its box and sits as
+     plain text on the value line — the same weight and size as the trigger's
+     value beside it, rather than a small bordered control inside a bordered
+     field. */
+  .rr-filter-sort .rr-sort-select {
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 15px;
+    width: 100%;
+  }
+  /* Glyph in, word out: two words would take 148px of the row. */
+  .rr-view-toggle svg { display: block; }
+  .rr-view-toggle-word { display: none; }
+  .rr-view-toggle button { padding: 5px 15px; }
 
   /* Modals become bottom sheets on mobile — docked to the bottom, full-width,
      thumb-reachable, slide-up. [F2.9 / P5-9]
