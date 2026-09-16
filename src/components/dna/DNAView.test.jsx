@@ -202,14 +202,17 @@ describe("DNAView — the shape of you [F-DNA-3 / F-DNA-9]", () => {
 });
 
 describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
-  // stats.emotion_counts is the /dna/patterns ledger the DNA tab already loads.
-  const stats = {
-    avg_intensity: 8.5,
+  // The counts ledger rides the DNA payload itself, NOT the separately-cached
+  // /dna/stats call — that one is only fetched when the Patterns section opens,
+  // so a reader who stayed on "the read" saw shares under a book-count heading.
+  const stats = { avg_intensity: 8.5 };
+  const counted = {
+    ...fullProfile,
     emotion_counts: { devastation: 16, catharsis: 11, dread: 11, comfort: 10, rage: 8 },
   };
 
   it("prints BOOK COUNTS from the stats ledger, not shares of the weighted vector", async () => {
-    const { container } = await renderView({ profile: fullProfile, username: "alice", stats });
+    const { container } = await renderView({ profile: counted, username: "alice", stats });
     const row = (name) =>
       [...container.querySelectorAll(".dna-portrait-row")].find(
         (r) => r.querySelector(".dna-portrait-name").textContent === name
@@ -221,7 +224,7 @@ describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
   });
 
   it("sorts by count, leaving the never-reached at the bottom", async () => {
-    const { container } = await renderView({ profile: fullProfile, username: "alice", stats });
+    const { container } = await renderView({ profile: counted, username: "alice", stats });
     const rows = [...container.querySelectorAll(".dna-portrait-row")];
     const names = rows.map((r) => r.querySelector(".dna-portrait-name").textContent);
     expect(names[0]).toBe("devastation");            // 16, the clear leader
@@ -240,7 +243,7 @@ describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
   });
 
   it("marks a blank the archetype names as a blind spot", async () => {
-    const { container } = await renderView({ profile: fullProfile, username: "alice", stats });
+    const { container } = await renderView({ profile: counted, username: "alice", stats });
     // fullProfile's archetype lists `boredom` as a blind spot; it is untagged.
     const boredom = [...container.querySelectorAll(".dna-portrait-row")].find(
       (r) => r.querySelector(".dna-portrait-name").textContent === "boredom"
@@ -254,7 +257,7 @@ describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
   });
 
   it("puts volumes and avg intensity in the running head", async () => {
-    await renderView({ profile: fullProfile, username: "alice", stats });
+    await renderView({ profile: counted, username: "alice", stats });
     expect(screen.getByText(/47 volumes · avg intensity 8\.5/)).toBeInTheDocument();
   });
 
@@ -265,7 +268,7 @@ describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
   });
 
   it("names what the reader said they read for, beside the headline's basis", async () => {
-    await renderView({ profile: fullProfile, username: "alice", stats });
+    await renderView({ profile: counted, username: "alice", stats });
     const foot = document.querySelector(".insight--headline .insight-basis");
     expect(foot.textContent).toMatch(/from 47 books · you told me: comfort/);
     // Non-headline insights keep their basis but not the stated-for clause.

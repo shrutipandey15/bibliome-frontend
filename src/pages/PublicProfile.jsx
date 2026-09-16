@@ -113,7 +113,15 @@ export default function PublicProfile() {
             <section className="pf-section">
               <div className="label pf-section-label">their signature</div>
               <div className="pf-signature">
-                <DNACard profile={profile.signature} username={profile.handle} allowShare={false} />
+                <DNACard
+                  profile={profile.signature}
+                  username={profile.handle}
+                  allowShare={false}
+                  showDescription={false}
+                  footer={cardArchetype(profile.signature)?.description && (
+                    <p className="dna-arch-desc">{cardArchetype(profile.signature).description}</p>
+                  )}
+                />
               </div>
             </section>
           )}

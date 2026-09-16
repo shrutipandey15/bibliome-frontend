@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
 import { getChatAttachmentBlobUrl } from "../services/api";
 
 /**
@@ -35,5 +36,20 @@ export default function ChatImage({ url, alt = "" }) {
 
   if (failed) return <div className="chat-image chat-image-failed">Couldn't load this image.</div>;
   if (!src) return <div className="chat-image chat-image-loading" aria-hidden="true" />;
-  return <img className="chat-image" src={src} alt={alt} />;
+  return (
+    <div className="chat-image-wrap">
+      <img className="chat-image" src={src} alt={alt} />
+      {/* The blob is already on hand (`src`), so download is just handing the
+          browser its own object URL under a real filename — no second fetch. */}
+      <a
+        className="chat-image-download"
+        href={src}
+        download="attachment"
+        aria-label="Download image"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Download size={15} aria-hidden="true" />
+      </a>
+    </div>
+  );
 }

@@ -830,6 +830,11 @@ button, a, [role="button"] { touch-action: manipulation; }
    Shared by ResonanceThread and CollectionChat (src/components/ChatImage.jsx).
    Fetched as an authenticated blob, not a plain <img src>, so there's always a
    brief loading state before the real image is ready. */
+.chat-image-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: min(100%, 320px);
+}
 .chat-image {
   display: block;
   max-width: min(100%, 320px);
@@ -838,6 +843,27 @@ button, a, [role="button"] { touch-action: manipulation; }
   border-radius: 12px;
   margin-top: 8px;
   object-fit: cover;
+}
+/* WhatsApp-style: a quiet corner control that only asserts itself on hover,
+   since it sits on top of the photo it's downloading. Always visible on
+   touch (`hover: none`) — there's no hover state to reveal it there. */
+.chat-image-download {
+  position: absolute;
+  top: 16px; right: 8px;
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.chat-image-wrap:hover .chat-image-download,
+.chat-image-download:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .chat-image-download { opacity: 1; }
 }
 .chat-image-loading {
   width: 160px;

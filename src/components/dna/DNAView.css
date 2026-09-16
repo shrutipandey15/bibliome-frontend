@@ -12,7 +12,10 @@
 /* The argument, and the shorthand it argues toward. */
 .dna-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  /* 372px — the plate's own width (`.dna-card--small`), not a round number
+     near it. At 340 the card was squeezed 32px narrower than the identical card
+     on the profile page. */
+  grid-template-columns: minmax(0, 1fr) 372px;
   gap: 56px;
   align-items: start;
   margin-top: 24px;
@@ -23,7 +26,6 @@
 /* The plate follows you down the evidence rather than sitting at the end of it. */
 .dna-aside { position: sticky; top: 52px; min-width: 0; }
 .dna-aside .dna-wrapper { align-items: flex-start; padding: 0; gap: 14px; width: 100%; }
-.dna-aside .dna-card { --card-w: 100%; }
 .dna-aside .dna-actions { justify-content: flex-start; }
 
 /* Running head — a page header, not a stat card: two mono lines against a rule. */

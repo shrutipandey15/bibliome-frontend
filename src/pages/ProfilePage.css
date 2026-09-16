@@ -196,7 +196,6 @@
 .pf-margin-cite { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-quiet); margin-top: 14px; }
 
 .pf-sig-card .dna-wrapper { padding: 0; width: 100%; }
-.pf-sig-card .dna-card { --card-w: 100%; }
 .pf-mast-actions .pf-says-link { margin-top: 0; }
 
 /* The shelf's observation — one italic line under the bio, then the link to the
@@ -360,7 +359,6 @@
     padding-bottom: 0;
     border-bottom: none;
   }
-  .pf-sig-card .dna-card { max-width: 100%; }
 
   .pf-section { margin-top: 28px; }
   .pf-footer { margin-top: 40px; flex-wrap: wrap; gap: 6px 20px; }

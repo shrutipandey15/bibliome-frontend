@@ -16,7 +16,15 @@
    ============================================================ */
 .dna-card {
   position: relative;
-  width: var(--card-w, 372px);
+  /* `min(..., 100%)` so a column narrower than the plate shrinks it instead of
+     overflowing. It is a `min`, not a bare percentage, because the plate must
+     never STRETCH either: it is one artifact, rasterised by html2canvas and
+     shared out of the app, and a column that sets its width makes it a different
+     object per page. The DNA tab's rail and the profile's rail each used to do
+     exactly that (340px vs 372px), which left the same reader's fingerprint
+     drawn at two widths — 18 bars and 17 fixed 2px gaps redistributed over 32px
+     less, so the same numbers read as a different silhouette. */
+  width: min(var(--card-w, 372px), 100%);
   aspect-ratio: 2 / 2.92;
   padding: 30px 30px 26px;
   display: flex;
@@ -364,7 +372,13 @@
 
 /* responsive */
 @media (max-width: 1080px) {
-  .dna-card { --card-w: 100%; max-width: 420px; }
+  /* No `--card-w: 100%` here any more — `width: min(--card-w, 100%)` above
+     already shrinks the plate into a narrow column, and forcing 100% made it
+     STRETCH to whatever the column was instead. The two rails are capped
+     differently on tablet (.dna-aside 372px, .pf-aside 420px), so that stretch
+     drew the same card 48px wider on the profile than on the DNA tab. The
+     max-width stays as the backstop for pages with no rail at all. */
+  .dna-card { max-width: 420px; }
   .dna-reveal { padding: 0 28px; }
   .dna-reveal-grid { grid-template-columns: 1fr; gap: 40px; }
   .dna-reveal-h1 { font-size: 56px; }
@@ -372,12 +386,14 @@
   .dna-reveal-rail-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
-  .dna-card { --card-w: 100%; max-width: 340px; padding: 22px; }
+  .dna-card { max-width: 340px; padding: 22px; }
   .dna-name { font-size: 30px; }
   .dna-blurb { font-size: 13px; }
   .dna-tagline { font-size: 14px; }
-  /* The bars keep their proportions at any width; the labels under them are
-     what runs out of room first. */
+  /* The bar block is px-sized while the plate's width is fluid, so it does NOT
+     keep its proportions across widths — which is why the plate is pinned to one
+     width per size rather than left to fill its column. Here it is stepped down
+     once, for the phone, where the labels under the bars run out of room first. */
   .dna-fp-bars { height: 44px; }
   .dna-fp-name { font-size: 11px; }
 }

@@ -182,24 +182,41 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
 
   // The shareable card uses the legacy signature shape; adapt the v2 payload for it.
   //
-  // The fingerprint is drawn from `stats.emotion_counts` — REAL books per
-  // register off this reader's shelf. `profiles.current` is a weighted recency
-  // vector: right for "who you've been lately", wrong for a bar chart, because
-  // its numbers are shares scaled to 100 and would draw the same silhouette for
-  // a reader with six books as for one with six hundred. It stays only as the
-  // fallback for the moment before the stats ledger lands.
+  // The fingerprint is drawn from `profile.emotion_counts` — REAL books per
+  // register, computed alongside `book_count`/`basis` on this SAME v2 payload, so
+  // it can never disagree with them or with the profile page's card. It used to
+  // read `stats.emotion_counts` off the separately Redis-cached `/dna/stats`
+  // endpoint instead — fine on the numbers most of the time, but that cache is
+  // only invalidated by the entries API's own write paths, so anything else that
+  // changed the shelf (an import, a fixture) could leave it stale for its TTL
+  // while this payload, recomputed by the same call that builds the rest of the
+  // card, never can. `profiles.current` (a weighted recency vector, wrong shape
+  // for a bar chart) stays only as the last-resort fallback for a cache written
+  // before this field existed.
   const cardProfile = arch && {
     archetype: arch,
     book_count: count,
-    emotion_counts: stats?.emotion_counts || null,
+    emotion_counts: profile.emotion_counts || null,
     archetype_share: profile.archetype_share,
     // What the label was nearly instead, and the counts that earn it. `margin` is
     // not passed: the card reads the hedge off `runner_up`'s presence rather than
     // re-deriving it from the number, so handing it over would be a dead prop.
     runner_up: profile.runner_up,
     basis: profile.basis,
-    top_emotions: vectorRows(profile.profiles?.current, 5)
-      .map((r) => ({ emotion_id: r.slug, count: Math.round(r.weight * 100) })),
+    // Last-resort fallback, for a cache written before `emotion_counts` existed.
+    //
+    // `weight`, NOT `count`: these are shares of the recency-weighted vector, and
+    // handing them over as counts made the card print "42" under "books per
+    // register" for a reader with 23 dread books. The card keys its own label off
+    // which key it gets, so the shape has to be honest here.
+    //
+    // `current_books`, NOT `current`: books alone, which is what the backend's
+    // `card_payload` fills this field from for every other surface. `current`
+    // spans the journal, so the same reader's fallback card would have differed
+    // between this tab and their profile — the exact drift this whole adapter is
+    // supposed to close.
+    top_emotions: vectorRows(profile.profiles?.current_books, 5)
+      .map((r) => ({ emotion_id: r.slug, weight: r.weight })),
   };
 
   const archetypeBody = !arch ? (
@@ -225,7 +242,12 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
   );
   const portrait = (
     <Portrait
-      counts={stats?.emotion_counts}
+      // Same tally the card's fingerprint draws, off THIS payload — not
+      // `stats.emotion_counts`, which rides the separately-cached /dna/stats
+      // call that is only fetched when the Patterns section is opened. A reader
+      // who never left "the read" had no counts to show, so this section
+      // silently fell back to percentage shares of the recency vector.
+      counts={profile.emotion_counts}
       current={profile.profiles?.current}
       blindSpots={arch?.blind_spots}
     />

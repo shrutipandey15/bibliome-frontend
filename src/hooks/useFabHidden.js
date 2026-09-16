@@ -16,6 +16,15 @@ export default function useFabHidden() {
   useEffect(() => {
     let last = window.scrollY;
     let queued = false;
+    let idleTimer;
+    // A finger lifted mid-page leaves the FAB hidden with no more scroll events
+    // coming to bring it back — scrolling up is the only documented way out, and
+    // on a long page a reader can sit still without ever doing that. So idling
+    // after a downward scroll counts as "done reading past it" too.
+    const scheduleIdleReveal = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => setHidden(false), 900);
+    };
     const onScroll = () => {
       if (queued) return;
       queued = true;
@@ -30,10 +39,14 @@ export default function useFabHidden() {
         else if (Math.abs(dy) > 6) setHidden(dy > 0);
         last = y;
         queued = false;
+        scheduleIdleReveal();
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(idleTimer);
+    };
   }, []);
 
   return hidden;

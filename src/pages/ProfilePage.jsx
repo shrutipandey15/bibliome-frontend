@@ -295,16 +295,24 @@ export default function ProfilePage() {
   const margins = profile.margins || [];
   const bookCount = profile.book_count ?? 0;
 
-  // The cached signature carries the archetype; the live payload carries this
-  // reader's own register tally and how many readers share the archetype today.
-  // Both move independently of the cache, so they are merged in at render.
+  // The card renders the signature payload AS IT ARRIVES. Everything printed on
+  // the plate — archetype, opened-book count, basis line, register tally — is
+  // counted once by the DNA engine and travels together, so this page cannot
+  // hand the card a figure that disagrees with the figure beside it.
+  //
+  // Two fields used to be overridden here and both were wrong to override:
+  //   - `book_count`: the page's `bookCount` counts the whole shelf including
+  //     want-to-read, which the DNA engine never opened. The card would have
+  //     printed a bigger number than the DNA tab's for the same reader.
+  //   - `emotion_counts`: the profile endpoint computed a SECOND register tally
+  //     of its own, and the card drew it over the basis line built from the
+  //     first. That endpoint no longer ships one; there is one tally now.
+  //
+  // `archetype_share` genuinely is not part of the signature — it moves with the
+  // reader POPULATION rather than with this reader, so it stays merged per
+  // request rather than frozen into anyone's cache.
   const signature = cardArchetype(profile.signature)
-    ? {
-      ...profile.signature,
-      book_count: bookCount,
-      emotion_counts: profile.emotion_counts,
-      archetype_share: profile.archetype_share,
-    }
+    ? { ...profile.signature, archetype_share: profile.archetype_share }
     : null;
 
   // The earliest date the shelf can evidence, not the signup date — an imported
@@ -432,6 +440,13 @@ export default function ProfilePage() {
           size="small"
           allowShare
           onSave={() => saveCardAsImage(cardRef.current, profile.handle)}
+          // Same split as the DNA tab's own card (DNAView.jsx): the blurb sits
+          // below the plate, not baked into it — this page had never adopted
+          // that, so the same archetype read as two different-looking cards.
+          showDescription={false}
+          footer={cardArchetype(signature)?.description && (
+            <p className="dna-arch-desc">{cardArchetype(signature).description}</p>
+          )}
         />
       ) : <SignaturePending bookCount={bookCount} />}
     </div>

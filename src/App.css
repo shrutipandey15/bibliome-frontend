@@ -1052,10 +1052,16 @@
      line instead, so nothing overflows and nothing hides under the FAB. */
   .rr-filter-sort {
     margin-left: 0;
-    justify-content: space-between;
+    /* `space-between` across the whole row shoved the select away from its own
+       "sort" label to hug the opposite edge — a wide dead gap between a label
+       and its control that every other row on this bar keeps pinned together.
+       Only the view-toggle (the item that actually needs to drop to its own
+       line to clear the FAB) gets pushed, via its own margin-left: auto. */
+    justify-content: flex-start;
     flex-wrap: wrap;
     padding-right: 86px;
   }
+  .rr-filter-sort .rr-view-toggle { margin-left: auto; }
 
   /* Modals become bottom sheets on mobile — docked to the bottom, full-width,
      thumb-reachable, slide-up. [F2.9 / P5-9]
