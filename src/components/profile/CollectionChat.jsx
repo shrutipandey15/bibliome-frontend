@@ -21,6 +21,7 @@ import { avatarColor } from "../../lib/avatar";
 import { splitMentions, activeMentionQuery, insertMention } from "../../lib/mentions";
 import Modal from "../Modal";
 import ChatImage from "../ChatImage";
+import PendingImage from "../PendingImage";
 import "./CollectionChat.css";
 
 function typingLabel(handles) {
@@ -644,10 +645,7 @@ export default function CollectionChat({ collectionId, collection }) {
           )}
         </div>
         {pendingImage && (
-          <div className="cc-pending-image">
-            <span>{pendingImage.name}</span>
-            <button type="button" onClick={() => setPendingImage(null)} aria-label="Remove photo">×</button>
-          </div>
+          <PendingImage file={pendingImage} sending={sending} onRemove={() => setPendingImage(null)} />
         )}
         {attach && (
           <div className="cc-pending-image">

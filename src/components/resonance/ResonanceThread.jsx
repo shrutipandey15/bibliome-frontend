@@ -9,6 +9,7 @@ import { REACTION_KINDS } from "../../lib/reactions";
 import { avatarColor } from "../../lib/avatar";
 import Modal from "../Modal";
 import ChatImage from "../ChatImage";
+import PendingImage from "../PendingImage";
 
 /**
  * The conversation, once both readers have said yes.
@@ -458,10 +459,7 @@ export default function ResonanceThread({ threadId, bookTitle, handle, onClose, 
             aria-label="Your message"
           />
           {pendingImage && (
-            <div className="rt-pending-image">
-              <span>{pendingImage.name}</span>
-              <button type="button" onClick={() => setPendingImage(null)} aria-label="Remove photo">×</button>
-            </div>
+            <PendingImage file={pendingImage} sending={sending} onRemove={() => setPendingImage(null)} />
           )}
           {imageError && <div className="rt-error" role="alert">{imageError}</div>}
           <div className="rt-compose-foot">

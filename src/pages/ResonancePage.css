@@ -939,28 +939,6 @@
   cursor: pointer;
 }
 .rt-tool-btn:hover { border-color: var(--res-accent); color: var(--ink); }
-.rt-pending-image {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 8px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg-sunken) 60%, transparent);
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--ink-quiet);
-}
-.rt-pending-image button {
-  background: none;
-  border: none;
-  font-size: 15px;
-  line-height: 1;
-  color: var(--ink-faint);
-  cursor: pointer;
-}
-.rt-pending-image button:hover { color: var(--ink); }
 
 /* Search over what's already loaded — no server round trip. */
 .rt-search {
@@ -1037,6 +1015,7 @@
   .rt-compose { padding: 18px 18px 16px; }
   .rt-compose-field { font-size: 16.5px; }
 
+
   /* ── The shared-emotion rows ──
      `.rm-emo-head` is a baseline flex row: swatch, the emotion phrase, then
      "at the same pitch" pushed right with `margin-left: auto` and
@@ -1097,17 +1076,20 @@
      `space-between` between "sent once · no edits after" and the send button.
      Together they need ~332px against ~303px of card, so both squeezed and
      "send the letter" wrapped to two lines inside its own button. */
-  .rt-compose-foot {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  /* Stacking the footer for space no longer means the send button should
-     become a full-width bar — that reads as oversized on a phone. Keep it a
-     compact, right-aligned button like the photo control beside it. */
+  /* Stacking it into a column fixed the squeeze but cost a row and a shape:
+     `align-items: stretch` also pulled "photo" into a full-width bar, and send
+     landed on a third line under it — three stacked rows under a text box.
+
+     Wrapping does the same job in two. The note takes a full line of its own
+     (`flex-basis: 100%`), which is what relieves the squeeze; the two controls
+     then sit together on the line below, photo at the left and send pushed
+     right where the thumb already is. Measured at 320px and 360px. */
+  .rt-compose-foot { flex-wrap: wrap; align-items: center; gap: 12px; }
+  .rt-compose-note { flex-basis: 100%; }
+  .rt-tool-btn { flex: none; }
   .rt-compose-foot .btn {
-    align-self: flex-end;
     flex: none;
+    margin-left: auto;
     justify-content: center;
     white-space: nowrap;
     padding: 8px 16px;
@@ -1122,6 +1104,9 @@
 
 @media (pointer: coarse) {
   .rm-foot .btn, .rt-compose-foot .btn { min-height: 44px; }
+  /* "photo" sits in that same footer at 10.5px in a 6px pill — about 27px tall,
+     well under the minimum, and the only way to attach an image. */
+  .rt-tool-btn { min-height: 44px; padding: 6px 16px; }
   /* Same standard as Echo's own reaction buttons (EchoThread.css). */
   .rt-react, .rt-reply-btn { min-height: 44px; }
   .rt-replying-cancel { min-width: 44px; min-height: 44px; }

@@ -14,7 +14,7 @@ vi.mock("../../services/api", () => ({
   getCollectionMembers: vi.fn(),
   getCollectionPinned: vi.fn(),
   setCollectionPinned: vi.fn(),
-  getChatAttachmentBlobUrl: vi.fn(),
+  getChatAttachment: vi.fn(),
 }));
 
 let rtHandlers = [];
@@ -26,7 +26,7 @@ import CollectionChat from "./CollectionChat";
 import {
   getCollectionConversations, getCollectionMessages, sendCollectionMessage, sendCollectionImageMessage,
   deleteCollectionMessage, reactToCollectionMessage, reportCollectionConversation, getCollectionSparks,
-  getCollectionMembers, getCollectionPinned, setCollectionPinned, getChatAttachmentBlobUrl,
+  getCollectionMembers, getCollectionPinned, setCollectionPinned, getChatAttachment,
 } from "../../services/api";
 
 const BOOKS = [
@@ -392,7 +392,7 @@ describe("CollectionChat — one room per collection [#6]", () => {
     sendCollectionImageMessage.mockResolvedValue(msg({
       id: "m2", is_mine: true, body: "look", attachment_url: "/collections/c1/messages/m2/attachment",
     }));
-    getChatAttachmentBlobUrl.mockResolvedValue("blob:fake");
+    getChatAttachment.mockResolvedValue({ url: "blob:fake", type: "image/png" });
     const input = await mount();
 
     const file = new File(["fake"], "page.png", { type: "image/png" });

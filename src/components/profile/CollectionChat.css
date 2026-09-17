@@ -738,7 +738,11 @@
   .cc-msg-del { opacity: 0.5; padding: 6px 8px; }
   /* "Enter to send" is a keyboard fact; on a phone the key is Return/newline. */
   .cc-hint { display: none; }
-  .cc-send { min-height: 44px; padding: 8px 14px; font-size: 13px; }
+  /* ...but `.cc-hint` was also what carried the `margin-left: auto` holding
+     send over on the right. Hiding it dropped the primary action back against
+     the "+" on the left, with the rest of the row empty — send has to own that
+     push itself, not inherit it from a label that isn't always there. */
+  .cc-send { min-height: 44px; padding: 8px 16px; font-size: 13px; margin-left: auto; }
   .cc-filter { padding: 8px 0; }
 
   /* Tap to react — same collapse as Resonance's thread view: only reactions
@@ -763,6 +767,12 @@
 }
 
 @media (pointer: coarse) {
+  /* The "+" keeps its 30px circle — a 44px one would out-weigh the send button
+     next to it — and grows only its hit area, which is what the 44px minimum is
+     actually about. `.cc-tools` is already the positioned ancestor. */
+  .cc-tool-toggle { position: relative; }
+  .cc-tool-toggle::after { content: ""; position: absolute; inset: -7px; }
+
   .cc-msg-del { min-width: 44px; min-height: 44px; }
   .cc-report-btn { min-height: 44px; }
   .cc-plain { min-height: 24px; display: inline-block; }

@@ -9,13 +9,13 @@ vi.mock("../../services/api", () => ({
   reactToThreadMessage: vi.fn(),
   blockThread: vi.fn(),
   reportThread: vi.fn(),
-  getChatAttachmentBlobUrl: vi.fn(),
+  getChatAttachment: vi.fn(),
 }));
 
 import ResonanceThread from "./ResonanceThread";
 import {
   getThreadMessages, sendThreadMessage, sendThreadImageMessage, reactToThreadMessage,
-  getChatAttachmentBlobUrl,
+  getChatAttachment,
 } from "../../services/api";
 
 const msg = (o = {}) => ({
@@ -114,7 +114,7 @@ describe("ResonanceThread — reply and reactions", () => {
     sendThreadImageMessage.mockResolvedValue(msg({
       id: "m2", is_mine: true, body: "look", attachment_url: "/threads/t1/messages/m2/attachment",
     }));
-    getChatAttachmentBlobUrl.mockResolvedValue("blob:fake");
+    getChatAttachment.mockResolvedValue({ url: "blob:fake", type: "image/png" });
     const input = await mount();
     await screen.findByText("the ending wrecked me");
 

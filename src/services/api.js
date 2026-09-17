@@ -1144,12 +1144,14 @@ export async function sendThreadImageMessage(threadId, body, file, replyToId = n
 
 // A message's attachment is Bearer-authenticated, not a plain public URL, so
 // it can't be dropped straight into <img src>. Fetch it through apiFetch and
-// hand back an object URL the caller is responsible for revoking.
-export async function getChatAttachmentBlobUrl(attachmentUrl) {
+// hand back an object URL the caller is responsible for revoking, plus the
+// blob's type — the attachment path carries no extension, so that type is the
+// only thing that can give a downloaded file a name its OS can open.
+export async function getChatAttachment(attachmentUrl) {
   const res = await apiFetch(attachmentUrl);
   if (!res.ok) throw new ApiError(res.status, errorKind(res.status), "Couldn't load that image");
   const blob = await res.blob();
-  return URL.createObjectURL(blob);
+  return { url: URL.createObjectURL(blob), type: blob.type };
 }
 
 export async function reactToThreadMessage(threadId, messageId, kind, on = true) {
