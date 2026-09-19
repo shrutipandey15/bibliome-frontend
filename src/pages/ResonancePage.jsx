@@ -5,6 +5,7 @@ import { markSeen } from "../components/resonance/signal";
 import MatchCard, { ThreadRow } from "../components/resonance/MatchCard";
 import ResonanceThread from "../components/resonance/ResonanceThread";
 import ThemeToggle from "../components/ThemeToggle";
+import PushPrompt from "../components/PushPrompt";
 import "./ResonancePage.css";
 
 /**
@@ -118,6 +119,11 @@ export default function ResonancePage() {
     );
     return (
       <div className="resonance-page">
+        {/* Same moment as the collection discussion: standing in a conversation
+            with another person in it. Asking only there meant a reader who lives
+            in Resonance was never asked at all, and so never heard a thing with
+            the app closed. The component self-gates and shares one dismissal. */}
+        <PushPrompt />
         {connected.length >= 2 ? (
           <div className="rp-inbox">
             <ThreadList
