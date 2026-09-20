@@ -1,3 +1,10 @@
+# One group per crawler, and a named group REPLACES the * group entirely — a
+# crawler never merges the two. So every rule below has to be repeated in the
+# answer-engine group; when only `Allow: /` was listed there, GPTBot and the
+# rest were free to crawl /s/ share tokens and every authed duplicate of "/".
+# Consecutive User-agent lines share one group, so the four named agents are
+# listed together rather than as four identical copies.
+
 User-agent: *
 Allow: /
 Disallow: /api/
@@ -18,19 +25,23 @@ Disallow: /collections/
 Disallow: /s/
 Disallow: /u/
 
-# Answer engines are a growth channel, not a threat. There is no public reader
-# data to protect here: Echo is authed-only, and the genuinely public surface is
-# just the landing page and the legal pages. Let them read those.
+# Answer engines are a growth channel, not a threat: the genuinely public
+# surface is the landing page and the legal pages, and they are welcome to it.
+# The disallows are the same list as above, not a laxer one.
 User-agent: GPTBot
-Allow: /
-
 User-agent: ClaudeBot
-Allow: /
-
 User-agent: PerplexityBot
-Allow: /
-
 User-agent: Google-Extended
 Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /settings
+Disallow: /echoes
+Disallow: /resonance
+Disallow: /journal
+Disallow: /me
+Disallow: /collections/
+Disallow: /s/
+Disallow: /u/
 
 Sitemap: https://bibliome.app/sitemap.xml
