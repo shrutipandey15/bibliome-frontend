@@ -59,6 +59,15 @@ const JournalPage = lazy(() => import("./pages/JournalPage"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const JoinCollectionPage = lazy(() => import("./pages/JoinCollectionPage"));
 const CollectionChatPage = lazy(() => import("./pages/CollectionChatPage"));
+// The prerendered marketing routes. Lazy like the rest, but note these are the
+// one set of routes that also exist as standalone HTML files in dist/ — a cold
+// load never reaches this chunk at all (vite.config.js prerender plugin).
+const ArchetypeIndexPage = lazy(() =>
+  import("./pages/ContentPages").then((m) => ({ default: m.ArchetypeIndexPage })));
+const ArchetypePage = lazy(() =>
+  import("./pages/ContentPages").then((m) => ({ default: m.ArchetypePage })));
+const ComparePage = lazy(() =>
+  import("./pages/ContentPages").then((m) => ({ default: m.ComparePage })));
 
 
 function SharedProfile() {
@@ -1185,6 +1194,13 @@ export default function App() {
             sign up is exactly who needs to read these. */}
         <Route path="/privacy" element={<LegalPage />} />
         <Route path="/terms" element={<LegalPage />} />
+        {/* Marketing content, top-level for the same reason as the legal pages:
+            the reader who needs them has no account yet. These are prerendered
+            to their own HTML files at build time, so a crawler gets the full
+            text without running any of this. */}
+        <Route path="/archetypes" element={<ArchetypeIndexPage />} />
+        <Route path="/archetypes/:slug" element={<ArchetypePage />} />
+        <Route path="/vs/:slug" element={<ComparePage />} />
         <Route path="/login" element={authed ? <Navigate to="/" replace /> : <AuthPage />} />
         {/* Top-level, like the other capability links: an invite has to open for
             a signed-out reader too, so it can name the collection and then send

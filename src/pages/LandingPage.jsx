@@ -82,11 +82,12 @@ const MANIFESTO = [
   { x: false, t: "A mirror, with three doors.", d: "One small public room that ends in “you're caught up.” One reader at a time, when a book lines up. One journal, encrypted so that even we can't read it." },
 ];
 
-// The single source for the FAQ. It renders the visible section AND is
-// serialised into FAQPage JSON-LD (injected below, in an effect — Google
-// renders JS and reads it). The <noscript> block in index.html carries a
-// shorter prose copy for crawlers that don't run JS; keep the two roughly
-// aligned when a claim changes, but the structured data comes from here.
+// The single source for the VISIBLE FAQ section. index.html carries two
+// crawler copies of the same answers — static FAQPage JSON-LD and the shorter
+// <noscript> prose — because an effect-injected script is invisible to the
+// answer engines this FAQ is written for. Change a claim here, change it there.
+// ponytail: three hand-synced copies; generate the two in index.html from this
+// array at build time if they ever actually drift.
 // Numbers come from the same constants as the rest of the page.
 // `g` groups the list into the subheadings the section renders and keeps the
 // JSON-LD order stable. GROUP_ORDER is the render order; the first item of each
@@ -171,25 +172,6 @@ export default function LandingPage({ onGetStarted }) {
 
   // Nav is sticky on every width. `activeSection` marks the link you're inside.
   const [activeSection, setActiveSection] = useState("");
-
-  // FAQPage structured data, built from the same FAQ array the section renders
-  // so the two can't disagree. Injected here rather than in index.html because
-  // that copy would have to be hand-kept in sync; Google runs JS and reads this.
-  useEffect(() => {
-    const el = document.createElement("script");
-    el.type = "application/ld+json";
-    el.textContent = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((f) => ({
-        "@type": "Question",
-        name: f.q,
-        acceptedAnswer: { "@type": "Answer", text: f.d },
-      })),
-    });
-    document.head.appendChild(el);
-    return () => el.remove();
-  }, []);
 
   useEffect(() => {
     const targets = [heroCtaRef.current, finalCtaRef.current].filter(Boolean);
@@ -392,7 +374,11 @@ export default function LandingPage({ onGetStarted }) {
           ))}
         </div>
         <div className="lrr-arch-foot">
-          The other {ARCHETYPE_COUNT - ARCHETYPES_PREVIEW.length} you meet by reading.
+          The other {ARCHETYPE_COUNT - ARCHETYPES_PREVIEW.length} you meet by reading —{" "}
+          {/* The one internal link into the prerendered archetype pages. They are
+              the only crawlable pages on the site other than this one, so this
+              link is their entire crawl path from the homepage. */}
+          <Link to="/archetypes/">or read all {ARCHETYPE_COUNT} here</Link>.
         </div>
       </section>
 

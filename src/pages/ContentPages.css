@@ -1,0 +1,152 @@
+/* The prerendered content pages. Deliberately self-contained: these files are
+   served as their own HTML documents before any React runs, so they lean only
+   on the tokens styles/global.css sets on :root (which it redefines under
+   [data-theme="dark"]), never on App.css layout. No hardcoded colours here —
+   the one exception is --cp-accent, which is the archetype's own colour from
+   the engine and is the same in both themes by design. */
+
+.cp-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: max(env(safe-area-inset-top), 1rem) 1rem 5rem;
+}
+
+.cp-toolbar {
+  max-width: 44rem;
+  margin: 0 auto 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cp {
+  max-width: 44rem;
+  margin: 0 auto;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.cp-crumb {
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2.5rem;
+}
+.cp-crumb a { color: inherit; text-decoration: none; }
+.cp-crumb a:hover { text-decoration: underline; }
+.cp-crumb span { opacity: 0.5; margin: 0 0.35em; }
+
+.cp-head { margin-bottom: 3rem; }
+.cp-glyph {
+  font-size: 2.5rem;
+  line-height: 1;
+  color: var(--cp-accent, var(--moss));
+  margin-bottom: 1rem;
+}
+.cp h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1.1;
+  font-weight: 500;
+  margin: 0 0 1rem;
+}
+.cp-tagline {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.cp section { margin-bottom: 2.75rem; }
+.cp h2 {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 500;
+  margin: 0 0 0.75rem;
+}
+.cp p { margin: 0 0 1.1em; }
+.cp p:last-child { margin-bottom: 0; }
+
+/* At a glance */
+.cp-dl { margin: 0; display: grid; gap: 0.6rem 1.25rem; }
+.cp-dl dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.cp-dl dd { margin: 0 0 0.75rem; }
+@media (min-width: 40rem) {
+  .cp-dl { grid-template-columns: 12rem 1fr; align-items: baseline; }
+  .cp-dl dt { padding-top: 0.2rem; }
+  .cp-dl dd { margin-bottom: 0; }
+}
+
+/* Comparison table */
+.cp-tablewrap { overflow-x: auto; }
+.cp table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; min-width: 34rem; }
+.cp th, .cp td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+.cp thead th {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.cp tbody th { font-weight: 500; width: 9rem; }
+
+/* Archetype cards on /archetypes */
+.cp-cards { list-style: none; padding: 0; margin: 0 0 3rem; display: grid; gap: 1rem; }
+@media (min-width: 40rem) { .cp-cards { grid-template-columns: 1fr 1fr; } }
+.cp-cards li {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cp-accent, var(--moss));
+  border-radius: 2px;
+}
+.cp-cards a { display: block; padding: 1.25rem; color: inherit; text-decoration: none; height: 100%; }
+.cp-cards a:hover { background: var(--bg-hover); }
+.cp-cards .cp-glyph { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.cp-cards h2 { font-size: 1.125rem; margin-bottom: 0.4rem; }
+.cp-cards p { font-size: 0.9375rem; line-height: 1.55; color: var(--text-secondary); }
+
+/* CTA + footer nav */
+.cp-cta {
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+  margin-top: 3.5rem;
+}
+/* Deliberately NOT tinted with --cp-accent. Four of the eight archetype
+   colours (Comfort Architect, Midnight Arsonist, Quiet Witness, Obsessive
+   Romantic) fall below 4.5:1 against white, so a per-archetype CTA was an
+   inaccessible button on half the pages. The accent stays on the glyph and the
+   card border, which carry no text. */
+.cp-btn {
+  display: inline-block;
+  padding: 0.7rem 1.4rem;
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--bg-page);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
+}
+.cp-btn:hover { filter: brightness(1.08); }
+
+.cp-more { border-top: 1px solid var(--border); padding-top: 1.75rem; }
+.cp-more h2 { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.cp-more ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.cp-more a { color: var(--text-secondary); text-decoration: none; font-size: 0.9375rem; }
+.cp-more a:hover { color: var(--text-primary); text-decoration: underline; }
+
+.cp a:focus-visible, .cp-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}

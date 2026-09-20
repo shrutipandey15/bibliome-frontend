@@ -1,5 +1,7 @@
 # Bibliome — frontend
 
+Live at **[bibliome.app](https://bibliome.app)** — Bibliome, the emotional book tracker.
+
 I built a book app for people who don't want to give books stars.
 
 You log what you read, and instead of a rating you record what it *did* to you — which emotions it pulled, how hard, where in the book they hit, whether you'd go back. Do that for five books and the app starts reading you back: the patterns in your shelf, the emotions you reach for, the ones you have never once reached for. Everything is private by default. There is one small public room and one encrypted journal, and both are anchored to the same thing: books.
