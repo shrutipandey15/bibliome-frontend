@@ -9,12 +9,13 @@ vi.mock("../services/push", () => ({
   currentSubscription: vi.fn(),
   enablePush: vi.fn(),
   disablePush: vi.fn(),
+  sendTestPush: vi.fn(),
 }));
 
 import PushToggle from "./PushToggle";
 import {
   pushSupported, pushPermission, pushConfig, currentSubscription,
-  enablePush, disablePush,
+  enablePush, disablePush, sendTestPush,
 } from "../services/push";
 
 describe("PushToggle [add-on to #6]", () => {
@@ -90,5 +91,45 @@ describe("PushToggle [add-on to #6]", () => {
     await userEvent.click(await screen.findByRole("button", { name: /turn off/i }));
     await waitFor(() => expect(disablePush).toHaveBeenCalled());
     expect(await screen.findByRole("button", { name: /turn on/i })).toBeInTheDocument();
+  });
+});
+
+describe("the test button", () => {
+  beforeEach(() => {
+    pushSupported.mockReturnValue(true);
+    pushPermission.mockReturnValue("granted");
+    pushConfig.mockResolvedValue({ enabled: true, key: "k" });
+    currentSubscription.mockResolvedValue({ endpoint: "e" });
+  });
+
+  it("is offered only once notifications are on", async () => {
+    currentSubscription.mockResolvedValue(null);
+    render(<PushToggle />);
+    await screen.findByRole("button", { name: /turn on/i });
+    expect(screen.queryByRole("button", { name: /send a test/i })).toBeNull();
+  });
+
+  it("rings this device and says so", async () => {
+    sendTestPush.mockResolvedValue(1);
+    render(<PushToggle />);
+    await userEvent.click(await screen.findByRole("button", { name: /send a test/i }));
+    await waitFor(() => expect(sendTestPush).toHaveBeenCalled());
+    expect(await screen.findByRole("status")).toHaveTextContent(/should appear/i);
+  });
+
+  it("admits when there is nothing registered to ring", async () => {
+    // The failure this button exists to catch: the browser thinks it is
+    // subscribed, the server has no row, and everything else looks fine.
+    sendTestPush.mockResolvedValue(0);
+    render(<PushToggle />);
+    await userEvent.click(await screen.findByRole("button", { name: /send a test/i }));
+    expect(await screen.findByRole("status")).toHaveTextContent(/isn't registered/i);
+  });
+
+  it("reports a refusal from the server", async () => {
+    sendTestPush.mockRejectedValue(new Error("Too many tests just now."));
+    render(<PushToggle />);
+    await userEvent.click(await screen.findByRole("button", { name: /send a test/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/too many tests/i);
   });
 });

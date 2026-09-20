@@ -143,3 +143,20 @@ export async function disablePush() {
   await sub.unsubscribe();
   return true;
 }
+
+/**
+ * Ring this device, now, at the reader's request.
+ *
+ * The one link in the chain no test can check: whether the server's VAPID pair
+ * is actually accepted by Google's and Mozilla's push services, and whether the
+ * worker on THIS device shows what comes back. Returns how many devices the
+ * push service accepted it for — 0 means nothing is really subscribed, which is
+ * worth saying out loud rather than reporting a cheerful success.
+ */
+export async function sendTestPush() {
+  const res = await apiFetch("/push/test", { method: "POST" });
+  if (res.status === 429) throw new Error("Too many tests just now. Try again in a few minutes.");
+  if (!res.ok) throw new Error("Couldn't send a test notification.");
+  const { sent } = await res.json();
+  return sent;
+}
