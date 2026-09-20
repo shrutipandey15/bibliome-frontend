@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   pushSupported, pushPermission, pushConfig, currentSubscription,
-  enablePush, disablePush, sendTestPush,
+  enablePush, disablePush,
 } from "../services/push";
 
 /**
@@ -19,8 +19,6 @@ export default function PushToggle() {
   const [state, setState] = useState("checking");
   // checking | unsupported | unconfigured | blocked | off | on | working
   const [error, setError] = useState(null);
-  const [testing, setTesting] = useState(false);
-  const [tested, setTested] = useState(null);
 
   useEffect(() => {
     let live = true;
@@ -48,25 +46,6 @@ export default function PushToggle() {
       // Re-read rather than assume: a refused prompt leaves the browser in a
       // state the component did not choose.
       setState(pushPermission() === "denied" ? "blocked" : turningOn ? "off" : "on");
-    }
-  };
-
-  /** Prove the whole chain, from this server's VAPID keys to this lock screen. */
-  const test = async () => {
-    setError(null);
-    setTested(null);
-    setTesting(true);
-    try {
-      const sent = await sendTestPush();
-      setTested(
-        sent > 0
-          ? "Sent. It should appear in a moment — try locking the screen or switching apps."
-          : "Nothing to send to: this device isn't registered. Turn notifications off and on again."
-      );
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setTesting(false);
     }
   };
 
@@ -112,13 +91,6 @@ export default function PushToggle() {
       >
         {state === "working" ? "…" : state === "on" ? "turn off" : "turn on"}
       </button>
-      {/* Only once it is on: a test that cannot arrive teaches nothing. */}
-      {state === "on" && (
-        <button className="btn ghost" onClick={test} disabled={testing}>
-          {testing ? "sending…" : "send a test"}
-        </button>
-      )}
-      {tested && <p className="set-note" role="status">{tested}</p>}
       {error && <p className="set-note" role="alert">{error}</p>}
     </div>
   );

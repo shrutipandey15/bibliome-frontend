@@ -119,3 +119,36 @@ describe("AdminPage — moderation queue", () => {
     );
   });
 });
+
+describe("the test notification", () => {
+  const clickTest = async (response) => {
+    apiFetch.mockImplementation((path) => {
+      if (path === "/push/test") return Promise.resolve(response);
+      return Promise.resolve({ ok: true, json: async () => (path === "/admin/dashboard" ? stats : []) });
+    });
+    render(<AdminPage />);
+    await userEvent.click(await screen.findByRole("button", { name: /test notification/i }));
+  };
+
+  it("rings the admin's own devices and says how many", async () => {
+    await clickTest({ ok: true, status: 200, json: async () => ({ sent: 2 }) });
+    expect(await screen.findByText(/sent to 2 devices/i)).toBeInTheDocument();
+  });
+
+  it("says plainly when nothing is registered", async () => {
+    // The answer worth having: this is a different problem from a push that
+    // was sent and never displayed, and the two look identical otherwise.
+    await clickTest({ ok: true, status: 200, json: async () => ({ sent: 0 }) });
+    expect(await screen.findByText(/no devices registered/i)).toBeInTheDocument();
+  });
+
+  it("reports an unconfigured server rather than a generic failure", async () => {
+    await clickTest({ ok: false, status: 503 });
+    expect(await screen.findByText(/isn't configured/i)).toBeInTheDocument();
+  });
+
+  it("reports being rate limited", async () => {
+    await clickTest({ ok: false, status: 429 });
+    expect(await screen.findByText(/too many tests/i)).toBeInTheDocument();
+  });
+});

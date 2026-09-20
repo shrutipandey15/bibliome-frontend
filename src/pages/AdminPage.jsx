@@ -129,6 +129,38 @@ export default function AdminPage() {
     }
   };
 
+  /**
+   * Ring your own devices, from the device in your hand.
+   *
+   * Lives here rather than in Settings on purpose: it is a diagnostic, and a
+   * reader has no use for a button that tests the plumbing. But it has to be
+   * tappable on a PHONE — that is the only place the answer means anything —
+   * so it is admin-gated rather than dev-only.
+   *
+   * `sent` is how many devices the push service accepted it for. Zero is the
+   * useful answer: it separates "nothing is subscribed" from "sent but never
+   * displayed", which look identical from the outside.
+   */
+  const sendTestPush = async () => {
+    const res = await apiFetch("/push/test", { method: "POST" });
+    if (!res.ok) {
+      showToast(
+        res.status === 429 ? "Too many tests just now — wait a few minutes."
+          : res.status === 503 ? "Push isn't configured on this server."
+          : "Couldn't send a test notification.",
+        "error",
+      );
+      return;
+    }
+    const { sent } = await res.json();
+    showToast(
+      sent > 0
+        ? `Sent to ${sent} device${sent === 1 ? "" : "s"} — lock the screen and watch.`
+        : "No devices registered for your account. Turn notifications off and on again in Settings.",
+      sent > 0 ? "success" : "error",
+    );
+  };
+
   const viewUser = async (userId) => {
     const res = await apiFetch(`/admin/users/${userId}`);
     if (res.ok) setSelectedUser(await res.json());
@@ -198,6 +230,9 @@ export default function AdminPage() {
               Cleanup {stats.expired_refresh_tokens} expired tokens
             </button>
           )}
+          <button className="admin-action-btn" onClick={sendTestPush}>
+            Send a test notification to my devices
+          </button>
         </div>
       )}
 
