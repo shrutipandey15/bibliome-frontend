@@ -105,6 +105,27 @@ function prerenderContent() {
         writeFileSync(file, html);
       }
 
+      // A crawl path from the homepage. The in-app link to /archetypes/ is
+      // rendered by React, so GPTBot, ClaudeBot and PerplexityBot — which run
+      // no JS and are the whole reason these pages exist — could reach them
+      // only via the sitemap. This puts real <a> tags in the landing page's
+      // <noscript>, generated from the same route list so it cannot go stale.
+      // Written after the loop so the content pages, which strip this
+      // <noscript> and carry their own footer nav, don't inherit it.
+      const crawlPath =
+        "<h2>Reading archetypes and comparisons</h2><ul>" +
+        CONTENT_ROUTES.map(
+          (r) => `<li><a href="${r.path}/">${r.title.split(" — ")[0]}</a></li>`,
+        ).join("") +
+        "</ul>";
+      // The LAST </noscript>: the first one closes the <noscript><style> block
+      // that styles this very fallback, and String.replace takes the first match.
+      const closeAt = shell.lastIndexOf("</noscript>");
+      writeFileSync(
+        resolve(outDir, "index.html"),
+        shell.slice(0, closeAt) + crawlPath + shell.slice(closeAt),
+      );
+
       // Sitemap, regenerated with the content routes and a real lastmod. The
       // hand-maintained public/sitemap.xml it overwrites said to do this "once
       // real pages land".
