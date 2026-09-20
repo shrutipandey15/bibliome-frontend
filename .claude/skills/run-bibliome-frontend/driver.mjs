@@ -10,6 +10,7 @@
 //   node .claude/skills/run-bibliome-frontend/driver.mjs smoke
 //   node .claude/skills/run-bibliome-frontend/driver.mjs shot /login --out login
 //   node .claude/skills/run-bibliome-frontend/driver.mjs shot / --mobile --out landing-m
+//   node .claude/skills/run-bibliome-frontend/driver.mjs shot / --dark --out landing-dark
 //
 // Assumes the dev server is already up on $BASE_URL (default http://localhost:4173).
 // Screenshots land in .claude/skills/run-bibliome-frontend/screenshots/.
@@ -59,13 +60,20 @@ function chromePath() {
 
 const { chromium } = loadPlaywright();
 
-async function withPage(fn, { mobile = false } = {}) {
+async function withPage(fn, { mobile = false, dark = false } = {}) {
   const browser = await chromium.launch({
     executablePath: chromePath(),
     args: ["--no-sandbox", "--disable-gpu"],
   });
   const page = await browser.newPage();
   await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 });
+  // Lamplight. index.html reads bd-theme before first paint, so this has to be
+  // seeded per origin before the first navigation, not toggled after load.
+  if (dark) {
+    await page.addInitScript(() => {
+      try { localStorage.setItem("bd-theme", "dark"); } catch (e) { /* private mode */ }
+    });
+  }
   const errors = [];
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
   page.on("pageerror", (e) => errors.push(String(e)));
@@ -82,7 +90,7 @@ const isBackendNoise = (t) =>
   /\/api\/|:8000|version\.json/i.test(t) ||
   /Failed to load resource.*status of (?:401|403|404|500|502|503)/i.test(t);
 
-async function shot(path, { mobile = false, out = "shot" } = {}) {
+async function shot(path, { mobile = false, dark = false, out = "shot" } = {}) {
   await withPage(async (page, errors) => {
     const resp = await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(400);
@@ -91,7 +99,7 @@ async function shot(path, { mobile = false, out = "shot" } = {}) {
     console.log(`${path}  ->  http ${resp.status()}  ->  ${file}`);
     const real = errors.filter((e) => !isBackendNoise(e));
     if (real.length) console.log("  console errors:\n   " + real.join("\n   "));
-  }, { mobile });
+  }, { mobile, dark });
 }
 
 async function smoke() {
@@ -143,8 +151,8 @@ const outArg = (() => { const i = rest.indexOf("--out"); return i >= 0 ? rest[i 
 if (cmd === "smoke") {
   await smoke();
 } else if (cmd === "shot") {
-  await shot(pos[0] || "/", { mobile: flags.has("--mobile"), out: outArg || "shot" });
+  await shot(pos[0] || "/", { mobile: flags.has("--mobile"), dark: flags.has("--dark"), out: outArg || "shot" });
 } else {
-  console.log("commands:\n  smoke                       full interaction check + screenshots\n  shot <path> [--mobile] [--out name]   screenshot one route");
+  console.log("commands:\n  smoke                       full interaction check + screenshots\n  shot <path> [--mobile] [--dark] [--out name]   screenshot one route");
   process.exit(2);
 }
