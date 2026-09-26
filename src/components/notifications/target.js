@@ -6,6 +6,7 @@
  * serves, and every payload field is one the API really sends:
  *
  *   echo_reply          app/routers/echo.py       → { echo_id, book_title, actors, count }
+ *   resonance_match     app/services/resonance_service → {}
  *   resonance_reach     app/routers/resonance.py  → { match_id }
  *   resonance_connected app/routers/resonance.py  → { match_id, thread_id }
  *   resonance_message   app/routers/threads.py    → { thread_id }
@@ -42,6 +43,7 @@ export function notificationTarget(n) {
     case "echo_reply":
       // Straight into the thread that was replied to, not just the feed.
       return p.echo_id ? `/echoes?echo=${encodeURIComponent(p.echo_id)}` : "/echoes";
+    case "resonance_match":
     case "resonance_reach":
     case "resonance_connected":
     case "resonance_message":
