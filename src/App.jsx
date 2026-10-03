@@ -14,7 +14,9 @@ import ThemeToggle from "./components/ThemeToggle";
 import TabBar from "./components/TabBar";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
 import { saveCardAsImage } from "./utils/cardUtils";
-import { getSharedDNA, getEmotionVocab, setReadFor } from "./services/api";
+import { getSharedDNA, getEmotionVocab, setReadFor, getDNAProfile } from "./services/api";
+import EchoCard from "./components/dna/EchoCard";
+import { shouldEcho } from "./components/dna/echo";
 import AuthPage from "./pages/AuthPage";
 import BookCard from "./components/BookCard";
 import EmptyShelf from "./components/EmptyShelf";
@@ -683,7 +685,8 @@ function Dashboard() {
   const {
     entries, analytics, stale,
     loading, generating, entriesError,
-    addEntry, editEntry, removeEntry, finishBook, generate, ensureFresh, loadEntries
+    addEntry, editEntry, removeEntry, finishBook, generate, ensureFresh, loadEntries,
+    adoptProfile, acknowledgeShift,
   } = useJournal();
 
   const navigate = useNavigate();
@@ -725,6 +728,9 @@ function Dashboard() {
   const [sortBy, setSortBy] = useState("date");
   const [view, setView] = useState("cover");
   const [toast, setToast] = useState(null);
+  // The echo after a save: what that book did to the reader's DNA. [Aliveness F1]
+  const [echo, setEcho] = useState(null);
+  const clearEcho = useCallback(() => setEcho(null), []);
 
   const fabHidden = useFabHidden();
 
@@ -804,12 +810,32 @@ function Dashboard() {
     [entries],
   );
 
-  const handleSaveEntry = async (data, existingId) => {
+  // Ask the server what the book just saved did. GET /dna/profile recomputes
+  // when the shelf has moved, so this one call is also what refreshes the DNA;
+  // the echo is shown only if it is about THIS book (a second save in flight, or
+  // an older cache, gets nothing rather than the wrong book's line).
+  const showEchoFor = async (entryId) => {
+    if (!entryId || String(entryId).startsWith("temp-")) return false;
     try {
-      if (existingId && !String(existingId).startsWith("temp-")) await editEntry(existingId, data);
-      else await addEntry(data);
+      const prof = await getDNAProfile();
+      adoptProfile(prof);
+      if (prof?.echo && prof.echo.entry_id === String(entryId)) {
+        setEcho(prof.echo);
+        return true;
+      }
+    } catch { /* the save already succeeded; no echo is not an error */ }
+    return false;
+  };
+
+  const handleSaveEntry = async (data, existingId) => {
+    const editing = existingId && !String(existingId).startsWith("temp-");
+    const prev = editing ? entries.find((e) => e.id === existingId) : null;
+    let saved;
+    try {
+      saved = editing ? await editEntry(existingId, data) : await addEntry(data);
       setModal(null);
-    } catch (err) { showToast("Failed to save book"); }
+    } catch (err) { showToast("Failed to save book"); return; }
+    if (shouldEcho(prev, data)) showEchoFor(saved?.id ?? existingId);
   };
   // The whole library is already in memory, so "have I shelved this?" is a local
   // question — no lookup endpoint, no debounce, no round trip per keystroke.
@@ -830,7 +856,8 @@ function Dashboard() {
   // Let errors propagate so FinishFlow can show them inline; toast only on success.
   const handleFinishBook = async (id, data) => {
     const saved = await finishBook(id, data);
-    showToast("Book finished ✦", "success");
+    // The echo says more than "finished" when the book carries feelings.
+    showEchoFor(id).then((shown) => { if (!shown) showToast("Book finished ✦", "success"); });
     return saved;
   };
   const handleGenerateDNA = async () => {
@@ -972,6 +999,7 @@ function Dashboard() {
                   cardRef={dnaCardRef}
                   bookCount={entries.length}
                   stats={analytics.stats}
+                  onShiftSeen={acknowledgeShift}
                 />
               </ErrorBoundary>
             )}
@@ -1102,7 +1130,9 @@ function Dashboard() {
           />
         </Modal>
       )}
-      {toast && <div className={`toast toast-${toast.type}`} onClick={() => setToast(null)}>{toast.message}</div>}
+      {echo ? (
+        <EchoCard echo={echo} onOpen={() => setTab("dna")} onDone={clearEcho} />
+      ) : toast && <div className={`toast toast-${toast.type}`} role="status" aria-live="polite" onClick={() => setToast(null)}>{toast.message}</div>}
     </div>
   );
 }

@@ -114,18 +114,29 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
   // tests deliberately say nothing about `margin`: pinning them to a threshold is
   // what let the card and the engine drift apart in the first place.
 
-  it("hedges the name and names the runner-up when the backend sent one", () => {
+  it("names the archetype it leans toward when the backend sent one [Aliveness F3]", () => {
     render(
       <DNACard profile={{ ...profile, runner_up: "The Soft Masochist" }} username="alice" />
     );
-    expect(screen.getByText(/closest to/i)).toBeInTheDocument();
-    expect(screen.getByText(/shading toward The Soft Masochist/)).toBeInTheDocument();
+    // The public payload carries only the name; the card words it the same way.
+    expect(screen.getByText("leaning toward the Soft Masochist")).toBeInTheDocument();
+    expect(screen.queryByText(/closest to|shading toward/i)).not.toBeInTheDocument();
   });
 
   it("asserts the name plainly when the backend sent no runner-up", () => {
     render(<DNACard profile={{ ...profile, runner_up: null }} username="alice" />);
-    expect(screen.queryByText(/closest to/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/shading toward/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/leaning toward/i)).not.toBeInTheDocument();
+  });
+
+  it("shows the owner's season under the name, and says how many archetypes there are", () => {
+    render(
+      <DNACard
+        profile={{ ...profile, season: { id: "world_diver", name: "The World-Diver", since: `${new Date().getFullYear()}-08-02`, home: false } }}
+        username="alice"
+      />
+    );
+    expect(screen.getByText(/^in a World-Diver season · since August/)).toBeInTheDocument();
+    expect(screen.getByText(/ONE OF TWELVE/)).toBeInTheDocument();
   });
 
   // The regression. `card_payload` — the share link, your profile, a public
@@ -134,8 +145,7 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
   // Neither half of the hedge may appear without the other.
   it("never orphans the hedge on a payload carrying margin but no runner-up", () => {
     render(<DNACard profile={{ ...profile, margin: 0.04 }} username="alice" />);
-    expect(screen.queryByText(/closest to/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/shading toward/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/leaning toward/i)).not.toBeInTheDocument();
   });
 
   it("prints the basis under the name — counts the reader can go and check", () => {

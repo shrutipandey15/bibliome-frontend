@@ -3,7 +3,14 @@ import { EMOTIONS, EMO_LIST } from "../services/emotions";
 import { generateShareToken } from "../services/api";
 import { cardArchetype } from "../services/dnaCard";
 import ShareModal from "./ShareModal";
+import { ARCHETYPE_COUNT } from "./dna/constants";
+import { leaningLine, seasonLine } from "./dna/aliveCopy";
 import "./DNACard.css";
+
+// "ONE OF TWELVE" — read off the archetype count rather than typed, so the plate
+// can't go on saying "eight" after the set changes (it did, for a release).
+const COUNT_WORDS = { 8: "EIGHT", 9: "NINE", 10: "TEN", 11: "ELEVEN", 12: "TWELVE", 13: "THIRTEEN" };
+const COUNT_WORD = COUNT_WORDS[ARCHETYPE_COUNT] || String(ARCHETYPE_COUNT);
 
 /**
  * The fingerprint: one bar per register in the vocabulary, tallest first.
@@ -132,6 +139,7 @@ const DNACard = forwardRef(function DNACard(
   // threshold stays somewhere this file can't get it wrong.
   const runnerUp = profile.runner_up;
   const close = runnerUp != null;
+  const season = profile.season || null;
   // Counts only, straight off the reader's own shelf. Null until the backend
   // computes it; nothing is invented to fill the line.
   const basis = profile.basis;
@@ -146,18 +154,23 @@ const DNACard = forwardRef(function DNACard(
 
         <div className="dna-header">
           <div>
-            <div className="dna-label">BIBLIOME · ONE OF EIGHT</div>
+            <div className="dna-label">BIBLIOME · ONE OF {COUNT_WORD}</div>
             <div className="dna-vol">{profile.book_count || 0} VOLUMES · {new Date().getFullYear()}</div>
           </div>
           <div className="dna-glyph">{p.glyph || "◈"}</div>
         </div>
 
-        {close && <div className="dna-hedge">closest to</div>}
         <h2 className="dna-name">
           {first}{second && <><br /><em>{second}</em></>}
         </h2>
+        {/* Weather under the climate: the season (owner's own view only — the
+            public payload never carries it) and the leaning line, which is the
+            hedge: shown only when a rival has caught up with this archetype. */}
+        {season && <div className="dna-hedge dna-hedge--after dna-season">{seasonLine(season)}</div>}
         {close && (
-          <div className="dna-hedge dna-hedge--after">shading toward {runnerUp}</div>
+          <div className="dna-hedge dna-hedge--after">
+            {leaningLine(profile.leaning || { name: runnerUp })}
+          </div>
         )}
         {/* The receipt. The name is a headline for a number the reader can go and
             check against their own shelf — without it, the label is just a bucket

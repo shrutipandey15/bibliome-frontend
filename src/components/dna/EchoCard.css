@@ -1,0 +1,45 @@
+/* The echo after a save — sits where the toast does, a little wider. */
+.echo-card {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  width: min(440px, calc(100vw - 32px));
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--echo-c, var(--brass));
+  border-radius: 2px;
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.echo-glyph { font-size: 22px; line-height: 1.1; color: var(--echo-c, var(--brass)); }
+.echo-text { min-width: 0; }
+.echo-line { margin: 0; font-family: var(--font-display); font-size: 15px; color: var(--ink); }
+.echo-extra { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
+.echo-actions { display: flex; align-items: center; gap: 4px; }
+.echo-open {
+  background: none; border: 0; padding: 6px 8px; cursor: pointer;
+  font-size: 12px; letter-spacing: 0.04em; color: var(--ink-soft);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.echo-open:hover { color: var(--ink); }
+.echo-close {
+  background: none; border: 0; cursor: pointer; font-size: 18px; line-height: 1;
+  color: var(--ink-faint, var(--ink-soft)); padding: 4px 6px; min-width: 32px; min-height: 32px;
+}
+/* Phone / installed PWA: same slot as the toast (App.css), above the tab bar
+   (56px) and the FAB (to 128px), clear of the home indicator. */
+@media (max-width: 640px) {
+  .echo-card { bottom: calc(144px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-width: 480px) {
+  .echo-card { grid-template-columns: auto 1fr; }
+  .echo-actions { grid-column: 1 / -1; justify-content: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) { .echo-card { animation: none; } }

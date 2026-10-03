@@ -98,8 +98,9 @@
   color: #f5ecd2;
 }
 .dna-name em { color: var(--dc, var(--oxblood)); font-style: italic; filter: brightness(1.6); }
-/* The hedge. Set small and quiet ABOVE the name so it reads as one sentence
-   ("closest to / The Grief Romantic") rather than as a caveat bolted on after. */
+/* The lines under the name: the season ("in a World-Diver season · since
+   August") and the leaning hedge ("leaning toward the World-Diver"). Small and
+   quiet, so they read as weather around the name, not caveats on it. */
 .dna-hedge {
   position: relative;
   font-family: var(--font-mono);

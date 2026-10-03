@@ -131,7 +131,8 @@ export function JournalProvider({ children }) {
       const saved = await createEntry(data);
       setEntries(prev => { const next = prev.map(e => e.id === tempId ? saved : e); setCachedEntries(next); return next; });
       setStale({ heatmap: true, stats: true, profile: true });
-      return true;
+      // The saved entry, not just `true`: the echo after a save needs its id.
+      return saved || true;
     } catch (err) {
       setEntries(prev => prev.filter(e => e.id !== tempId));
       throw err;
@@ -160,7 +161,7 @@ export function JournalProvider({ children }) {
       const saved = await updateEntry(id, data);
       setEntries(prev => { const next = prev.map(e => e.id === id ? saved : e); setCachedEntries(next); return next; });
       setStale({ heatmap: true, stats: true, profile: true });
-      return true;
+      return saved || true;
     } catch (err) {
       setEntries(prevEntries);
       throw err;
@@ -216,12 +217,25 @@ export function JournalProvider({ children }) {
     }
   };
 
+  // A profile fetched elsewhere (the echo after a save asks GET /dna/profile,
+  // which recomputes) is the freshest there is — take it rather than refetching.
+  const adoptProfile = useCallback((prof) => {
+    if (!prof) return;
+    setAnalytics(prev => ({ ...prev, profile: prof }));
+    setStale(prev => ({ ...prev, profile: false }));
+  }, []);
+  // The reader dismissed the shift card; the server has been told. Keep the
+  // cached profile in step so the card doesn't come back on the next visit.
+  const acknowledgeShift = useCallback(() => {
+    setAnalytics(prev => (prev.profile ? { ...prev, profile: { ...prev.profile, shift_unseen: false } } : prev));
+  }, []);
+
   return (
     <JournalContext.Provider value={{
       entries, analytics, stale, shareToken,
       loading, generating, entriesError,
       addEntry, editEntry, removeEntry, finishBook, generate, createToken,
-      ensureFresh, loadEntries, shelveBook,
+      ensureFresh, loadEntries, shelveBook, adoptProfile, acknowledgeShift,
     }}>
       {children}
     </JournalContext.Provider>

@@ -4,6 +4,8 @@ import DNACard from "../DNACard";
 import DNAGate from "./DNAGate";
 import Insight from "./Insight";
 import EvolutionView from "./EvolutionView";
+import Moments from "./Moments";
+import ShiftCard from "./ShiftCard";
 import { MIN_BOOKS } from "./constants";
 import useIsNarrow from "../../hooks/useIsNarrow";
 import "./DNAView.css";
@@ -150,7 +152,7 @@ function Portrait({ counts, current, blindSpots = [] }) {
   );
 }
 
-export default function DNAView({ profile, username, onSave, onEditReadFor, cardRef, bookCount = 0, stats = null }) {
+export default function DNAView({ profile, username, onSave, onEditReadFor, cardRef, bookCount = 0, stats = null, onShiftSeen }) {
   const count = profile?.book_count ?? bookCount;
   const needed = profile?.needed ?? MIN_BOOKS;
   // The mirror auto-computes on read; `enough` is the honest gate. Present
@@ -202,6 +204,10 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
     // not passed: the card reads the hedge off `runner_up`'s presence rather than
     // re-deriving it from the number, so handing it over would be a dead prop.
     runner_up: profile.runner_up,
+    leaning: profile.leaning || null,
+    // The season is the owner's weather — only this tab passes it; the public
+    // card payload never carries one.
+    season: profile.season || null,
     basis: profile.basis,
     // Last-resort fallback, for a cache written before `emotion_counts` existed.
     //
@@ -238,7 +244,10 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
     />
   );
   const evolution = (
-    <EvolutionView profiles={profile.profiles} drift={profile.drift} snapshotCount={snapshotCount} />
+    <EvolutionView
+      profiles={profile.profiles} drift={profile.drift} snapshotCount={snapshotCount}
+      seasons={profile.seasons} eras={profile.eras}
+    />
   );
   const portrait = (
     <Portrait
@@ -284,6 +293,8 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
           hairline fighting it. */}
       <div className="dna-body">
         <div className="dna-col">
+          {/* A changed archetype gets its moment first, once. [Aliveness F5] */}
+          {profile.shift_unseen && <ShiftCard eras={profile.eras} onSeen={onShiftSeen} />}
           {headline && (
             <section className="dna-headline" aria-labelledby="dna-reading-title" aria-live="polite">
               <h2 id="dna-reading-title" className="dna-section-label">What your reading says</h2>
@@ -293,6 +304,7 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
 
           {evolution}
           {portrait}
+          <Moments moments={profile.moments} />
 
           {rest.length > 0 && (
             <section className="dna-more" aria-labelledby="dna-more-title">

@@ -1,4 +1,5 @@
 import { EMOTIONS } from "../../services/emotions";
+import { shortName, spanLabel } from "./aliveCopy";
 
 /**
  * The evolution view — the return mechanic. [F7.3]
@@ -69,7 +70,30 @@ function Composition({ vec }) {
  * genuinely different statement from "compared, and you haven't moved". We say
  * which one it is rather than letting a steady reading stand in for both. [F-DNA-4]
  */
-export default function EvolutionView({ profiles, drift = 0, snapshotCount = null }) {
+// A dated list of seasons or eras, newest first. Names are always written; the
+// swatch is decoration. [DNA Aliveness · F2/F5]
+function SpanList({ title, items, suffix }) {
+  if (!items?.length) return null;
+  return (
+    <div>
+      <h3 className="evo-list-title">{title}</h3>
+      <ul className="evo-list">
+        {items.map((x) => (
+          <li key={`${x.id}-${x.from}`} className="evo-list-row" style={{ "--evo-c": x.color }}>
+            <span className="evo-list-when">{spanLabel(x.from, x.to)}</span>
+            <span className="evo-list-name">
+              <span className="evo-list-swatch" aria-hidden="true" />
+              {shortName(x)} {suffix}
+            </span>
+            <span className="evo-list-books">{x.books} {x.books === 1 ? "book" : "books"}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default function EvolutionView({ profiles, drift = 0, snapshotCount = null, seasons = null, eras = null }) {
   const enduring = profiles?.enduring;
   const current = profiles?.current;
   if (!enduring && !current) return null;
@@ -119,9 +143,18 @@ export default function EvolutionView({ profiles, drift = 0, snapshotCount = nul
         </p>
       )}
 
-      {/* The gap IS the insight: enduring vs. lately, contrasted. Both columns are
-          weightings of the shelf you have now, so they are real with or without
-          snapshot history. */}
+      {/* Seasons and eras, when the payload carries them: what changed, dated,
+          instead of two weightings of today's shelf. A payload from before the
+          aliveness layer falls back to the then / now columns below. */}
+      {(seasons?.length || eras?.length) ? (
+        <div className="evo-lists">
+          <SpanList title="Your seasons" items={seasons} suffix="season" />
+          <SpanList title="Eras" items={eras} suffix="" />
+        </div>
+      ) : (
+      /* The gap IS the insight: enduring vs. lately, contrasted. Both columns are
+         weightings of the shelf you have now, so they are real with or without
+         snapshot history. */
       <div className="evo-gap">
         <div className="evo-gap-col">
           <div className="evo-gap-when">then</div>
@@ -140,6 +173,7 @@ export default function EvolutionView({ profiles, drift = 0, snapshotCount = nul
           <Composition vec={current} />
         </div>
       </div>
+      )}
     </section>
   );
 }

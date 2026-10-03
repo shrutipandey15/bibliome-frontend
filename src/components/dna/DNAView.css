@@ -396,3 +396,37 @@
   .dna-portrait-fold-chev { flex: none; color: var(--brass); font-size: 18px; transition: transform .2s ease; }
   .dna-portrait-fold[open] .dna-portrait-fold-chev { transform: rotate(180deg); }
 }
+
+/* ── Aliveness: the shift card, moments, seasons and eras ── */
+.dna-shift {
+  position: relative;
+  margin: 0 0 28px;
+  padding: 22px 22px 18px;
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--shift-c, var(--brass));
+  background: var(--bg-card);
+}
+.dna-shift-glyph { font-size: 28px; color: var(--shift-c, var(--brass)); line-height: 1; }
+.dna-shift-title { font-family: var(--font-display); font-size: 24px; margin: 10px 0 8px; color: var(--ink); }
+.dna-shift-body, .dna-shift-footer { margin: 0 0 10px; color: var(--ink-soft); font-size: 14px; }
+.dna-shift-books { margin: 0 0 12px; padding-left: 18px; font-style: italic; color: var(--ink); }
+.dna-shift-ok { margin-top: 4px; }
+
+.dna-moments { margin-top: 32px; }
+.dna-moments-list, .evo-list { list-style: none; margin: 0; padding: 0; }
+.dna-moment, .evo-list-row {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 2px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+.dna-moment-date, .evo-list-when { color: var(--ink-faint, var(--ink-soft)); font-family: var(--font-mono); font-size: 11px; padding-top: 3px; }
+.dna-moment-what, .evo-list-name { color: var(--ink); }
+.dna-moment-book, .evo-list-books { grid-column: 2; color: var(--ink-soft); font-style: italic; font-size: 13px; }
+.evo-list-books { font-style: normal; }
+.evo-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 18px; }
+@media (max-width: 640px) { .evo-lists { grid-template-columns: 1fr; } }
+.evo-list-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 6px; }
+.evo-list-swatch { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; background: var(--evo-c, var(--brass)); }

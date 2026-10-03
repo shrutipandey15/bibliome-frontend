@@ -108,7 +108,8 @@ function itemText(n) {
     return <>{who} mentioned you in a collection room.</>;
   }
   if (n.kind === "dna_shifted") {
-    return <>Your reading DNA shifted — from <em>{p.old}</em> to <em>{p.new}</em>.</>;
+    // Matches the shift card the DNA page opens with. [Aliveness F5]
+    return <>You've become <em>{p.new}</em> — after reading as <em>{p.old}</em>.</>;
   }
   if (n.kind === "collection_joined") {
     const actors = p.actors || [];

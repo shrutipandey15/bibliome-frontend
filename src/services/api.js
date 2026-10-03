@@ -358,6 +358,13 @@ export async function getDNAProfile() {
   return res.json();
 }
 
+// The reader has seen the "You've become…" card for their current archetype;
+// the server won't flag it again until the archetype changes. [DNA Aliveness · F5]
+export async function markShiftSeen() {
+  const res = await apiFetch("/dna/shift-seen", { method: "POST" });
+  return res.ok;
+}
+
 // "What do you read for" is a stated preference stored on the user as 1–2 canonical
 // EMOTION slugs; it lives on PATCH /user/settings (it dirties the DNA cache so the
 // stated-vs-revealed insight recomputes). [F7.7 / B7.1]

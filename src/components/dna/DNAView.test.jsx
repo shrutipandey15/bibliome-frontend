@@ -18,7 +18,11 @@ vi.mock("../DNACard", () => ({
 // payload as `snapshot_count`. The mock stays only to catch a regression that
 // reintroduces a request.
 const evolutionPoints = vi.fn(async () => []);
-vi.mock("../../services/api", () => ({ getDNAEvolution: (...a) => evolutionPoints(...a) }));
+const shiftSeen = vi.fn(async () => true);
+vi.mock("../../services/api", () => ({
+  getDNAEvolution: (...a) => evolutionPoints(...a),
+  markShiftSeen: (...a) => shiftSeen(...a),
+}));
 
 import DNAView from "./DNAView";
 import { EMO_LIST } from "../../services/emotions";
@@ -321,5 +325,64 @@ describe("DNAView — what's changed / snapshot history [F-DNA-4]", () => {
     await renderView({ profile: { ...fullProfile, snapshot_count: 2 }, username: "alice" });
     await renderView({ profile: belowGate, username: "alice" });
     expect(evolutionPoints).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("DNAView — the aliveness layer [DNA Aliveness spec]", () => {
+  const WD = { id: "world_diver", name: "The World-Diver", color: "#3A7A8C", glyph: "✦" };
+  const GR = { id: "grief_romantic", name: "The Grief Romantic", color: "#3A5A6B", glyph: "◈" };
+  const alive = {
+    ...fullProfile,
+    archetype: { ...fullProfile.archetype, id: "world_diver", name: "The World-Diver" },
+    season: { ...GR, since: "2026-08-04", books: 7, home: false },
+    seasons: [
+      { ...GR, from: "2026-08-04", to: null, books: 7 },
+      { ...WD, from: "2026-05-01", to: "2026-08-04", books: 9 },
+    ],
+    eras: [
+      { ...WD, from: "2026-06-10", to: null, books: 12,
+        books_that_moved: [{ entry_id: "b1", title: "The Night Circus" }] },
+      { ...GR, from: "2025-03-01", to: "2026-06-10", books: 30 },
+    ],
+    moments: [{ kind: "first", emotion: "swoon", gap: null, entry_id: "b1", title: "The Night Circus", date: "2026-09-12" }],
+    shift_unseen: true,
+  };
+
+  beforeEach(() => shiftSeen.mockClear());
+
+  it("lists seasons and eras, dated, instead of then / now", async () => {
+    await renderView({ profile: alive, username: "alice" });
+    expect(screen.getByText("Your seasons")).toBeInTheDocument();
+    expect(screen.getByText("Eras")).toBeInTheDocument();
+    expect(screen.getByText("since Aug 2026")).toBeInTheDocument();
+    expect(screen.getByText("Mar 2025–Jun 2026")).toBeInTheDocument();
+    expect(screen.queryByText("then")).not.toBeInTheDocument();
+  });
+
+  it("opens with the shift card once, and tells the server it was seen", async () => {
+    await renderView({ profile: alive, username: "alice" });
+    expect(screen.getByRole("heading", { name: "You've become a World-Diver." })).toBeInTheDocument();
+    expect(screen.getAllByText("The Night Circus").length).toBeGreaterThan(0);
+    await act(async () => { screen.getByRole("button", { name: "Got it" }).click(); });
+    expect(shiftSeen).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("heading", { name: "You've become a World-Diver." })).not.toBeInTheDocument();
+    await renderView({ profile: { ...alive, shift_unseen: false }, username: "bob" });
+    expect(screen.queryByText(/You've become/)).not.toBeInTheDocument();
+  });
+
+  it("shows dated moments", async () => {
+    await renderView({ profile: alive, username: "alice" });
+    expect(screen.getByText("Moments")).toBeInTheDocument();
+    expect(screen.getByText("A first: “it gave me butterflies”")).toBeInTheDocument();
+    expect(screen.getByText("12 Sep 2026")).toBeInTheDocument();
+  });
+
+  it("keeps every new line clear of banned framing", async () => {
+    const { container } = await renderView({ profile: alive, username: "alice" });
+    const text = container.textContent;
+    expect(text).not.toMatch(/\breveal\b/i);
+    expect(text).not.toMatch(/streak/i);
+    expect(text).not.toMatch(/than \d+%|% of readers|more \w+ than/i);
   });
 });
