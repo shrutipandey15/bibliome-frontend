@@ -138,7 +138,7 @@ function buildDashboardStats(entries) {
     freq[id] = (freq[id] || 0) + 1;
   }));
   const topEmotion = Object.entries(freq).sort((a, b) => b[1] - a[1])[0] || [null, 0];
-  // How many of the eighteen registers this shelf has ever reached for. The
+  // How many of the twenty-one registers this shelf has ever reached for. The
   // fourth figure the strip needed: real, countable here, and the same one the
   // study prints, so the two surfaces agree.
   const registers = Object.keys(freq).length;

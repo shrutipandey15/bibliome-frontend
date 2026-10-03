@@ -18,7 +18,7 @@ import { formatLongDate } from "./BlankPage";
  *   Tuesday gets a truer answer than asking on Tuesday — and the friction is
  *   lower, because the writing is already done.
  *
- * The eighteen emotions arrive collapsed into their five families. Eighteen
+ * The twenty-one feelings arrive collapsed into their six families. Twenty-one
  * options at once is a menu; five is a question.
  *
  * These tags go to the server in plaintext, and that is the deliberate half of

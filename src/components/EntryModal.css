@@ -242,7 +242,7 @@
 
 .em-emo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* ── Five doors → the emotions inside [Part A] ── */
+/* ── Six doors → the feelings inside [Part A] ── */
 .em-fam-doors { display: flex; flex-wrap: wrap; gap: 6px; }
 .em-fam-door {
   display: inline-flex; align-items: center; gap: 8px;
@@ -757,3 +757,8 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* "something else…" — the way out at the end of every family [v3] */
+.em-chip-other { border-style: dashed; font-style: italic; }
+.em-emo-other .em-emo-row-label { font-style: italic; opacity: 0.8; }
+.em-other-feeling { margin-top: 8px; width: 100%; }

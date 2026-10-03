@@ -39,15 +39,15 @@ beforeEach(() => {
 const fullProfile = {
   enough: true,
   book_count: 47,
-  archetype: { id: "grief-romantic", name: "The Grief Romantic", description: "You read toward the ache.", color: "#6B4F8E", glyph: "◈", blind_spots: ["boredom"] },
+  archetype: { id: "grief-romantic", name: "The Grief Romantic", description: "You read toward the ache.", color: "#6B4F8E", glyph: "◈", blind_spots: ["beauty"] },
   insights: [
     { category: "contradiction", variant: "a", text: "You said you read for comfort. You rate the ones that hurt 2.3 points higher.", n: 47, surprise: 0.9 },
-    { category: "blind_spot", variant: "rare", text: "47 books. Never once: tenderness.", n: 47, surprise: 0.7 },
+    { category: "blind_spot", variant: "rare", text: "47 books. Never once: nostalgia.", n: 47, surprise: 0.7 },
   ],
   locked: [{ category: "seasonality", unlocks_at: "25 books + 12 months", reason: "25 books across a full year of reading, once you've read here that long", have: null, need: 25 }],
   profiles: {
-    enduring: { comfort: 0.6, grief: 0.3, devastation: 0.1 },
-    current: { devastation: 0.7, grief: 0.2, comfort: 0.1 },
+    enduring: { comfort: 0.6, grief: 0.3, shock: 0.1 },
+    current: { shock: 0.7, grief: 0.2, comfort: 0.1 },
   },
   drift: 0.55,
   reads_for: ["comfort"],
@@ -136,8 +136,8 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
 
   it("shows the evolution gap as a text equivalent, not shape/colour alone [F7.3/F7.8]", async () => {
     await renderView({ profile: fullProfile, username: "alice" });
-    // Drift moved comfort → devastation; stated plainly in words.
-    expect(screen.getByText(/enduringly, you read toward comfort\. lately, devastation/i)).toBeInTheDocument();
+    // Drift moved comfort → shock; stated plainly in words.
+    expect(screen.getByText(/enduringly, you read toward comfort\. lately, shock/i)).toBeInTheDocument();
     // then / now columns, each captioned with what the weighting actually means.
     expect(screen.getByText("then")).toBeInTheDocument();
     expect(screen.getByText("now")).toBeInTheDocument();
@@ -175,11 +175,11 @@ describe("DNAView — the shape of you [F-DNA-3 / F-DNA-9]", () => {
   it("renders never-tagged emotions as a blank, not omitted — the blind spot IS the gap", async () => {
     await renderView({ profile: fullProfile, username: "alice" });
     const names = [...document.querySelectorAll(".dna-portrait-name")].map((n) => n.textContent);
-    // `tenderness` appears nowhere in the current vector, but must still be listed.
-    expect(names).toContain("tenderness");
+    // `nostalgia` appears nowhere in the current vector, but must still be listed.
+    expect(names).toContain("nostalgia");
 
     const blankRow = [...document.querySelectorAll(".dna-portrait-row")].find(
-      (r) => r.querySelector(".dna-portrait-name").textContent === "tenderness"
+      (r) => r.querySelector(".dna-portrait-name").textContent === "nostalgia"
     );
     expect(blankRow.className).toMatch(/dna-portrait-row--blank/);
     expect(blankRow.querySelector(".dna-portrait-count").textContent).toBe("—");
@@ -193,11 +193,11 @@ describe("DNAView — the shape of you [F-DNA-3 / F-DNA-9]", () => {
     expect(container.querySelector(".evo-comp-seg")).toBeNull();
     // Leader dots, and a readable number on the tagged rows.
     expect(container.querySelector(".dna-portrait-leader")).not.toBeNull();
-    const devastation = [...container.querySelectorAll(".dna-portrait-row")].find(
-      (r) => r.querySelector(".dna-portrait-name").textContent === "devastation"
+    const shock = [...container.querySelectorAll(".dna-portrait-row")].find(
+      (r) => r.querySelector(".dna-portrait-name").textContent === "shock"
     );
     // No counts ledger supplied here, so it falls back to the weighted share.
-    expect(devastation.querySelector(".dna-portrait-count").textContent).toBe("70");
+    expect(shock.querySelector(".dna-portrait-count").textContent).toBe("70");
   });
 });
 
@@ -208,7 +208,7 @@ describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
   const stats = { avg_intensity: 8.5 };
   const counted = {
     ...fullProfile,
-    emotion_counts: { devastation: 16, catharsis: 11, dread: 11, comfort: 10, rage: 8 },
+    emotion_counts: { shock: 16, catharsis: 11, dread: 11, comfort: 10, rage: 8 },
   };
 
   it("prints BOOK COUNTS from the stats ledger, not shares of the weighted vector", async () => {
@@ -217,19 +217,20 @@ describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
       [...container.querySelectorAll(".dna-portrait-row")].find(
         (r) => r.querySelector(".dna-portrait-name").textContent === name
       );
-    expect(row("devastation").querySelector(".dna-portrait-count").textContent).toBe("16");
+    expect(row("shock").querySelector(".dna-portrait-count").textContent).toBe("16");
     expect(row("comfort").querySelector(".dna-portrait-count").textContent).toBe("10");
-    // `grief` is in the weighted vector but absent from the ledger — a real blank.
-    expect(row("grief").querySelector(".dna-portrait-count").textContent).toBe("—");
+    // `grief` (shown as "heartbreak") is in the weighted vector but absent from the ledger — a real blank.
+    expect(row("heartbreak").querySelector(".dna-portrait-count").textContent).toBe("—");
   });
 
   it("sorts by count, leaving the never-reached at the bottom", async () => {
     const { container } = await renderView({ profile: counted, username: "alice", stats });
     const rows = [...container.querySelectorAll(".dna-portrait-row")];
     const names = rows.map((r) => r.querySelector(".dna-portrait-name").textContent);
-    expect(names[0]).toBe("devastation");            // 16, the clear leader
-    // Ties keep vocabulary order (dread is declared before catharsis; both are 11).
-    expect(names.slice(1, 3)).toEqual(["dread", "catharsis"]);
+    expect(names[0]).toBe("shock");            // 16, the clear leader
+    // Ties keep vocabulary order (catharsis is declared before dread, shown as
+    // "tension"; both are 11).
+    expect(names.slice(1, 3)).toEqual(["catharsis", "tension"]);
 
     // Counts never increase as you go down the column.
     const figures = rows
@@ -244,11 +245,11 @@ describe("DNAView — the counts ledger and blind spots (mockup pass)", () => {
 
   it("marks a blank the archetype names as a blind spot", async () => {
     const { container } = await renderView({ profile: counted, username: "alice", stats });
-    // fullProfile's archetype lists `boredom` as a blind spot; it is untagged.
-    const boredom = [...container.querySelectorAll(".dna-portrait-row")].find(
-      (r) => r.querySelector(".dna-portrait-name").textContent === "boredom"
+    // fullProfile's archetype lists `beauty` as a blind spot; it is untagged.
+    const beauty = [...container.querySelectorAll(".dna-portrait-row")].find(
+      (r) => r.querySelector(".dna-portrait-name").textContent === "beauty"
     );
-    expect(boredom.className).toMatch(/dna-portrait-row--flagged/);
+    expect(beauty.className).toMatch(/dna-portrait-row--flagged/);
     // A blank that is NOT called out stays unflagged.
     const joy = [...container.querySelectorAll(".dna-portrait-row")].find(
       (r) => r.querySelector(".dna-portrait-name").textContent === "joy"
@@ -300,7 +301,7 @@ describe("DNAView — what's changed / snapshot history [F-DNA-4]", () => {
   it("reads the real drift once two snapshots exist", async () => {
     await renderView({ profile: { ...fullProfile, snapshot_count: 2 }, username: "alice" });
     await waitFor(() =>
-      expect(screen.getByText(/enduringly, you read toward comfort\. lately, devastation/i)).toBeInTheDocument()
+      expect(screen.getByText(/enduringly, you read toward comfort\. lately, shock/i)).toBeInTheDocument()
     );
     expect(screen.queryByText(/not enough history yet/i)).toBeNull();
   });

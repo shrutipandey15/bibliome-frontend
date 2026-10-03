@@ -36,23 +36,41 @@ export const DNF_STATUSES = ["abandoned", "paused"];
 // Only an open book has a "how far in"; the backend stores progress for these.
 export const PROGRESS_STATUSES = ["reading", "paused"];
 
-// "Would you read it again?" — a disambiguating axis, optional, never gates save.
-const VERDICT_OPTIONS = [
-  { value: "yes",      label: "yes" },
-  { value: "no",       label: "no" },
-  { value: "not_sure", label: "not sure" },
+// "How did it land?" — asked in the open once a book is finished (or reread).
+// Optional, never gates save. Mirrors `Verdict` in the backend's
+// app/schemas/entry.py; exported so a test can pin the two lists together.
+export const VERDICT_OPTIONS = [
+  { value: "loved",      label: "loved it" },
+  { value: "liked",      label: "liked it" },
+  { value: "mixed",      label: "mixed" },
+  { value: "not_for_me", label: "not for me" },
 ];
+// Only a book the reader got to the end of has a verdict.
+export const VERDICT_STATUSES = ["finished", "reread"];
+// The verdicts that earn a "what went wrong?" follow-up.
+export const NEGATIVE_VERDICTS = ["mixed", "not_for_me"];
+// Mirrors `VerdictReason` in app/schemas/entry.py.
+export const VERDICT_REASON_OPTIONS = [
+  { value: "ending_let_me_down", label: "the ending let me down" },
+  { value: "overhyped",          label: "overhyped" },
+  { value: "didnt_connect",      label: "didn't connect" },
+  { value: "badly_written",      label: "badly written" },
+  { value: "forgettable",        label: "forgettable" },
+];
+// The "something else…" box: the reader's own words for a feeling we don't have.
+// Mirrors MAX_OTHER_FEELING_CHARS in the backend.
+export const MAX_OTHER_FEELING = 80;
 
 // Why a book was put down — shown for both DNF_STATUSES.
 // Mirrors `DnfReason` in the backend's app/schemas/entry.py. The API validates
 // against that Literal, so a value offered here but missing there is a 422 the
 // reader can do nothing about. Exported so a test can pin the two lists together.
 export const DNF_OPTIONS = [
-  { value: "bored",         label: "bored" },
+  { value: "bored",         label: "too slow" },
   { value: "too_much",      label: "too much" },
   { value: "badly_written", label: "badly written" },
   { value: "wrong_time",    label: "wrong time" },
-  { value: "lost_me",       label: "lost me" },
+  { value: "lost_me",       label: "I got lost" },
   { value: "drifted",       label: "just drifted" },
 ];
 
@@ -136,6 +154,11 @@ export default function EntryModal({
   // Disambiguating axes [Part C]: both optional, both skippable.
   const [verdict, setVerdict] = useState(entry?.verdict || null);
   const [dnfReason, setDnfReason] = useState(entry?.dnf_reason || null);
+  const [verdictReason, setVerdictReason] = useState(entry?.verdict_reason || null);
+  const [otherFeeling, setOtherFeeling] = useState(entry?.other_feeling || "");
+  const [otherOpen, setOtherOpen] = useState(Boolean(entry?.other_feeling));
+  const asksVerdict = VERDICT_STATUSES.includes(status);
+  const asksVerdictReason = asksVerdict && NEGATIVE_VERDICTS.includes(verdict);
 
   // The optional tail — verdict, quote, notes — folds away on a phone so the
   // fast path is one screen. It does NOT fold when editing a book that already
@@ -178,7 +201,7 @@ export default function EntryModal({
   useEffect(() => { if (step > STEPS) setStep(STEPS); }, [step, STEPS]);
 
   const [moreOpen, setMoreOpen] = useState(
-    () => !isNarrow || Boolean(entry?.verdict || entry?.quote || entry?.notes),
+    () => !isNarrow || Boolean(entry?.quote || entry?.notes),
   );
   // Above 640 the <summary> is hidden, so a resize must never leave it shut with
   // no way to reopen it. Only forces open — a phone user's own toggle stands.
@@ -284,7 +307,11 @@ export default function EntryModal({
       started_at: startedAt || null,
       finished_at: finishedAt || null,
       notes: notes.trim() || null,
-      verdict: verdict || null,
+      // A verdict only means something for a book read to the end; a reason
+      // only follows a verdict that didn't land.
+      verdict: asksVerdict ? (verdict || null) : null,
+      verdict_reason: asksVerdictReason ? (verdictReason || null) : null,
+      other_feeling: otherFeeling.trim().slice(0, MAX_OTHER_FEELING) || null,
       // A DNF reason means something on both ways of stopping. The backend's
       // own tally counts `paused` as put-down (dna_signals._DNF_STATUSES), so
       // asking only on `abandoned` left half the pile unexplained.
@@ -550,7 +577,7 @@ export default function EntryModal({
         {onStep("emotions") && (
         <div className="em-field">
           {!wizard && <div className="label-sm em-field-label">what did it make you feel?</div>}
-          {/* Five doors → the emotions inside. Recognition, not recall. [Part A] */}
+          {/* Six doors → the feelings inside. Recognition, not recall. [Part A] */}
           <div className="em-fam-doors">
             {families.map(({ family, emotions: famEmos }) => {
               const count = famEmos.filter(([id]) => isSelected(id)).length;
@@ -602,6 +629,16 @@ export default function EntryModal({
                   </div>
                 );
               })}
+              <div className={`em-emo-row em-emo-other ${otherOpen ? "active" : ""}`}>
+                <button
+                  type="button"
+                  className="em-emo-row-tap"
+                  aria-pressed={otherOpen}
+                  onClick={() => setOtherOpen((o) => !o)}
+                >
+                  <span className="em-emo-row-label">something else…</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="em-emo-chips em-fam-chips">
@@ -621,8 +658,29 @@ export default function EntryModal({
                   </button>
                 );
               })}
+              {/* Every family ends in an honest way out. What people type here is
+                  how we find the feelings the list is still missing. */}
+              <button
+                type="button"
+                className={`chip em-chip-other ${otherOpen ? "active" : ""}`}
+                aria-pressed={otherOpen}
+                onClick={() => setOtherOpen((o) => !o)}
+              >
+                something else…
+              </button>
             </div>
           ))}
+          {otherOpen && (
+            <input
+              className="em-input em-other-feeling"
+              type="text"
+              maxLength={MAX_OTHER_FEELING}
+              placeholder="in your own words — what did it make you feel?"
+              aria-label="something else, in your own words"
+              value={otherFeeling}
+              onChange={(e) => setOtherFeeling(e.target.value)}
+            />
+          )}
         </div>
         )}
         {onStep("emotions") && strengthRows.length > 0 && (
@@ -679,6 +737,27 @@ export default function EntryModal({
           />
         )}
 
+        {/* How did it land? — in the open, not folded: for a finished book it is
+            the one question worth a tap. It separates "loved it" from "it wrecked
+            me and I hated it", which feelings alone cannot. [v3] */}
+        {onStep("status") && asksVerdict && (
+          <OneTap
+            label="how did it land?"
+            options={VERDICT_OPTIONS}
+            value={verdict}
+            onChange={setVerdict}
+          />
+        )}
+        {onStep("status") && asksVerdictReason && (
+          <OneTap
+            label="what went wrong? (optional)"
+            options={VERDICT_REASON_OPTIONS}
+            value={verdictReason}
+            onChange={setVerdictReason}
+            wrap
+          />
+        )}
+
         {/* Fields stay mounted while folded — their values live in this
             component's state, so nothing is lost either way, but keeping them
             mounted means a collapse can't drop focus mid-typing. */}
@@ -692,14 +771,6 @@ export default function EntryModal({
             <span>Add more details</span>
             <span className="em-more-chev" aria-hidden="true">⌄</span>
           </summary>
-
-          {/* Verdict — a disambiguating one-tap. Optional, skippable. [Part C] */}
-          <OneTap
-            label="would you read it again?"
-            options={VERDICT_OPTIONS}
-            value={verdict}
-            onChange={setVerdict}
-          />
 
           <div className="em-field">
             <div className="label-sm em-field-label">the line that hit hardest</div>

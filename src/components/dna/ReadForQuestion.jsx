@@ -6,7 +6,7 @@ import { MAX_READ_FOR } from "./constants";
  * "What do you read for?" — asked once at onboarding, editable later in settings. [F7.7]
  *
  * This single question unlocks the best insight class: STATED vs. REVEALED
- * ("you said comfort; your shelf says devastation"). The stated preference is
+ * ("you said comfort; your shelf says heartbreak"). The stated preference is
  * 1–2 canonical emotions (B7.1), so we pick from the shared vocabulary — recognition,
  * not free text. Light and skippable, but we say WHY we ask, because people answer
  * honestly when they know the purpose.

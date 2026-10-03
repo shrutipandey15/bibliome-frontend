@@ -13,8 +13,8 @@ import "./EchoComposer.css";
  * column made you scroll past the anchor fields to reach the button, which put
  * the fiddly decisions between the reader and the thing they came to say.
  *
- * The emotion picker shows all eighteen, grouped by family. The old "+14 more…"
- * reveal existed because a flat wall of eighteen chips is unreadable — grouping
+ * The emotion picker shows all twenty-one, grouped by family. The old "+14 more…"
+ * reveal existed because a flat wall of twenty-one chips is unreadable — grouping
  * fixes the same problem without hiding two thirds of the vocabulary behind a
  * click. Still one primary and an optional second: no sprawl.
  */

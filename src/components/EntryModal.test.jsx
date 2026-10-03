@@ -5,7 +5,9 @@ import userEvent from "@testing-library/user-event";
 // Book search is network — stub it so the modal renders offline.
 vi.mock("../services/api", () => ({ searchBooks: vi.fn().mockResolvedValue([]) }));
 
-import EntryModal, { DNF_OPTIONS, STATUS_OPTIONS, DNF_STATUSES, PROGRESS_STATUSES } from "./EntryModal";
+import EntryModal, {
+  DNF_OPTIONS, STATUS_OPTIONS, DNF_STATUSES, PROGRESS_STATUSES, VERDICT_OPTIONS, VERDICT_REASON_OPTIONS,
+} from "./EntryModal";
 
 describe("EntryModal full entry fields [F2.1 / B2.4]", () => {
   it("saves status, dates, and private notes in the payload", async () => {
@@ -87,32 +89,48 @@ describe("EntryModal full entry fields [F2.1 / B2.4]", () => {
 describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () => {
   const base = (over = {}) => ({ id: "a", title: "X", status: "finished", emotions: [], ...over });
 
-  it("renders the five family doors and reveals emotions only on tap", async () => {
+  it("renders the six family doors and reveals emotions only on tap", async () => {
     render(<EntryModal entry={base()} onSave={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()} />);
     // Family doors present.
-    expect(screen.getByRole("button", { name: /it messed me up/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /it lost me/i })).toBeInTheDocument();
+    for (const fam of ["it broke me", "it hooked me", "it held me", "it lit me up", "it got my heart", "it opened my eyes"]) {
+      expect(screen.getByRole("button", { name: new RegExp(fam, "i") })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("button", { name: /it lost me/i })).not.toBeInTheDocument();
     // Emotions inside a family are hidden until the door is tapped. Chips show the
     // human phrase, never the word/slug.
-    expect(screen.queryByRole("button", { name: "it wrecked me" })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /it messed me up/i }));
-    expect(screen.getByRole("button", { name: "it wrecked me" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "I'm still not over it" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "I cried and felt lighter" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /it broke me/i }));
+    expect(screen.getByRole("button", { name: "I cried and felt lighter" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "it broke my heart" })).toBeInTheDocument();
+    // Every family ends in an honest way out.
+    expect(screen.getByRole("button", { name: "something else…" })).toBeInTheDocument();
+  });
+
+  it("saves the reader's own words from \"something else…\"", async () => {
+    const onSave = vi.fn();
+    render(<EntryModal entry={base()} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button", { name: /it held me/i }));
+    await userEvent.click(screen.getByRole("button", { name: "something else…" }));
+    const box = screen.getByLabelText("something else, in your own words");
+    expect(box).toHaveAttribute("maxLength", "80");
+    await userEvent.type(box, "  quietly proud of her  ");
+    await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    expect(onSave.mock.calls[0][0].other_feeling).toBe("quietly proud of her");
   });
 
   it("saves two emotions at independent strengths", async () => {
     const onSave = vi.fn();
     render(<EntryModal entry={base()} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
-    await userEvent.click(screen.getByRole("button", { name: /it messed me up/i }));
-    await userEvent.click(screen.getByRole("button", { name: "it wrecked me" }));
-    await userEvent.click(screen.getByRole("button", { name: "I'm still not over it" }));
-    fireEvent.change(screen.getByLabelText("it wrecked me strength"), { target: { value: "9" } });
-    fireEvent.change(screen.getByLabelText("I'm still not over it strength"), { target: { value: "2" } });
+    await userEvent.click(screen.getByRole("button", { name: /it broke me/i }));
+    await userEvent.click(screen.getByRole("button", { name: "I cried and felt lighter" }));
+    await userEvent.click(screen.getByRole("button", { name: "it broke my heart" }));
+    fireEvent.change(screen.getByLabelText("I cried and felt lighter strength"), { target: { value: "9" } });
+    fireEvent.change(screen.getByLabelText("it broke my heart strength"), { target: { value: "2" } });
     await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     expect(onSave.mock.calls[0][0].emotions).toEqual(
       expect.arrayContaining([
-        { emotion_id: "devastation", strength: 9 },
+        { emotion_id: "catharsis", strength: 9 },
         { emotion_id: "grief", strength: 2 },
       ]),
     );
@@ -127,17 +145,42 @@ describe("EntryModal new vocabulary + per-emotion intensity [Part A/B/C]", () =>
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByLabelText("I'm still not over it strength")).toHaveValue("3");
-    expect(screen.getByLabelText("I wanted to throw it across the room strength")).toHaveValue("8");
+    expect(screen.getByLabelText("it broke my heart strength")).toHaveValue("3");
+    expect(screen.getByLabelText("what happened made me furious strength")).toHaveValue("8");
   });
 
   it("saves the verdict and leaves dnf_reason null on a non-abandoned book", async () => {
     const onSave = vi.fn();
     render(<EntryModal entry={base()} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
     expect(screen.queryByText(/put it down/i)).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("radio", { name: "no" }));
+    expect(screen.getByRole("radiogroup", { name: "how did it land?" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "loved it" }));
+    // A book that landed is never asked what went wrong.
+    expect(screen.queryByRole("radiogroup", { name: /what went wrong/i })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
-    expect(onSave.mock.calls[0][0]).toMatchObject({ verdict: "no", dnf_reason: null });
+    expect(onSave.mock.calls[0][0]).toMatchObject({ verdict: "loved", verdict_reason: null, dnf_reason: null });
+  });
+
+  it("asks what went wrong only after mixed or not for me, and saves it", async () => {
+    const onSave = vi.fn();
+    render(<EntryModal entry={base()} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
+    await userEvent.click(screen.getByRole("radio", { name: "not for me" }));
+    await userEvent.click(screen.getByRole("radio", { name: "overhyped" }));
+    await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    expect(onSave.mock.calls[0][0]).toMatchObject({ verdict: "not_for_me", verdict_reason: "overhyped" });
+  });
+
+  it("drops the verdict for a book that was never finished", async () => {
+    const onSave = vi.fn();
+    render(
+      <EntryModal
+        entry={base({ status: "reading", verdict: "liked", verdict_reason: "overhyped" })}
+        onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("radiogroup", { name: "how did it land?" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    expect(onSave.mock.calls[0][0]).toMatchObject({ verdict: null, verdict_reason: null });
   });
 
   it("asks how far in only for an open book, and saves null until answered", async () => {
@@ -254,6 +297,19 @@ describe("DNF reason vocabulary", () => {
       expect(o.label).toBeTruthy();
       expect(o.value).toMatch(/^[a-z_]+$/);
     });
+  });
+});
+
+// ── "How did it land?": mirrors the backend's Verdict / VerdictReason literals ──
+
+describe("verdict vocabulary [v3]", () => {
+  it("matches the backend's Verdict and VerdictReason literals exactly", () => {
+    // app/utils/emotions.py VERDICTS / VERDICT_REASONS. A value offered here
+    // and missing there is a 422 the reader can do nothing about.
+    expect(VERDICT_OPTIONS.map((o) => o.value)).toEqual(["loved", "liked", "mixed", "not_for_me"]);
+    expect(VERDICT_REASON_OPTIONS.map((o) => o.value)).toEqual([
+      "ending_let_me_down", "overhyped", "didnt_connect", "badly_written", "forgettable",
+    ]);
   });
 });
 

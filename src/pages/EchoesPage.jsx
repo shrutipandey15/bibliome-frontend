@@ -24,9 +24,9 @@ import "./EchoesPage.css";
  *   - no path from the feed to a person's other content or a profile [F3.7]
  *
  * The layout is two columns because the page has two jobs and they don't belong
- * to each other: a column you READ, and a rail you ACT from. The eighteen
+ * to each other: a column you READ, and a rail you ACT from. The twenty-one
  * emotions used to sit as a chip wall above the feed, where they read as
- * eighteen equal buttons; in the rail they read as an index, grouped by the
+ * twenty-one equal buttons; in the rail they read as an index, grouped by the
  * families the vocabulary already has.
  */
 // The "your echoes" view needs `?mine=true` on GET /echoes/feed, which the
@@ -366,7 +366,7 @@ export default function EchoesPage() {
  * The rail. Two things: the one action this page has, and the feeling index.
  *
  * Grouped by family because "grief" and "boredom" are not siblings, and a flat
- * row of eighteen chips asserted that they were. The families come from the
+ * row of twenty-one chips asserted that they were. The families come from the
  * server's own vocabulary, so this never drifts from the tagging surfaces.
  */
 function FeelingRail({ emotion, onEmotion, onCompose }) {

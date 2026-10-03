@@ -15,7 +15,7 @@ const profile = {
     description: "You read toward the ache.",
     color: "#6B4F8E",
     glyph: "◈",
-    blind_spots: ["boredom", "revulsion"],
+    blind_spots: ["nostalgia", "beauty"],
   },
   top_emotions: [
     { emotion_id: "grief", count: 9 },
@@ -33,7 +33,7 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
 
     // Fingerprint rows use the SERVER-CANONICAL labels (F1.5), lowercased —
     // "grief"/"longing", NOT the old divergent "melancholy"/"nostalgia".
-    expect(screen.getByText("grief")).toBeInTheDocument();
+    expect(screen.getByText("heartbreak")).toBeInTheDocument();
     expect(screen.getByText("longing")).toBeInTheDocument();
     expect(screen.queryByText("melancholy")).not.toBeInTheDocument();
     expect(screen.queryByText("nostalgia")).not.toBeInTheDocument();
@@ -50,22 +50,22 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
     // One bar per register in the vocabulary — including the ones never reached,
     // which are the half of the fingerprint that actually distinguishes readers.
     const bars = container.querySelectorAll(".dna-fp-bar");
-    expect(bars.length).toBe(18);
-    expect(container.querySelectorAll(".dna-fp-bar--none").length).toBe(15);
+    expect(bars.length).toBe(21);
+    expect(container.querySelectorAll(".dna-fp-bar--none").length).toBe(18);
 
     // Tallest first, scaled to this reader's own peak.
     expect(bars[0].style.height).toBe("100%");
     expect(bars[1].style.height).toBe("33%");
 
     // Only registers actually felt are named underneath.
-    expect(screen.getByText("grief")).toBeInTheDocument();
-    expect(screen.queryByText("boredom")).not.toBeInTheDocument();
+    expect(screen.getByText("heartbreak")).toBeInTheDocument();
+    expect(screen.queryByText("nostalgia")).not.toBeInTheDocument();
   });
 
   it("falls back to top_emotions when a surface predates the tally", () => {
     const { container } = render(<DNACard profile={profile} username="alice" />);
     expect(container.querySelectorAll(".dna-fp-bar").length).toBe(2);
-    expect(screen.getByText("grief")).toBeInTheDocument();
+    expect(screen.getByText("heartbreak")).toBeInTheDocument();
   });
 
   it("shows the archetype's share only when the backend can support one", () => {
@@ -145,15 +145,34 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
           ...profile,
           basis: {
             counts: [{ emotion: "grief", books: 14, of: 31 }],
-            top_rated_emotions: ["devastation"],
+            top_rated_emotions: ["shock"],
             top_rated_n: 3,
           },
         }}
         username="alice"
       />
     );
-    expect(screen.getByText(/grief in 14 of your 31 books/)).toBeInTheDocument();
-    expect(screen.getByText(/your 3 highest-rated were all devastation/)).toBeInTheDocument();
+    expect(screen.getByText(/heartbreak in 14 of your 31 books/)).toBeInTheDocument();
+    expect(screen.getByText(/your 3 highest-rated were all shock/)).toBeInTheDocument();
+  });
+
+  it("gives the Discerning Reader a verdict receipt, not a feeling one [v3]", () => {
+    render(
+      <DNACard
+        profile={{
+          ...profile,
+          archetype: { id: "discerning_reader", name: "The Discerning Reader", description: "x", color: "#6E6E6E", glyph: "◌" },
+          basis: {
+            counts: [],
+            verdicts: [{ verdict: "not_for_me", books: 6, of: 9 }, { verdict: "gave_up", books: 2, of: 9 }],
+            top_rated_emotions: [],
+            top_rated_n: 0,
+          },
+        }}
+        username="alice"
+      />
+    );
+    expect(screen.getByText(/not for me in 6 of your 9 judged books · put down 2 of 9/)).toBeInTheDocument();
   });
 
   it("makes no 'all' claim when the top-rated books disagree", () => {
@@ -163,14 +182,14 @@ describe("DNACard signature render [F2.4 / F2.11]", () => {
           ...profile,
           basis: {
             counts: [{ emotion: "grief", books: 14, of: 31 }],
-            top_rated_emotions: ["devastation", "rage", "awe"],
+            top_rated_emotions: ["shock", "rage", "awe"],
             top_rated_n: 3,
           },
         }}
         username="alice"
       />
     );
-    expect(screen.getByText(/grief in 14 of your 31 books/)).toBeInTheDocument();
+    expect(screen.getByText(/heartbreak in 14 of your 31 books/)).toBeInTheDocument();
     expect(screen.queryByText(/highest-rated/)).not.toBeInTheDocument();
   });
 

@@ -219,7 +219,7 @@
   border-top: 1px solid var(--rule-soft);
   text-wrap: pretty;
 }
-/* Two columns. Eighteen rows in one stack ran the section past a screen, which
+/* Two columns. Twenty-one rows in one stack ran the section past a screen, which
    buried the blanks at the bottom — and the blanks are the argument. */
 .dna-portrait-list {
   list-style: none; margin: 0; padding: 0;

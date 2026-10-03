@@ -1,15 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { EMOTIONS, EMO_LIST, hydrateEmotions, getPrimaryEmotion, getEmotionFamilies } from "./emotions";
+import { EMOTIONS, EMO_LIST, RETIRED_EMOTIONS, hydrateEmotions, getPrimaryEmotion, getEmotionFamilies } from "./emotions";
 
 describe("shared emotion vocabulary [F1.5 / P2-9]", () => {
   it("the display label is the human phrase, with the plain word on `name`", () => {
     // Per VISION §4 the reader sees the first-person phrase, never the word/slug.
-    expect(EMOTIONS.grief.label).toBe("I'm still not over it");
-    expect(EMOTIONS.devastation.label).toBe("it wrecked me");
-    expect(EMOTIONS.confusion.label).toBe("I have no idea what happened");
+    expect(EMOTIONS.grief.label).toBe("it broke my heart");
+    expect(EMOTIONS.thrill.label).toBe("I read it in one sitting");
+    expect(EMOTIONS.recognition.label).toBe("it knew me");
     // The plain word is still available for compact/analytic surfaces.
-    expect(EMOTIONS.grief.name).toBe("grief");
-    expect(EMOTIONS.devastation.name).toBe("devastation");
+    expect(EMOTIONS.grief.name).toBe("heartbreak");
+    expect(EMOTIONS.thrill.name).toBe("page-turner");
   });
 
   it("keeps presentation (Icon/glyph) local while carrying server label/color", () => {
@@ -41,14 +41,25 @@ describe("shared emotion vocabulary [F1.5 / P2-9]", () => {
     expect(EMOTIONS.rage.label).toBe("rage");
   });
 
-  it("groups the vocabulary into the five families in order [Part A]", () => {
+  it("groups the 21 feelings into the six families in order [v3]", () => {
     const fams = getEmotionFamilies();
     expect(fams.map((f) => f.family)).toEqual([
-      "it messed me up", "it held me", "the yearning", "it hit different", "it lost me",
+      "it broke me", "it hooked me", "it held me", "it lit me up", "it got my heart", "it opened my eyes",
     ]);
-    const hurt = fams.find((f) => f.family === "it messed me up");
-    expect(hurt.emotions.map(([slug]) => slug)).toContain("devastation");
-    expect(hurt.emotions.map(([slug]) => slug)).toContain("rage");
+    expect(fams.map((f) => f.emotions.length)).toEqual([3, 4, 3, 3, 4, 4]);
+    expect(EMO_LIST).toHaveLength(21);
+    const hooked = fams.find((f) => f.family === "it hooked me");
+    expect(hooked.emotions.map(([slug]) => slug)).toEqual(["thrill", "dread", "shock", "rage"]);
+  });
+
+  it("keeps retired tags displayable but out of every picker [v3]", () => {
+    for (const slug of ["boredom", "revulsion", "confusion", "indifference"]) {
+      expect(RETIRED_EMOTIONS.has(slug)).toBe(true);
+      expect(EMOTIONS[slug]).toBeDefined();           // old entries still render
+      expect(EMO_LIST.some(([s]) => s === slug)).toBe(false);
+    }
+    const inFamilies = getEmotionFamilies().flatMap((f) => f.emotions.map(([s]) => s));
+    expect(inFamilies.some((s) => RETIRED_EMOTIONS.has(s))).toBe(false);
   });
 
   it("getPrimaryEmotion falls back for unknown slugs", () => {

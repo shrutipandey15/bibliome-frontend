@@ -74,7 +74,7 @@ describe.skipIf(!MINE_FILTER_SUPPORTED)("EchoesPage — your echoes [B: ?mine=tr
     await waitFor(() => screen.getByText("first echo"));
 
     await userEvent.click(screen.getByRole("button", { name: /your echoes/i }));
-    await userEvent.click(screen.getByRole("button", { name: /^grief$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^heartbreak$/i }));
     await waitFor(() =>
       expect(getEchoFeed).toHaveBeenLastCalledWith(
         expect.objectContaining({ mine: true, emotion: "grief" })
@@ -142,7 +142,7 @@ describe("EchoesPage feed [F3.3]", () => {
     expect(screen.queryByText(/that's all of it/i)).toBeNull();
   });
 
-  it("makes all 18 emotions reachable in the feeling rail [F6.3 / P5-5]", async () => {
+  it("makes all 21 feelings reachable in the feeling rail [F6.3 / P5-5]", async () => {
     getEchoFeed.mockResolvedValue(feed);
     render(<EchoesPage />);
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
@@ -150,8 +150,8 @@ describe("EchoesPage feed [F3.3]", () => {
     // flat chip wall, but every one of them is still one click away — nothing is
     // behind a "more…" reveal.
     const rail = screen.getByRole("complementary", { name: /filter by feeling/i });
-    // 18 canonical emotions + "any feeling" + the write button = 20 controls.
-    expect(within(rail).getAllByRole("button")).toHaveLength(20);
+    // 21 canonical feelings + "any feeling" + the write button = 23 controls.
+    expect(within(rail).getAllByRole("button")).toHaveLength(23);
   });
 
   it("renders NO public count anywhere across the feed cards [F6.5]", async () => {
@@ -174,7 +174,7 @@ describe("EchoesPage feed [F3.3]", () => {
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
 
     getEchoFeed.mockImplementationOnce(() => firstCall); // grief: doesn't resolve yet
-    await userEvent.click(screen.getByRole("button", { name: /^grief$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^heartbreak$/i }));
 
     getEchoFeed.mockResolvedValueOnce(aweFeed); // awe: resolves immediately
     await userEvent.click(screen.getByRole("button", { name: /^awe$/i }));

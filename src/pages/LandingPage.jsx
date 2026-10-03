@@ -6,7 +6,7 @@ import { ARCHETYPE_COUNT, MIN_BOOKS } from "../components/dna/constants";
 import { EMO_LIST } from "../services/emotions";
 import "./LandingPage.css";
 
-// Three of the eight, verbatim from the engine that actually assigns them
+// Three of the twelve, verbatim from the engine that actually assigns them
 // (app/services/dna_engine.py PERSONALITY_TYPES) — id, name, colour, glyph and
 // description all copied, not paraphrased.
 //
@@ -52,7 +52,7 @@ const STEPS = [
   { n: "01", t: "Put the book on the shelf",
     d: `Type a title and we look for it in Google Books, Open Library and our own catalog at once — cover, author and all. Or type it in yourself; the search never blocks the save.` },
   { n: "02", t: "Say what it did to you",
-    d: `Not a rating. Pick from ${EMO_LIST.length} feelings, grouped into five families you open one at a time, and give each one a strength. Keep the line you couldn't forget.` },
+    d: `Not a rating. Pick from ${EMO_LIST.length} feelings, grouped into six families you open one at a time, and give each one a strength. Keep the line you couldn't forget.` },
   { n: "03", t: "Walk it back in three beats",
     d: "A book doesn't leave you the way it found you. When you finish one, you can trace the arc — how it began, how it felt in the thick of it, how it left you. Take it when a book earns it, skip it when it doesn't. That arc is what a star can't hold." },
   { n: "04", t: `After ${MIN_BOOKS} books, it starts reading you back`,
@@ -97,7 +97,7 @@ const FAQ = [
   { g: "The basics", q: "What is Bibliome?",
     d: `A private journal for readers. Instead of rating a book, you record what it did to you — which of ${EMO_LIST.length} emotions it pulled, how hard, and how it left you. After ${MIN_BOOKS} books it reads your patterns back as a reading archetype.` },
   { g: "The basics", q: "Is Bibliome an emotion or mood book tracker?",
-    d: `Yes — that's the whole idea. You log each book against ${EMO_LIST.length} emotions grouped into five families, with a strength for each, instead of a star rating or a mood tag. Over time the emotions become a picture of you as a reader.` },
+    d: `Yes — that's the whole idea. You log each book against ${EMO_LIST.length} feelings grouped into six families, with a strength for each, instead of a star rating or a mood tag. Over time the emotions become a picture of you as a reader.` },
   { g: "The basics", q: "Is Bibliome free?",
     d: "Yes — free, with no ads, no third-party analytics or tracking scripts, and no data selling." },
   { g: "The basics", q: "How do I record how a book made me feel?",

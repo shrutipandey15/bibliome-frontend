@@ -16,6 +16,11 @@
 import { ARCHETYPES } from "./archetypes.js";
 import { COMPARISONS } from "./comparisons.js";
 
+// Size of the feeling vocabulary. Kept as a literal because this module must
+// load in Node without the lucide-backed services/emotions.js; pageHtml.test.js
+// pins it to EMO_LIST.length so the two can't drift.
+export const EMO_COUNT = 21;
+
 export const SITE = "https://bibliome.app";
 
 // These pages are served as dist/<route>/index.html, i.e. as directories. nginx
@@ -49,15 +54,18 @@ export function renderArchetype(a) {
     `<h1>${esc(a.name)}</h1><p class="cp-tagline">${esc(a.tagline)}</p></header>` +
     sections(a.sections) +
     `<section><h2>At a glance</h2><dl class="cp-dl">` +
-    `<dt>Emotions that produce it</dt><dd>${a.primary.map(esc).join(", ")}</dd>` +
-    `<dt>Emotions it avoids</dt><dd>${a.anti.map(esc).join(", ")}</dd>` +
+    // The Discerning Reader is assigned from verdicts, not feelings — no rows to print.
+    (a.primary.length
+      ? `<dt>Feelings that produce it</dt><dd>${a.primary.map(esc).join(", ")}</dd>` +
+        `<dt>Feelings it avoids</dt><dd>${a.anti.map(esc).join(", ")}</dd>`
+      : `<dt>What produces it</dt><dd>How your finished books land, not what they made you feel</dd>`) +
     `<dt>Comfort tropes</dt><dd>${a.tropes.map(esc).join(" · ")}</dd>` +
     `<dt>Blind spots</dt><dd>${a.blindSpots.map(esc).join(" · ")}</dd>` +
     `</dl></section>` +
     `<section class="cp-cta"><h2>Which one are you?</h2>` +
-    `<p>Bibliome does not let you pick. Log 5 books against the 18 emotions and the engine assigns one of the 8 from what you actually recorded. Free, no ads, and the journal is end-to-end encrypted.</p>` +
+    `<p>Bibliome does not let you pick. Log 5 books against the ${EMO_COUNT} feelings and the engine assigns one of the ${ARCHETYPES.length} from what you actually recorded. Free, no ads, and the journal is end-to-end encrypted.</p>` +
     `<p><a class="cp-btn" href="/">Start your Reading DNA</a></p></section>` +
-    `<nav class="cp-more"><h2>The other seven</h2><ul>` +
+    `<nav class="cp-more"><h2>The other ${ARCHETYPES.length - 1}</h2><ul>` +
     ARCHETYPES.filter((o) => o.slug !== a.slug)
       .map((o) => `<li><a href="${href(`/archetypes/${o.slug}`)}">${esc(o.name)}</a></li>`)
       .join("") +
@@ -70,8 +78,8 @@ export function renderArchetypeIndex() {
   return (
     `<article class="cp cp-index">` +
     `<nav class="cp-crumb"><a href="/">Bibliome</a> <span>/</span> Reading archetypes</nav>` +
-    `<header class="cp-head"><h1>The 8 reading archetypes</h1>` +
-    `<p class="cp-tagline">Bibliome does not ask what you read. It asks what the book did to you, across 18 emotions in five families. After 5 books it reads the pattern back as one of these eight — assigned from what you recorded, never a quiz and never something you pick.</p></header>` +
+    `<header class="cp-head"><h1>The ${ARCHETYPES.length} reading archetypes</h1>` +
+    `<p class="cp-tagline">Bibliome does not ask what you read. It asks what the book did to you, across ${EMO_COUNT} feelings in six families. After 5 books it reads the pattern back as one of these ${ARCHETYPES.length} — assigned from what you recorded, never a quiz and never something you pick.</p></header>` +
     `<ul class="cp-cards">` +
     ARCHETYPES.map(
       (a) =>
@@ -85,14 +93,15 @@ export function renderArchetypeIndex() {
         h: "What a reading archetype is",
         p: [
           "A reading archetype is a description of the reader, derived from the reading. It is not a genre preference and it is not a personality quiz result — Bibliome never asks you to pick one, and there is no way to choose.",
-          "The input is emotional. Every time you finish a book you record what it did to you: which of the 18 emotions it pulled, from five families — it messed me up, it held me, the yearning, it hit different, and it lost me — and how strongly each one landed. No stars, no page counts, no rating out of ten.",
-          "After five books there is enough signal to score. The engine compares the emotions your shelf actually recorded against each archetype's three defining emotions and its two anti-emotions — the feelings that archetype conspicuously does not log. The anti-emotions do as much work as the primaries: two readers can both log a great deal of grief and end up in different places entirely based on whether they ever record the release afterwards.",
+          `The input is emotional. Every time you finish a book you record what it did to you: which of the ${EMO_COUNT} feelings it pulled, from six families — it broke me, it hooked me, it held me, it lit me up, it got my heart, and it opened my eyes — and how strongly each one landed. Then one tap for how it landed overall: loved it, liked it, mixed, or not for me. No stars, no page counts, no rating out of ten.`,
+          "After five books there is usually enough signal to score. The engine compares the emotions your shelf actually recorded against each archetype's three defining emotions and its two anti-emotions — the feelings that archetype conspicuously does not log. The anti-emotions do as much work as the primaries: two readers can both log a great deal of grief and end up in different places entirely based on whether they ever record the release afterwards.",
+          "One archetype is different. The Discerning Reader is not scored from feelings at all: once at least eight books have been judged and most of them did not land, that is the truest thing the shelf says, and Bibliome says it rather than guessing a feeling type from the few books that did.",
         ],
       },
       {
-        h: "Why eight",
+        h: "Why these twelve",
         p: [
-          "Eight is what the emotion vocabulary can actually distinguish. Each archetype is anchored on a triple of emotions that no other archetype holds in full, so a shelf cannot sit ambiguously between two of them forever — and the set has been re-anchored more than once when two started collecting the same readers.",
+          "Eleven is what the feeling vocabulary can actually distinguish, plus one for the reader most books do not reach. Each archetype is anchored on a triple of emotions that no other archetype holds in full, so a shelf cannot sit ambiguously between two of them forever — and the set has been re-anchored more than once when two started collecting the same readers.",
           "It also means an archetype is falsifiable. If your reading changes, the label changes with it, and Bibliome will tell you it shifted rather than quietly keeping the old one.",
         ],
       },
@@ -138,9 +147,9 @@ export function renderCompare(c) {
 export const CONTENT_ROUTES = [
   {
     path: "/archetypes",
-    title: "The 8 Reading Archetypes — Bibliome",
+    title: `The ${ARCHETYPES.length} Reading Archetypes — Bibliome`,
     description:
-      "The eight reading archetypes Bibliome can assign, from the Grief Romantic to the Emotional Archaeologist — what each one is, and the emotions that produce it.",
+      "The 12 reading archetypes Bibliome can assign, from the Grief Romantic to the Emotional Archaeologist — what each one is, and the emotions that produce it.",
     html: renderArchetypeIndex,
     jsonLd: () => ({
       "@context": "https://schema.org",

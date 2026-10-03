@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { ARCHETYPES } from "./archetypes";
 import { COMPARISONS } from "./comparisons";
-import { CONTENT_ROUTES, routeByPath } from "./pageHtml";
+import { CONTENT_ROUTES, EMO_COUNT, routeByPath } from "./pageHtml";
+import { ARCHETYPE_COUNT } from "../components/dna/constants";
 
 // These pages exist to be read by crawlers that run no JavaScript, so the thing
 // worth checking is that the prerendered string is actually a whole page — not
@@ -10,7 +11,7 @@ import { CONTENT_ROUTES, routeByPath } from "./pageHtml";
 
 describe("content routes", () => {
   it("covers every archetype and comparison exactly once", () => {
-    expect(ARCHETYPES).toHaveLength(8);
+    expect(ARCHETYPES).toHaveLength(ARCHETYPE_COUNT);
     const paths = CONTENT_ROUTES.map((r) => r.path);
     expect(new Set(paths).size).toBe(paths.length);
     for (const a of ARCHETYPES) expect(paths).toContain(`/archetypes/${a.slug}`);
@@ -55,13 +56,28 @@ describe("archetype copy stays anchored to the engine", () => {
   const ENGINE_IDS = [
     "grief_romantic", "control_intellectual", "soft_masochist", "comfort_architect",
     "midnight_arsonist", "quiet_witness", "obsessive_romantic", "emotional_archaeologist",
+    "world_diver", "adrenaline_seeker", "sunshine_romantic",
   ];
+  // Assigned from verdicts, not feelings (dna_engine.py DISCERNING_READER).
+  const VERDICT_IDS = ["discerning_reader"];
 
   it("has one page per engine archetype and no extras", () => {
-    expect(ARCHETYPES.map((a) => a.id).sort()).toEqual([...ENGINE_IDS].sort());
+    expect(ARCHETYPES.map((a) => a.id).sort()).toEqual([...ENGINE_IDS, ...VERDICT_IDS].sort());
   });
 
-  it.each(ARCHETYPES.map((a) => [a.slug, a]))("%s names its emotions", (_s, a) => {
+  it("the Discerning Reader names no feelings, and its page says so", () => {
+    const a = ARCHETYPES.find((x) => x.id === "discerning_reader");
+    expect(a.primary).toEqual([]);
+    expect(a.anti).toEqual([]);
+    expect(routeByPath(`/archetypes/${a.slug}`).html()).toMatch(/How your finished books land/);
+  });
+
+  it("the page copy's feeling count matches the vocabulary", async () => {
+    const { EMO_LIST } = await import("../services/emotions");
+    expect(EMO_COUNT).toBe(EMO_LIST.length);
+  });
+
+  it.each(ARCHETYPES.filter((a) => !VERDICT_IDS.includes(a.id)).map((a) => [a.slug, a]))("%s names its emotions", (_s, a) => {
     expect(a.primary).toHaveLength(3);
     expect(a.anti).toHaveLength(2);
     // An emotion can't be both what produces an archetype and what it avoids.

@@ -1,10 +1,11 @@
 import {
   Flame, CloudMoon, Heart, Coffee, Sparkles,
-  Eye, Droplets, Telescope, Leaf, Wind, HelpCircle,
-  Sun, Laugh, Hourglass, Aperture, Meh, Frown, Tornado, CircleOff,
+  Aperture, Droplets, Telescope, Leaf, HelpCircle,
+  Sun, Laugh, Hourglass, Meh, Frown, Tornado, CircleOff,
+  Ghost, Zap, CloudLightning, Users, Sprout, Flower2, Rose, Lightbulb, Feather,
 } from "lucide-react";
 
-// ── Shared emotion vocabulary [F1.5 / P2-9, P2-12] ──
+// ── Shared emotion vocabulary [F1.5 / P2-9, P2-12] — v3, 21 feelings ──
 // label / color / description are OWNED BY THE BACKEND and served from
 // GET /emotions (B2.10). They are the single source of truth; do NOT edit them
 // here to diverge from the server — that divergence is exactly the P2-9 bug
@@ -16,63 +17,92 @@ import {
 // can drift) and stay local. The server's `symbol` (emoji) is stored too, if a
 // surface prefers it.
 const PRESENTATION = {
-  // it messed me up
-  devastation: { Icon: Wind,      glyph: "·" },
-  grief:       { Icon: Droplets,  glyph: "◦" },
-  dread:       { Icon: CloudMoon, glyph: "◐" },
-  rage:        { Icon: Flame,     glyph: "◉" },
+  // it broke me
+  grief:       { Icon: Droplets,       glyph: "◦" },
+  catharsis:   { Icon: Sparkles,       glyph: "✧" },
+  haunted:     { Icon: Ghost,          glyph: "◍" },
+  // it hooked me
+  thrill:      { Icon: Zap,            glyph: "»" },
+  dread:       { Icon: CloudMoon,      glyph: "◐" },
+  shock:       { Icon: CloudLightning, glyph: "!" },
+  rage:        { Icon: Flame,          glyph: "◉" },
   // it held me
-  comfort:     { Icon: Coffee,    glyph: "○" },
-  tenderness:  { Icon: Eye,       glyph: "◎" },
-  joy:         { Icon: Sun,       glyph: "☀" },
-  amusement:   { Icon: Laugh,     glyph: "‡" },
-  // the yearning
-  longing:     { Icon: Leaf,      glyph: "❋" },
-  desire:      { Icon: Heart,     glyph: "♡" },
-  nostalgia:   { Icon: Hourglass, glyph: "☾" },
-  // it hit different
-  awe:         { Icon: Telescope, glyph: "✺" },
-  recognition: { Icon: Aperture,  glyph: "◈" },
-  catharsis:   { Icon: Sparkles,  glyph: "✧" },
-  // it lost me
-  boredom:     { Icon: Meh,       glyph: "—" },
-  revulsion:   { Icon: Frown,     glyph: "✗" },
-  confusion:   { Icon: Tornado,   glyph: "✦" },
-  indifference:{ Icon: CircleOff, glyph: "◌" },
+  comfort:     { Icon: Coffee,         glyph: "○" },
+  attachment:  { Icon: Users,          glyph: "∞" },
+  nostalgia:   { Icon: Hourglass,      glyph: "☾" },
+  // it lit me up
+  joy:         { Icon: Sun,            glyph: "☀" },
+  amusement:   { Icon: Laugh,          glyph: "‡" },
+  hope:        { Icon: Sprout,         glyph: "❀" },
+  // it got my heart
+  swoon:       { Icon: Flower2,        glyph: "❦" },
+  desire:      { Icon: Heart,          glyph: "♡" },
+  longing:     { Icon: Leaf,           glyph: "❋" },
+  conflicted:  { Icon: Rose,           glyph: "⚘" },
+  // it opened my eyes
+  awe:         { Icon: Telescope,      glyph: "✺" },
+  recognition: { Icon: Aperture,       glyph: "◈" },
+  insight:     { Icon: Lightbulb,      glyph: "✳" },
+  beauty:      { Icon: Feather,        glyph: "✒" },
+  // retired "it lost me" tags — display only, never offered (see RETIRED below)
+  boredom:     { Icon: Meh,            glyph: "—" },
+  revulsion:   { Icon: Frown,          glyph: "✗" },
+  confusion:   { Icon: Tornado,        glyph: "✦" },
+  indifference:{ Icon: CircleOff,      glyph: "◌" },
 };
 
 // Canonical seed — mirrors the backend's served vocabulary. Each emotion carries
-// BOTH a `phrase` (the first-person line the UI shows — "it wrecked me") and a
-// `name` (the plain word — "devastation", used where a single token is wanted).
+// BOTH a `phrase` (the first-person line the UI shows — "it broke my heart") and a
+// `name` (the plain word — "heartbreak", used where a single token is wanted).
 // Per VISION §4 the reader sees phrases, never the word/slug. `family`, `phrase`,
 // `name`, and `color` are all OWNED BY THE BACKEND and refreshed from GET
 // /emotions by hydrateEmotions() so nothing drifts. Order matters: families
 // render in first-appearance order.
+//
+// Every phrase must carry its whole meaning alone: the picker shows the family
+// and the phrase, never the description. These lines were chosen in a blind
+// reader test (Emotion & DNA rework, Stage 2); change them there, not here.
 // Tuple: [slug, family, name(word), phrase, color, description]
 const SEED = [
-  // it messed me up
-  ["devastation", "it messed me up", "devastation", "it wrecked me",                          "#3D2B3D", "The books that take something out of you. You finish and just sit there for a while."],
-  ["grief",       "it messed me up", "grief",       "I'm still not over it",                   "#6B4F8E", "Loss and mourning. The ache that doesn't leave when the book ends."],
-  ["dread",       "it messed me up", "dread",       "shoulders up by my ears the entire time", "#4B6B8E", "The low hum of something-bad-is-coming that you read the whole book with."],
-  ["rage",        "it messed me up", "rage",        "I wanted to throw it across the room",    "#C44B4B", "Injustice you can't let go of. The book that makes you want to burn it all down."],
+  // it broke me
+  ["grief",       "it broke me", "heartbreak", "it broke my heart",               "#6B4F8E", "Sorrow over a loss in the story that stays with you after the last page."],
+  ["catharsis",   "it broke me", "catharsis",  "I cried and felt lighter",        "#C9A96E", "The release after the tension. A cry that leaves you lighter."],
+  ["haunted",     "it broke me", "haunted",    "a scene keeps coming back to me", "#3D2B3D", "An image or scene that keeps returning, often eerie, long after you finish."],
+  // it hooked me
+  ["thrill",      "it hooked me", "page-turner", "I read it in one sitting",      "#D08A3C", "Pull and momentum. One more chapter until it's 3am — fast plot or quietly absorbing."],
+  ["dread",       "it hooked me", "tension",     "it had me scared or on edge",   "#4B6B8E", "Fear, suspense and unease while reading — or real-world worry it leaves behind."],
+  ["shock",       "it hooked me", "shock",       "I did NOT see that coming",     "#8E4B6B", "The twist, the reveal, the turn that rearranged everything."],
+  ["rage",        "it hooked me", "anger",       "what happened made me furious", "#C44B4B", "Anger at an injustice inside the story — not anger at the book itself."],
   // it held me
-  ["comfort",     "it held me", "comfort",    "it felt like being tucked in",  "#8E6B4B", "The book that's a soft place to land. Safe, warm, yours."],
-  ["tenderness",  "it held me", "tenderness", "handle-with-care kind of love", "#9B6B7B", "Gentle, careful love. The book that's kind to you."],
-  ["joy",         "it held me", "joy",        "I closed it smiling",           "#E0A458", "Pure lightness. You put it down happier than you picked it up."],
-  ["amusement",   "it held me", "amusement",  "I actually laughed out loud",   "#C9B24B", "Genuinely funny. The lines you stop to read out loud to someone."],
-  // the yearning
-  ["longing",     "the yearning", "longing",   "the yearning was unreal",      "#5B6B8E", "Wanting something you can't quite name, or can't have."],
-  ["desire",      "the yearning", "desire",    "the tension nearly killed me", "#9B5B8E", "The pull toward. Romantic tension, want, the ache of almost."],
-  ["nostalgia",   "the yearning", "nostalgia", "it smelled like a memory",     "#B07B4B", "The ache of a time you can't go back to. It puts you somewhere you used to be."],
-  // it hit different
-  ["awe",         "it hit different", "awe",         "I had to put it down and just sit there", "#4B7B6B", "Wonder at the sheer scale of it. You have to stop and let it land."],
-  ["recognition", "it hit different", "recognition", "it read my mind",                        "#4B8E8A", "Being seen. The book that already knew you."],
-  ["catharsis",   "it hit different", "catharsis",   "I cried and felt lighter after",         "#C9A96E", "The release after the tension. A cry that leaves you lighter."],
-  // it lost me
-  ["boredom",     "it lost me", "boredom",      "my two brain cells died",          "#8A8A7A", "The pages wouldn't turn. You kept checking how much was left."],
-  ["revulsion",   "it lost me", "revulsion",    "I felt a little sick",             "#6B7A4B", "Recoil. Something in it you couldn't sit with."],
-  ["confusion",   "it lost me", "confusion",    "I have no idea what happened",     "#7B6B9B", "You lost the thread and never found it again."],
-  ["indifference","it lost me", "indifference", "closed it and forgot it existed", "#9A9A9A", "It closed and left nothing behind. You felt nothing either way."],
+  ["comfort",     "it held me", "comfort",    "like a hug on a rainy day",       "#8E6B4B", "Soothing: safe, warm and gentle, or calm and still. A soft place to land."],
+  ["attachment",  "it held me", "attachment", "they felt like my friends",       "#9B6B7B", "Loving the characters like real people, and missing them when it ends."],
+  ["nostalgia",   "it held me", "nostalgia",  "it took me back to a younger me", "#B07B4B", "It brings back your own past — a time, a place, an earlier you."],
+  // it lit me up
+  ["joy",         "it lit me up", "joy",      "it made me so happy",            "#E0A458", "Pure lightness. You put it down happier than you picked it up."],
+  ["amusement",   "it lit me up", "laughter", "it made me laugh",               "#C9B24B", "Genuinely funny — out loud or quietly, dry or silly."],
+  ["hope",        "it lit me up", "hope",     "I closed it feeling inspired",   "#7BA05B", "Hopeful, uplifted, proud or motivated. Believing in people, or yourself, again."],
+  // it got my heart
+  ["swoon",       "it got my heart", "swoon",      "it gave me butterflies",            "#D47A9B", "Giddy romantic delight. Kicking your feet over a love story."],
+  ["desire",      "it got my heart", "desire",     "the chemistry nearly killed me",    "#9B5B8E", "Romantic or sexual tension between characters. The slow burn, the almost."],
+  ["longing",     "it got my heart", "longing",    "a soft ache for what I can't have", "#5B6B8E", "Your own ache for something you can't have or can't quite name."],
+  ["conflicted",  "it got my heart", "conflicted", "I shouldn't love this but I do",    "#6B3A4D", "Loving what you feel you shouldn't — a villain, a dark story. Guilty pleasure."],
+  // it opened my eyes
+  ["awe",         "it opened my eyes", "awe",         "so vast it made me go quiet",  "#4B7B6B", "Wonder at something vast or grand. You feel small, and go quiet."],
+  ["recognition", "it opened my eyes", "recognition", "it knew me",                   "#4B8E8A", "Being seen. The book that already knew you."],
+  ["insight",     "it opened my eyes", "insight",     "it changed how I think",       "#5A7A9A", "Ideas that engaged your mind. You learned something, or now see it differently."],
+  ["beauty",      "it opened my eyes", "beauty",      "the writing was so beautiful", "#A08BB8", "Delight in the writing itself — sentences you read twice."],
+];
+
+// Retired "it lost me" tags. Older entries still carry them, so they stay
+// displayable, but they are verdicts now (the "How did it land?" step), never
+// offered in a picker and never counted as feelings. No `family`, so
+// getEmotionFamilies skips them; not in EMO_LIST, so no picker lists them.
+// Tuple: [slug, name, phrase, color]
+const RETIRED = [
+  ["boredom",      "boredom",      "my two brain cells died",         "#8A8A7A"],
+  ["revulsion",    "revulsion",    "I felt a little sick",            "#6B7A4B"],
+  ["confusion",    "confusion",    "I have no idea what happened",    "#7B6B9B"],
+  ["indifference", "indifference", "closed it and forgot it existed", "#9A9A9A"],
 ];
 
 export const EMOTIONS = {};
@@ -82,8 +112,14 @@ for (const [slug, family, name, phrase, color, desc] of SEED) {
 }
 
 // EMO_LIST holds live references to the EMOTIONS objects. hydrateEmotions mutates
-// those objects IN PLACE, so this array never needs rebuilding.
+// those objects IN PLACE, so this array never needs rebuilding. Built BEFORE the
+// retired tags are added below, so no picker ever offers them.
 export const EMO_LIST = Object.entries(EMOTIONS);
+
+export const RETIRED_EMOTIONS = new Set(RETIRED.map(([slug]) => slug));
+for (const [slug, name, phrase, color] of RETIRED) {
+  EMOTIONS[slug] = { name, label: phrase, color, desc: "", symbol: null, retired: true, ...(PRESENTATION[slug] || {}) };
+}
 
 // Merge the server's canonical vocabulary into EMOTIONS in place. Called once at
 // boot with the GET /emotions payload. label/color/description follow the server;

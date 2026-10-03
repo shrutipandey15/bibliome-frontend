@@ -80,6 +80,21 @@ Stop the server:
 lsof -ti:4173 -sTCP:LISTEN | xargs -r kill
 ```
 
+### DNA feature, against the real backend
+
+`dna-smoke.mjs` walks the whole DNA feature signed in as a real account and
+cross-checks every rendered figure against `/api/dna/profile`. Needs the API up
+(`../bookDNA/scripts/dev.sh`, Postgres already on :5432 locally):
+
+```bash
+EMAIL=someone@example.com PASSWORD=... node .claude/skills/run-bibliome-frontend/dna-smoke.mjs
+```
+
+Covers: the gate, the read (headline/evolution/portrait/other findings), the
+register, the patterns, the read-for prompt, the archetype card, `/s/:token`
+sharing, and phone width. The fresh-account gate check skips itself when
+`/auth/register` is rate-limited (429) — re-run in a few minutes for that one.
+
 ### Driving something else
 
 `driver.mjs` is small — `withPage(fn, {mobile})` gives a Playwright `page` and a

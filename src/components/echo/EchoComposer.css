@@ -124,8 +124,8 @@
 }
 .ec-pick-hint.full { color: var(--brass); }
 
-/* All eighteen, but grouped — the "+14 more…" reveal existed because a flat
-   wall of eighteen chips is unreadable, not because the vocabulary is too long.
+/* All twenty-one, but grouped — the "+14 more…" reveal existed because a flat
+   wall of twenty-one chips is unreadable, not because the vocabulary is too long.
    Grouped by family it scans in one pass and nothing is hidden behind a click. */
 .ec-fams { margin-top: 12px; display: flex; flex-direction: column; gap: 11px; }
 .ec-fam-name {

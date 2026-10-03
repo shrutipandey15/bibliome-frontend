@@ -3,7 +3,7 @@
    ECHO — the one public room.
    Two columns: an editorial feed, and a rail that holds the two
    things you can DO here (write one; anchor to a feeling). The
-   eighteen-chip wall is gone; the vocabulary reads as an index
+   twenty-one-chip wall is gone; the vocabulary reads as an index
    grouped by family, which is how it is actually organised.
    ============================================================ */
 .echoes-page {
@@ -365,7 +365,7 @@
 @media (max-width: 640px) {
   /* The rail is `order: 1` from the 1080 tier, which on a tablet makes it a
      horizontal strip above the feed. On a phone it meant ~330px of gold button,
-     friction line and an eighteen-emotion index before the words "The Echoes."
+     friction line and a twenty-one-feeling index before the words "The Echoes."
      — you landed on a composer instead of the room. Its two jobs move to the
      FAB and the sheet below, so the whole thing goes. (That also takes the
      `.ep-fam { min-width: 148px }` overflow with it: what the reader saw was

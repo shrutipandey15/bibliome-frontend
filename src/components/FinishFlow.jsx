@@ -97,7 +97,7 @@ export default function FinishFlow({ entry, onFinish, onClose }) {
         </div>
       ) : (
         <div className="ff-body">
-          <div className="label-sm ff-eyebrow">the verdict</div>
+          <div className="label-sm ff-eyebrow">the last word</div>
           <p className="ff-prompt">Anything you want to remember?</p>
           <textarea
             className="ff-thought"

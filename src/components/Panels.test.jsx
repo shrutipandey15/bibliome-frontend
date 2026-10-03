@@ -14,11 +14,11 @@ const baseStats = {
 
 describe("Patterns / emotion ledger [F5.2 / F5.3]", () => {
   it("renders the full ledger from emotion_counts", () => {
-    const stats = { ...baseStats, emotion_counts: { grief: 6, awe: 3, wit: 1 } };
+    const stats = { ...baseStats, emotion_counts: { grief: 6, awe: 3, amusement: 1 } };
     render(<Patterns stats={stats} heatmap={null} />);
     // Ranked rows appear using the plain word ("grief"). "grief" also shows in the
     // most-felt tile, so allow more than one match.
-    expect(screen.getAllByText("grief").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("heartbreak").length).toBeGreaterThan(0);
     expect(screen.getByText("awe")).toBeInTheDocument();
     // Counts render as n/total.
     expect(screen.getByText("6/10")).toBeInTheDocument();

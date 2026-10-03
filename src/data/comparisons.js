@@ -16,7 +16,7 @@ export const COMPARISONS = [
       "Both are places to put the books you have read. That is where the overlap ends. Goodreads is a catalogue with a social network attached; Bibliome is a private emotional record with no social network at all, by design rather than by omission.",
     // [feature, bibliome, other]
     table: [
-      ["Rating a book", "No stars. You record which of 18 emotions it pulled, and how strongly.", "1–5 stars, plus a public average."],
+      ["Rating a book", "No stars. You record which of 21 feelings it pulled, how strongly, and how it landed.", "1–5 stars, plus a public average."],
       ["What it produces", "A reading archetype — one of 8, assigned from your emotional patterns after 5 books.", "A shelf, a yearly count, and a rating history."],
       ["Social layer", "None. Nobody can follow you and there are no counts on anything.", "Friends, followers, feeds, likes, comments."],
       ["Reading goals", "None. No page counts, no streaks, no yearly challenge.", "Yearly Reading Challenge, page-count tracking."],
@@ -30,7 +30,7 @@ export const COMPARISONS = [
         h: "The actual difference",
         p: [
           "Goodreads answers the question what have I read. It is very good at it — twenty years of data, the deepest catalogue in the category, and the network effect that comes with everyone else already being there.",
-          "Bibliome answers a different question: what did those books do to me. You do not give a book a score. You open one emotion family at a time, pick the feelings that fit from 18, and give each one a strength. After five books the engine reads the pattern back to you as an archetype — the Grief Romantic, the Midnight Arsonist, the Comfort Architect, one of eight — worked out from what you actually recorded, never a quiz and never something you pick.",
+          "Bibliome answers a different question: what did those books do to me. You do not give a book a score. You open one emotion family at a time, pick the feelings that fit from 21, and give each one a strength. After five books the engine reads the pattern back to you as an archetype — the Grief Romantic, the Midnight Arsonist, the Comfort Architect, one of twelve — worked out from what you actually recorded, never a quiz and never something you pick.",
           "A star rating is a verdict you deliver about a book. An emotional record is a description of what happened to you. The second one turns out to say considerably more about the reader.",
         ],
       },
@@ -62,7 +62,7 @@ export const COMPARISONS = [
       "This is the harder comparison, because on the surface the two look alike: both are Goodreads alternatives, both talk about mood, both draw charts. The difference is direction. The StoryGraph points forward at your next book. Bibliome points backward at you.",
     table: [
       ["Core question", "What did this book do to me?", "What should I read next?"],
-      ["Emotional input", "18 emotions in five families, each logged with a strength, per book.", "Mood tags and pace, plus a 5-star rating with half stars."],
+      ["Emotional input", "21 feelings in six families, each logged with a strength, plus how the book landed.", "Mood tags and pace, plus a 5-star rating with half stars."],
       ["What it produces", "A reading archetype — one of 8, assigned from your patterns after 5 books.", "Stats, charts, and mood-and-pace based recommendations."],
       ["Recommendations", "None. Not a recommendation engine and not planned as one.", "Central to the product, and genuinely good."],
       ["Social layer", "None. No followers, no counts, one small public room that ends in “you're caught up.”", "Friends, buddy reads, readalongs."],

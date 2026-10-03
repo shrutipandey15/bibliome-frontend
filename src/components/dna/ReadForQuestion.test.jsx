@@ -16,7 +16,7 @@ describe("ReadForQuestion [F7.7]", () => {
   it("caps the selection at two feelings", async () => {
     render(<ReadForQuestion onSave={vi.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: /^comfort$/i }));
-    await userEvent.click(screen.getByRole("button", { name: /^grief$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^heartbreak$/i }));
     // A third option is now disabled — pick 1–2.
     expect(screen.getByRole("button", { name: /^awe$/i })).toBeDisabled();
   });

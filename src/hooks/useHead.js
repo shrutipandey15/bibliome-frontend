@@ -32,7 +32,7 @@ const DEFAULTS = {
   ogType: "website",
   ogTitle: "Bibliome — The Emotional Fingerprint of Your Reading Life",
   ogDescription:
-    "Every book you've ever loved changed you. Bibliome maps how — tracking 18 emotions across your library to reveal your unique reading personality.",
+    "Every book you've ever loved changed you. Bibliome maps how — tracking 21 feelings across your library to reveal your unique reading personality.",
   ogImage: "https://bibliome.app/og-image.png",
   robots: "index, follow",
 };
