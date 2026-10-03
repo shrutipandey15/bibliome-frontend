@@ -82,7 +82,10 @@ export default function AuthPage() {
       // register auto-logs-in (returns tokens + user, sets the refresh cookie),
       // so we never need a second login round-trip. [authCookieContract.md]
       if (mode === "register") {
-        await register(email.toLowerCase().trim(), username.trim(), password, displayName.trim() || undefined);
+        // Arrived from a shared card's "Find yours": counted, never linked to
+        // whoever shared it (the marker is only "card", never the link).
+        const via = params.get("via") === "card" ? "card" : undefined;
+        await register(email.toLowerCase().trim(), username.trim(), password, displayName.trim() || undefined, { via });
       } else {
         await login(email.toLowerCase().trim(), password);
       }

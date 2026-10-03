@@ -134,7 +134,10 @@ export async function apiFetch(path, opts = {}) {
 // ── Auth ──
 // login/register return { access_token, expires_in, user } and set the refresh
 // cookie via Set-Cookie. No refresh token ever appears in the body.
-export async function register(email, username, password, displayName) {
+// `via: "card"` when the reader arrived from a shared card's "Find yours". The
+// backend adds one to a daily total and keeps nothing else — not on the account,
+// and never tied to whoever shared the card.
+export async function register(email, username, password, displayName, { via } = {}) {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: "POST",
     credentials: "same-origin",
@@ -144,6 +147,7 @@ export async function register(email, username, password, displayName) {
       username,
       password,
       display_name: displayName || username,
+      ...(via === "card" ? { via } : {}),
     }),
   });
   if (!res.ok) {
@@ -412,33 +416,44 @@ export async function getPatterns() {
 }
 
 
+// The reader's card link: ONE per reader, made once and handed back on every
+// call until they turn it off (backend visibility.card_link). Making it also
+// renders the link-preview image, so the first crawler never meets a missing one.
 export async function generateShareToken() {
   const res = await apiFetch("/user/share-token", { method: "POST" });
   if (!res.ok) throw new Error("Failed to generate share link");
   return res.json();
 }
 
-// Revoke ALL of the caller's active share links (204 No Content). [B2.1]
+// The current card link without making one: { share_token, off }. `off` means
+// the reader turned it off, so nothing should make a new one unasked.
+export async function getShareToken() {
+  const res = await apiFetch("/user/share-token");
+  if (!res.ok) return { share_token: null };
+  return res.json();
+}
+
+// "Turn off my card link": revokes ALL of the caller's links (204). Old previews
+// fall back to the generic image and the page says the card isn't available.
 export async function revokeShareTokens() {
   const res = await apiFetch("/user/share-token", { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to revoke share links");
 }
 
-// The share card. Served from the OWNER'S CACHE, by the same engine their own DNA
-// tab renders — it used to recompute a second, older engine live, which could name
-// a different archetype than the app had shown them. Never recomputed here, so a
-// card can lag a just-added book until the owner's DNA is recomputed.
-//   { handle, share_token, archetype, archetype_scores, margin, basis, book_count,
-//     top_emotions: [{ emotion_id, weight }] }   // weight is a 0..1 SHARE, not a count
-// NOTE: no `runner_up`. This payload (backend `card_payload`, also the `signature`
-// on your profile and a public profile) carries `margin` but not the name the
-// backend picked to go with it, so a surface rendering this shape CANNOT show the
-// hedge — and must not reconstruct it from `margin`. DNACard keys the hedge off
-// `runner_up` alone and so simply asserts the name here. If the hedge is wanted on
-// public surfaces, the fix is the backend adding `runner_up` to this payload.
-// 404 → null: the token is dead, OR the reader has no DNA yet (the card refuses to
-// exist for a reader the app itself is telling to keep reading). The old
-// `personality` / `stats` keys are gone.
+// One share, counted into a first-party daily total by format. Nothing about
+// who is kept. Fire-and-forget: a failed count must never fail a share.
+export function countShare(format) {
+  apiFetch("/card/shares", { method: "POST", body: JSON.stringify({ format }) }).catch(() => {});
+}
+
+// The share card, as strangers see it: the backend's card payload with the
+// reader's switches (season, red flag) applied, from the OWNER'S CACHE — the same
+// engine their own DNA tab renders, never recomputed here.
+//   { handle, share_token, archetype: {…, article, share_line, red_flag},
+//     palette, bloom: { size, layers, top }, tagged_count, year, leaning,
+//     runner_up, season | null, red_flag | null, basis, … }
+// 404 → null: the link is off or dead, OR the reader has no DNA yet (the card
+// refuses to exist for a reader the app itself is telling to keep reading).
 export async function getSharedDNA(token) {
   const res = await apiFetch(`/public/shared/${token}`);
   if (!res.ok) return null;

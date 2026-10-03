@@ -1,264 +1,90 @@
-import { forwardRef, useState } from "react";
-import { EMOTIONS, EMO_LIST } from "../services/emotions";
-import { generateShareToken } from "../services/api";
-import { cardArchetype } from "../services/dnaCard";
-import ShareModal from "./ShareModal";
-import { ARCHETYPE_COUNT } from "./dna/constants";
-import { leaningLine, seasonLine } from "./dna/aliveCopy";
+import Bloom from "./card/Bloom";
+import {
+  applyChoices, article, booksLabel, displayName, leaningLine, nameLines,
+} from "./card/cardModel";
 import "./DNACard.css";
 
-// "ONE OF TWELVE" — read off the archetype count rather than typed, so the plate
-// can't go on saying "eight" after the set changes (it did, for a release).
-const COUNT_WORDS = { 8: "EIGHT", 9: "NINE", 10: "TEN", 11: "ELEVEN", 12: "TWELVE", 13: "THIRTEEN" };
-const COUNT_WORD = COUNT_WORDS[ARCHETYPE_COUNT] || String(ARCHETYPE_COUNT);
-
 /**
- * The fingerprint: one bar per register in the vocabulary, tallest first.
+ * The reading DNA card, in the page (DNA card spec, "In-app card").
  *
- * The bars are REAL — `emotion_counts` is a per-reader tally of books per
- * register, counted server-side from their own shelf. The registers that come
- * back zero are drawn too, as stubs: the gaps are the half of the fingerprint
- * that says the most, and dropping them would make every reader's card look
- * equally full.
+ * The same design as the images people post — the archetype's ground, the
+ * bloom, "I'm a Grief Romantic.", the share line, three numbers, the red flag —
+ * at phone width, with height that grows with its content. It used to be a
+ * fixed 2 : 2.92 plate with overflow hidden, which cut it off mid-word on
+ * phones; nothing here can clip now. It is real text, not an image, so screen
+ * readers and zoom work, and the bloom carries its own description.
  *
- * `top_emotions` is the fallback for surfaces with no book tally to hand (the
- * share card, a legacy DNA cache). Those carry `weight` — a SHARE of recent
- * reading, 0..1 — not a book count, so the figures are rendered as percentages
- * and labelled as such. Printing a share as a bare number would read as "37
- * books" on a shelf of nine.
+ * `card` is the backend's card payload (dna_card.card_payload_from). A
+ * stranger's copy arrives with the reader's switches already applied; the
+ * owner's carries `choices`, applied here so the DNA tab shows what strangers
+ * see. `children` sit under the card (actions, the archetype's description).
  */
-function fingerprintRows(profile) {
-  const counts = profile.emotion_counts;
-  if (counts && Object.keys(counts).length > 0) {
-    return EMO_LIST
-      .map(([slug, emo]) => ({ slug, emo, count: counts[slug] || 0 }))
-      .filter((r) => r.emo)
-      .sort((a, b) => b.count - a.count);
-  }
-  return (profile.top_emotions || [])
-    .map((t) => ({
-      slug: t.emotion_id,
-      emo: EMOTIONS[t.emotion_id],
-      // `count` on legacy payloads, `weight` (a 0..1 share) on the card payload.
-      count: t.count ?? Math.round((t.weight || 0) * 100),
-      isShare: t.count == null,
-    }))
-    .filter((r) => r.emo)
-    .sort((a, b) => b.count - a.count);
-}
-
-/**
- * The evidence under the label: "grief in 14 of your 31 books · your 3
- * highest-rated were all heartbreak". Counts only, no adjectives — every clause
- * is something the reader can go and count for themselves.
- */
-// How a verdict reads inside the basis line. `gave_up` is the backend's key
-// for an abandoned book, which counts as a judgement for the Discerning Reader.
-const VERDICT_WORDS = {
-  loved: "loved", liked: "liked", mixed: "mixed", not_for_me: "not for me", gave_up: "put down",
-};
-
-function BasisLine({ basis }) {
-  const counts = (basis.counts || []).slice(0, 2);
-  const topRated = basis.top_rated_emotions || [];
-  const clauses = counts.map((c) => {
-    const emo = EMOTIONS[c.emotion];
-    return `${(emo?.name || c.emotion).toLowerCase()} in ${c.books} of your ${c.of} books`;
-  });
-  // The Discerning Reader is earned from verdicts, so its receipt is verdicts:
-  // "not for me in 6 of your 9 judged books · put down 2 of 9".
-  (basis.verdicts || []).slice(0, 2).forEach((v, i) => {
-    const word = VERDICT_WORDS[v.verdict] || v.verdict;
-    clauses.push(i === 0
-      ? `${word} in ${v.books} of your ${v.of} judged books`
-      : `${word} ${v.books} of ${v.of}`);
-  });
-  // Only when the reader's highest-rated books agree on ONE register. Listing
-  // three is a list, not a finding, and "all" would then be a lie.
-  if (topRated.length === 1) {
-    const emo = EMOTIONS[topRated[0]];
-    const n = basis.top_rated_n || 3;
-    clauses.push(`your ${n} highest-rated were all ${(emo?.name || topRated[0]).toLowerCase()}`);
-  }
-  if (clauses.length === 0) return null;
-  return <p className="dna-basis">{clauses.join(" · ")}</p>;
-}
-
-/**
- * The shorthand card — the one shareable artifact. Rendered on the DNA page's
- * shelf-side rail, on your profile, and on a shared link, so it is deliberately
- * self-contained: a dark plate that carries its own surface rather than
- * inheriting Vellum or Lamplight from whatever page it lands on.
- *
- * `footer` slots content between the plate and its actions (the DNA page puts
- * the archetype's description there). `showDescription` keeps the blurb ON the
- * plate for the standalone uses, where there is no page around it to hold it.
- */
-const DNACard = forwardRef(function DNACard(
-  { profile, username, allowShare = false, onSave, size = "large", showDescription = true, footer = null },
-  ref
-) {
-  const [showShare, setShowShare] = useState(false);
-  const [shareToken, setShareToken] = useState(null);
-
-  const p = cardArchetype(profile);
-  if (!p) return null;
-
-  const handleShareClick = async () => {
-    try {
-      const data = await generateShareToken();
-      setShareToken(data.share_token);
-      setShowShare(true);
-    } catch (err) {
-      console.error("Token error", err);
-    }
-  };
-
-  const rows = fingerprintRows(profile);
-  const top = rows.filter((r) => r.count > 0).slice(0, 5);
-  const peak = rows.length ? Math.max(...rows.map((r) => r.count)) : 0;
-  const isShare = rows.some((r) => r.isShare);
-  const share = profile.archetype_share;
-  const [first, ...rest] = (p.name || "").split(" ");
-  const second = rest.join(" ");
-
-  // Whether the label was close enough to a coin flip that the card hedges rather
-  // than asserts. That call belongs to the BACKEND: `runner_up` is present exactly
-  // when it decided to hedge, and absent when it didn't. So the presence of the
-  // name IS the condition — the card never re-derives it from `margin`.
-  //
-  // It used to, with a hardcoded `margin < 0.10`, and that disagreed with the
-  // engine two ways at once. The scorer was recalibrated: `margin` is now the
-  // absolute lead over second place, not a fraction of the leader's score, and the
-  // hedge threshold moved to the backend's own `HEDGE_ARCHETYPE_GAP` — so the
-  // number here was both the wrong scale and the wrong value. Separately, every
-  // surface fed by the backend's `card_payload` (the share link, your profile, a
-  // public profile) ships `margin` with NO `runner_up` at all. Either way the card
-  // drew "closest to" over the name with nothing underneath it to shade toward.
-  // Tying both lines to one value means the hedge is whole or absent, and the
-  // threshold stays somewhere this file can't get it wrong.
-  const runnerUp = profile.runner_up;
-  const close = runnerUp != null;
-  const season = profile.season || null;
-  // Counts only, straight off the reader's own shelf. Null until the backend
-  // computes it; nothing is invented to fill the line.
-  const basis = profile.basis;
+export default function DNACard({ card, children = null, headingLevel = 2 }) {
+  if (!card?.archetype) return null;
+  const c = applyChoices(card);
+  const a = c.archetype;
+  const pal = c.palette || {};
+  const lines = nameLines(a.name);
+  const leaning = leaningLine(c);
+  const top = c.bloom?.top || [];
+  const H = `h${headingLevel}`;
 
   return (
-    <div className="dna-wrapper">
-      <div className={`dna-card anim-flip dna-card--${size}`} ref={ref} style={{ "--dc": p.color || "var(--oxblood)" }}>
-        {/* The plate's grain. The four corner glyphs are gone — the double
-            ruled inset (see `.dna-card::before/::after`) does that job without
-            four more marks competing with the archetype's own. */}
-        <span className="dna-frame" aria-hidden="true" />
-
-        <div className="dna-header">
-          <div>
-            <div className="dna-label">BIBLIOME · ONE OF {COUNT_WORD}</div>
-            <div className="dna-vol">{profile.book_count || 0} VOLUMES · {new Date().getFullYear()}</div>
-          </div>
-          <div className="dna-glyph">{p.glyph || "◈"}</div>
+    <div className="dnacard-wrap">
+      <article
+        className="dnacard"
+        aria-label={`Reading DNA card: ${a.name}`}
+        style={{
+          "--dc-top": pal.top, "--dc-bottom": pal.bottom,
+          "--dc-accent": pal.accent, "--dc-ink": pal.ink,
+        }}
+      >
+        <div className="dnacard-head">
+          <span>MY READING DNA</span>
+          <span>{booksLabel(c.tagged_count ?? c.book_count)}{c.year ? ` · ${c.year}` : ""}</span>
         </div>
 
-        <h2 className="dna-name">
-          {first}{second && <><br /><em>{second}</em></>}
-        </h2>
-        {/* Weather under the climate: the season (owner's own view only — the
-            public payload never carries it) and the leaning line, which is the
-            hedge: shown only when a rival has caught up with this archetype. */}
-        {season && <div className="dna-hedge dna-hedge--after dna-season">{seasonLine(season)}</div>}
-        {close && (
-          <div className="dna-hedge dna-hedge--after">
-            {leaningLine(profile.leaning || { name: runnerUp })}
-          </div>
-        )}
-        {/* The receipt. The name is a headline for a number the reader can go and
-            check against their own shelf — without it, the label is just a bucket
-            they were sorted into. */}
-        {basis && <BasisLine basis={basis} />}
-        {p.tagline && <div className="dna-tagline">“{p.tagline}”</div>}
-        {showDescription && p.description && <p className="dna-blurb">{p.description}</p>}
-
-        {/* Renamed from `.dna-divider`, which collided with the DNA page's
-            ◆ ◆ ◆ section break of the same name — two stylesheets, one class,
-            and whichever loaded last won. */}
-        <div className="dna-card-rule" />
-
-        {/* "no two alike" is gone. Those bars are a tally over an 18-register
-            vocabulary: two eight-book readers who both tag grief and comfort draw
-            the same silhouette. It was the one line on the card making a claim the
-            rest of the project refuses to make. What replaces it says what the
-            figures ARE, which is the thing a reader actually needs to know. */}
-        <div className="dna-fp-head">
-          <span className="label dna-fp-label">emotional fingerprint</span>
-          <span className="dna-fp-note">{isShare ? "share of recent reading" : "books per register"}</span>
-        </div>
-
-        {peak > 0 && (
-          <>
-            {/* Decorative: every bar's figure is spelled out in the row of top
-                registers underneath, and the whole tally is on the DNA page. */}
-            <div className="dna-fp-bars" aria-hidden="true">
-              {rows.map((r) => (
-                <span
-                  key={r.slug}
-                  className={`dna-fp-bar${r.count === 0 ? " dna-fp-bar--none" : ""}`}
-                  style={{ height: `${Math.max(4, Math.round((r.count / peak) * 100))}%`, background: r.emo.color }}
-                />
-              ))}
+        <div className="dnacard-bloom">
+          <Bloom bloom={c.bloom} />
+          {c.season && (
+            <div className="dnacard-sticker" aria-label={c.season.home
+              ? "In my element: my season matches my archetype"
+              : `Now in ${article(c.season)} ${displayName(c.season.name)} season`}
+            >
+              {c.season.home ? (
+                <><span>in my</span><em>element</em></>
+              ) : (
+                <><span>now in {article(c.season)}</span><em>{displayName(c.season.name)}</em><span>season</span></>
+              )}
             </div>
+          )}
+        </div>
 
-            <ul className="dna-fp-top">
-              {top.map((r) => (
-                <li key={r.slug} className="dna-fp-cell">
-                  <span className="dna-fp-count">{r.count}{r.isShare ? "%" : ""}</span>
-                  <span className="dna-fp-name">{(r.emo.name || r.emo.label).toLowerCase()}</span>
-                </li>
+        <div className="dnacard-kicker">I'm {article(a)}</div>
+        <H className="dnacard-name">
+          {lines.map((l, i) => (
+            i === lines.length - 1 ? <em key={i}>{l}</em> : <span key={i}>{l}</span>
+          ))}
+        </H>
+        {leaning && <p className="dnacard-leaning">{leaning}</p>}
+        {a.share_line && <p className="dnacard-line">{a.share_line}</p>}
+
+        {top.length > 0 && (
+          <div className="dnacard-numbers">
+            <div className="dnacard-label">what my books did to me</div>
+            <ul>
+              {top.map((t) => (
+                <li key={t.slug}><b>{t.count}</b> <span>{t.label}</span></li>
               ))}
             </ul>
-          </>
-        )}
-
-        {p.blind_spots?.length > 0 && (
-          <div className="dna-blinds">
-            {/* These are the archetype's known failure modes — the same lines for
-                everyone who lands on this type — not a measurement of which
-                feelings THIS reader skips. Labelled as what it is. The DNA page's
-                Portrait does the per-reader version, cross-checked against your
-                own untagged registers. */}
-            <div className="label-sm">where this type tends to get stuck</div>
-            <div className="dna-blind">{p.blind_spots.join(" · ")}</div>
           </div>
         )}
 
-        <div className="dna-footer">
-          {/* Only when the population is large enough for a share to mean
-              something — the backend sends null until then. */}
-          {share != null && <span>shared by {share}% of readers</span>}
-          <span>BIBLIOME.APP</span>
-          <span>@{(username || "you").toUpperCase()}</span>
-        </div>
-      </div>
-
-      {footer}
-
-      {allowShare && (
-        <div className="dna-actions">
-          <button className="btn brass" onClick={onSave}>
-            <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 16 }}>Save</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em" }}>AS IMAGE</span>
-          </button>
-          <button className="btn ghost" onClick={handleShareClick}>share link →</button>
-        </div>
-      )}
-
-      <ShareModal
-        isOpen={showShare}
-        onClose={() => setShowShare(false)}
-        shareToken={shareToken}
-      />
+        {c.red_flag && (
+          <p className="dnacard-flag"><span className="dnacard-chip">red flag</span> {c.red_flag}</p>
+        )}
+      </article>
+      {children}
     </div>
   );
-});
-
-export default DNACard;
+}

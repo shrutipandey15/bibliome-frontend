@@ -12,10 +12,9 @@
 /* The argument, and the shorthand it argues toward. */
 .dna-body {
   display: grid;
-  /* 372px — the plate's own width (`.dna-card--small`), not a round number
-     near it. At 340 the card was squeezed 32px narrower than the identical card
-     on the profile page. */
-  grid-template-columns: minmax(0, 1fr) 372px;
+  /* The card's own column. The card grows with its content, never clips, and
+     caps itself at 420px wherever it sits. */
+  grid-template-columns: minmax(0, 1fr) 380px;
   gap: 56px;
   align-items: start;
   margin-top: 24px;
@@ -25,8 +24,6 @@
 .dna-col { min-width: 0; display: flex; flex-direction: column; gap: 40px; }
 /* The plate follows you down the evidence rather than sitting at the end of it. */
 .dna-aside { position: sticky; top: 52px; min-width: 0; }
-.dna-aside .dna-wrapper { align-items: flex-start; padding: 0; gap: 14px; width: 100%; }
-.dna-aside .dna-actions { justify-content: flex-start; }
 
 /* Running head — a page header, not a stat card: two mono lines against a rule. */
 .dna-runhead {
@@ -347,7 +344,7 @@
 /* The rail folds under the argument; the plate stops following. */
 @media (max-width: 1080px) {
   .dna-body { grid-template-columns: minmax(0, 1fr); gap: 44px; }
-  .dna-aside { position: static; max-width: 372px; }
+  .dna-aside { position: static; max-width: 420px; }
 }
 @media (max-width: 900px) {
   .dna-view { padding: 8px 18px 64px; }

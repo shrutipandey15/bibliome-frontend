@@ -17,7 +17,7 @@
   --rule: #d8cdb8;
   --ink: #241f19;
   --ink-faint: #8d8474;
-  --font-display: "Spectral", "Cormorant Garamond", Georgia, serif;
+  --font-display: "Spectral", "Cormorant Garamond Variable", "Cormorant Garamond", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   background: var(--bg-page);
   color: var(--ink);

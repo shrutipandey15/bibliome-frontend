@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import App from "./App";
 import { syncEmotions } from "./services/emotions";
+import "./styles/fonts";
 import "./styles/global.css";
 
 // Make the backend canonical for the emotion vocabulary. Not awaited: the local

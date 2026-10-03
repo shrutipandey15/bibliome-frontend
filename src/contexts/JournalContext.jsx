@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useContext, createContext, useRef } from "react";
 import {
   getAllEntries, getDNAProfile, getPatterns, generateDNA,
-  createEntry, updateEntry, deleteEntry, generateShareToken, finishEntry, addToTbr
+  createEntry, updateEntry, deleteEntry, finishEntry, addToTbr
 } from "../services/api";
 import { getCachedEntries, setCachedEntries } from "../services/offline";
 
@@ -19,7 +19,6 @@ export function JournalProvider({ children }) {
   const [entries, setEntries] = useState([]);
   const [analytics, setAnalytics] = useState({ profile: null, heatmap: null, stats: null });
   const [stale, setStale] = useState({ heatmap: true, stats: true, profile: true });
-  const [shareToken, setShareToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   // Distinguishes a genuine failure (429/500/offline) from an empty shelf so the
@@ -60,7 +59,6 @@ export function JournalProvider({ children }) {
       if (seq !== loadSeq.current) return;
       if (prof) {
         setAnalytics(prev => ({ ...prev, profile: prof }));
-        if (prof.share_token) setShareToken(prof.share_token);
         setStale(prev => ({ ...prev, profile: false }));
       }
     } catch (err) {
@@ -109,8 +107,7 @@ export function JournalProvider({ children }) {
         const prof = await getDNAProfile();
         if (prof) {
           setAnalytics(prev => ({ ...prev, profile: prof }));
-          if (prof.share_token) setShareToken(prof.share_token);
-        }
+          }
         setStale(prev => ({ ...prev, profile: false }));
         return prof;
       } catch (err) {
@@ -204,19 +201,6 @@ export function JournalProvider({ children }) {
     }
   };
 
-  const createToken = async () => {
-    try {
-      setGenerating(true);
-      const data = await generateShareToken();
-      setShareToken(data.share_token);
-      setGenerating(false);
-      return data.share_token;
-    } catch (err) {
-      setGenerating(false);
-      throw err;
-    }
-  };
-
   // A profile fetched elsewhere (the echo after a save asks GET /dna/profile,
   // which recomputes) is the freshest there is — take it rather than refetching.
   const adoptProfile = useCallback((prof) => {
@@ -232,9 +216,9 @@ export function JournalProvider({ children }) {
 
   return (
     <JournalContext.Provider value={{
-      entries, analytics, stale, shareToken,
+      entries, analytics, stale,
       loading, generating, entriesError,
-      addEntry, editEntry, removeEntry, finishBook, generate, createToken,
+      addEntry, editEntry, removeEntry, finishBook, generate,
       ensureFresh, loadEntries, shelveBook, adoptProfile, acknowledgeShift,
     }}>
       {children}

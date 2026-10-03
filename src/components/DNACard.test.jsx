@@ -1,213 +1,116 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-
-// The share button hits the network + renders ShareModal; stub both out.
-vi.mock("../services/api", () => ({ generateShareToken: vi.fn() }));
-vi.mock("./ShareModal", () => ({ default: () => null }));
-
 import DNACard from "./DNACard";
 
-const profile = {
-  book_count: 12,
-  personality: {
-    id: "grief-romantic",
-    name: "The Grief Romantic",
-    description: "You read toward the ache.",
-    color: "#6B4F8E",
-    glyph: "◈",
-    blind_spots: ["nostalgia", "beauty"],
+// The backend's card payload (dna_card.card_payload_from), cut down.
+const card = {
+  archetype: {
+    id: "grief_romantic", name: "The Grief Romantic", article: "a",
+    share_line: "Loss isn't my enemy. Numbness is.", red_flag: "I avoid neat happy endings",
+    description: "You seek books that break your heart…",
   },
-  top_emotions: [
-    { emotion_id: "grief", count: 9 },
-    { emotion_id: "longing", count: 5 },
-  ],
+  palette: { top: "#22343E", bottom: "#121C22", accent: "#9FC3D4", ink: "#F6EEDF" },
+  bloom: {
+    size: 1000,
+    layers: [{ d: "M0 0Z", stroke: 0.08, width: 3 }, { d: "M1 1Z", fill: 1 }],
+    top: [
+      { slug: "grief", label: "heartbreak", count: 14 },
+      { slug: "catharsis", label: "catharsis", count: 9 },
+      { slug: "haunted", label: "haunted", count: 7 },
+    ],
+  },
+  tagged_count: 34,
+  book_count: 40,
+  year: 2026,
+  leaning: null,
+  runner_up: null,
+  red_flag: "I avoid neat happy endings",
+  season: { id: "world_diver", name: "The World-Diver", article: "a", home: false },
 };
 
-describe("DNACard signature render [F2.4 / F2.11]", () => {
-  it("renders the personality and an emotional fingerprint using canonical labels", () => {
-    render(<DNACard profile={profile} username="alice" />);
-
-    // Personality name (split across first/rest) and volume count.
-    expect(screen.getByText(/Grief Romantic/)).toBeInTheDocument();
-    expect(screen.getByText(/12 VOLUMES/)).toBeInTheDocument();
-
-    // Fingerprint rows use the SERVER-CANONICAL labels (F1.5), lowercased —
-    // "grief"/"longing", NOT the old divergent "melancholy"/"nostalgia".
-    expect(screen.getByText("heartbreak")).toBeInTheDocument();
-    expect(screen.getByText("longing")).toBeInTheDocument();
-    expect(screen.queryByText("melancholy")).not.toBeInTheDocument();
-    expect(screen.queryByText("nostalgia")).not.toBeInTheDocument();
+describe("DNACard — the in-app card", () => {
+  it("says it in the first person: I'm a Grief Romantic", () => {
+    render(<DNACard card={card} />);
+    expect(screen.getByText("I'm a")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Grief Romantic." })).toBeInTheDocument();
+    expect(screen.getByText("Loss isn't my enemy. Numbness is.")).toBeInTheDocument();
   });
 
-  it("draws the fingerprint from this reader's own register tally", () => {
-    const { container } = render(
-      <DNACard
-        profile={{ ...profile, emotion_counts: { grief: 9, awe: 3, rage: 1 } }}
-        username="alice"
-      />
-    );
-
-    // One bar per register in the vocabulary — including the ones never reached,
-    // which are the half of the fingerprint that actually distinguishes readers.
-    const bars = container.querySelectorAll(".dna-fp-bar");
-    expect(bars.length).toBe(21);
-    expect(container.querySelectorAll(".dna-fp-bar--none").length).toBe(18);
-
-    // Tallest first, scaled to this reader's own peak.
-    expect(bars[0].style.height).toBe("100%");
-    expect(bars[1].style.height).toBe("33%");
-
-    // Only registers actually felt are named underneath.
-    expect(screen.getByText("heartbreak")).toBeInTheDocument();
-    expect(screen.queryByText("nostalgia")).not.toBeInTheDocument();
+  it("counts tagged books in the header, not the shelf", () => {
+    render(<DNACard card={card} />);
+    expect(screen.getByText("34 BOOKS · 2026")).toBeInTheDocument();
   });
 
-  it("falls back to top_emotions when a surface predates the tally", () => {
-    const { container } = render(<DNACard profile={profile} username="alice" />);
-    expect(container.querySelectorAll(".dna-fp-bar").length).toBe(2);
-    expect(screen.getByText("heartbreak")).toBeInTheDocument();
+  it("prints the same three numbers the bloom's solid petals stand for", () => {
+    render(<DNACard card={card} />);
+    const items = screen.getAllByRole("listitem").map((li) => li.textContent);
+    expect(items).toEqual(["14 heartbreak", "9 catharsis", "7 haunted"]);
   });
 
-  it("shows the archetype's share only when the backend can support one", () => {
-    const { rerender } = render(<DNACard profile={profile} username="alice" />);
-    expect(screen.queryByText(/shared by/i)).not.toBeInTheDocument();
-
-    rerender(<DNACard profile={{ ...profile, archetype_share: 3 }} username="alice" />);
-    expect(screen.getByText("shared by 3% of readers")).toBeInTheDocument();
+  it("describes the bloom for screen readers", () => {
+    render(<DNACard card={card} />);
+    expect(screen.getByRole("img", {
+      name: "A bloom of petals, one per feeling, longest for heartbreak, catharsis and haunted.",
+    })).toBeInTheDocument();
   });
 
-  it("renders nothing without a personality (honest empty)", () => {
-    const { container } = render(<DNACard profile={{ personality: null }} username="alice" />);
-    expect(container.querySelector(".dna-card")).toBeNull();
+  it("shows the season sticker and the red flag when they're on", () => {
+    render(<DNACard card={card} />);
+    expect(screen.getByLabelText("Now in a World-Diver season")).toBeInTheDocument();
+    expect(screen.getByText("I avoid neat happy endings")).toBeInTheDocument();
   });
 
-  // ── One engine: the backend's card shape (`archetype`) ──
-
-  it("renders the backend's one card shape, and still reads a legacy payload", () => {
-    // What /public/shared/{token} and the profile signature now return.
-    const card = {
-      handle: "alice",
-      book_count: 12,
-      archetype: profile.personality,
-      top_emotions: [{ emotion_id: "grief", weight: 0.42 }, { emotion_id: "longing", weight: 0.19 }],
-    };
-    const { rerender } = render(<DNACard profile={card} username="alice" />);
-    expect(screen.getByText(/Grief Romantic/)).toBeInTheDocument();
-    // A share is rendered as a share — printing "42" here would read as 42 books
-    // on a shelf of twelve.
-    expect(screen.getByText("42%")).toBeInTheDocument();
-    expect(screen.getByText(/share of recent reading/i)).toBeInTheDocument();
-
-    rerender(<DNACard profile={profile} username="alice" />);
-    expect(screen.getByText(/Grief Romantic/)).toBeInTheDocument();
-    expect(screen.getByText("9")).toBeInTheDocument();          // a count stays a count
+  it("says 'in my element' when the season is the reader's own archetype", () => {
+    render(<DNACard card={{ ...card, season: { ...card.season, id: "grief_romantic", name: "The Grief Romantic", home: true } }} />);
+    expect(screen.getByText("element")).toBeInTheDocument();
   });
 
-  it("renders nothing when the engine abstained", () => {
-    const { container } = render(<DNACard profile={{ ...profile, personality: null, archetype: null }} username="alice" />);
-    expect(container.querySelector(".dna-card")).toBeNull();
+  it("leaves off what a stranger's payload left off", () => {
+    render(<DNACard card={{ ...card, season: null, red_flag: null }} />);
+    expect(screen.queryByText(/red flag/i)).toBeNull();
+    expect(screen.queryByText(/season/i)).toBeNull();
   });
 
-  // ── The label stops overstating itself ──
-
-  // The hedge is the BACKEND's call, carried by the presence of `runner_up`. These
-  // tests deliberately say nothing about `margin`: pinning them to a threshold is
-  // what let the card and the engine drift apart in the first place.
-
-  it("names the archetype it leans toward when the backend sent one [Aliveness F3]", () => {
-    render(
-      <DNACard profile={{ ...profile, runner_up: "The Soft Masochist" }} username="alice" />
-    );
-    // The public payload carries only the name; the card words it the same way.
-    expect(screen.getByText("leaning toward the Soft Masochist")).toBeInTheDocument();
-    expect(screen.queryByText(/closest to|shading toward/i)).not.toBeInTheDocument();
+  it("applies the owner's own switches, so the DNA tab shows what strangers see", () => {
+    render(<DNACard card={{ ...card, choices: { season: false, red_flag: false } }} />);
+    expect(screen.queryByText("I avoid neat happy endings")).toBeNull();
+    expect(screen.queryByLabelText(/season/)).toBeNull();
   });
 
-  it("asserts the name plainly when the backend sent no runner-up", () => {
-    render(<DNACard profile={{ ...profile, runner_up: null }} username="alice" />);
-    expect(screen.queryByText(/leaning toward/i)).not.toBeInTheDocument();
+  it("carries the hedge whenever the engine sent one", () => {
+    render(<DNACard card={{ ...card, leaning: { id: "obsessive_romantic", name: "The Obsessive Romantic" } }} />);
+    expect(screen.getByText("leaning toward the Obsessive Romantic")).toBeInTheDocument();
   });
 
-  it("shows the owner's season under the name, and says how many archetypes there are", () => {
-    render(
-      <DNACard
-        profile={{ ...profile, season: { id: "world_diver", name: "The World-Diver", since: `${new Date().getFullYear()}-08-02`, home: false } }}
-        username="alice"
-      />
-    );
-    expect(screen.getByText(/^in a World-Diver season · since August/)).toBeInTheDocument();
-    expect(screen.getByText(/ONE OF TWELVE/)).toBeInTheDocument();
+  it("puts 'an' before a vowel and keeps a one-word name whole", () => {
+    render(<DNACard card={{ ...card, archetype: { ...card.archetype, id: "world_diver", name: "The World-Diver" } }} />);
+    expect(screen.getByRole("heading", { name: "World-Diver." })).toBeInTheDocument();
+    const { container } = render(<DNACard card={{ ...card, archetype: { ...card.archetype, name: "The Adrenaline Seeker", article: "an" } }} />);
+    expect(container).toHaveTextContent("I'm an");
   });
 
-  // The regression. `card_payload` — the share link, your profile, a public
-  // profile — ships `margin` and NO `runner_up`. The card used to read the number,
-  // so a thin margin drew "closest to" over the name with nothing underneath it.
-  // Neither half of the hedge may appear without the other.
-  it("never orphans the hedge on a payload carrying margin but no runner-up", () => {
-    render(<DNACard profile={{ ...profile, margin: 0.04 }} username="alice" />);
-    expect(screen.queryByText(/leaning toward/i)).not.toBeInTheDocument();
+  it("takes its colours from the payload's palette", () => {
+    const { container } = render(<DNACard card={card} />);
+    const el = container.querySelector(".dnacard");
+    expect(el.style.getPropertyValue("--dc-top")).toBe("#22343E");
+    expect(el.style.getPropertyValue("--dc-accent")).toBe("#9FC3D4");
   });
 
-  it("prints the basis under the name — counts the reader can go and check", () => {
-    render(
-      <DNACard
-        profile={{
-          ...profile,
-          basis: {
-            counts: [{ emotion: "grief", books: 14, of: 31 }],
-            top_rated_emotions: ["shock"],
-            top_rated_n: 3,
-          },
-        }}
-        username="alice"
-      />
-    );
-    expect(screen.getByText(/heartbreak in 14 of your 31 books/)).toBeInTheDocument();
-    expect(screen.getByText(/your 3 highest-rated were all shock/)).toBeInTheDocument();
+  it("has no fixed shape to clip it", () => {
+    const { container } = render(<DNACard card={card} />);
+    const el = container.querySelector(".dnacard");
+    expect(el.style.aspectRatio).toBe("");
   });
 
-  it("gives the Discerning Reader a verdict receipt, not a feeling one [v3]", () => {
-    render(
-      <DNACard
-        profile={{
-          ...profile,
-          archetype: { id: "discerning_reader", name: "The Discerning Reader", description: "x", color: "#6E6E6E", glyph: "◌" },
-          basis: {
-            counts: [],
-            verdicts: [{ verdict: "not_for_me", books: 6, of: 9 }, { verdict: "gave_up", books: 2, of: 9 }],
-            top_rated_emotions: [],
-            top_rated_n: 0,
-          },
-        }}
-        username="alice"
-      />
-    );
-    expect(screen.getByText(/not for me in 6 of your 9 judged books · put down 2 of 9/)).toBeInTheDocument();
+  it("renders nothing without an archetype, and makes no comparison claims", () => {
+    const { container } = render(<DNACard card={{ ...card, archetype: null }} />);
+    expect(container).toBeEmptyDOMElement();
+    const again = render(<DNACard card={card} />);
+    expect(again.container).not.toHaveTextContent(/no two alike|% of readers|rarest/i);
   });
 
-  it("makes no 'all' claim when the top-rated books disagree", () => {
-    render(
-      <DNACard
-        profile={{
-          ...profile,
-          basis: {
-            counts: [{ emotion: "grief", books: 14, of: 31 }],
-            top_rated_emotions: ["shock", "rage", "awe"],
-            top_rated_n: 3,
-          },
-        }}
-        username="alice"
-      />
-    );
-    expect(screen.getByText(/heartbreak in 14 of your 31 books/)).toBeInTheDocument();
-    expect(screen.queryByText(/highest-rated/)).not.toBeInTheDocument();
-  });
-
-  it("makes no claim it can't support: 'no two alike' is gone", () => {
-    // Two eight-book readers who both tag grief and comfort draw the same
-    // silhouette. The card no longer says otherwise.
-    render(<DNACard profile={{ ...profile, emotion_counts: { grief: 9, awe: 3 } }} username="alice" />);
-    expect(screen.queryByText(/no two alike/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/books per register/i)).toBeInTheDocument();
+  it("renders children under the card", () => {
+    render(<DNACard card={card}><button type="button">Share my card</button></DNACard>);
+    expect(screen.getByRole("button", { name: "Share my card" })).toBeInTheDocument();
   });
 });

@@ -158,3 +158,42 @@ describe("getAllEntries walks the keyset cursor [F1.8 / B1.4]", () => {
     await expect(getAllEntries()).rejects.toBeInstanceOf(ApiError);
   });
 });
+
+describe("the share card's calls", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+    setAccessToken("tok");
+  });
+
+  it("sends the 'card' marker on sign-up from Find yours, and nothing else", async () => {
+    const { register } = await import("./api");
+    const fetchMock = vi.fn(async () => jsonResponse({ access_token: "a", expires_in: 900, user: {} }, 201));
+    vi.stubGlobal("fetch", fetchMock);
+    await register("a@b.co", "reader", "hunter2pass", "", { via: "card" });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).via).toBe("card");
+    await register("a@b.co", "reader", "hunter2pass", "", { via: "somebody-else" });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).not.toHaveProperty("via");
+    await register("a@b.co", "reader", "hunter2pass");
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body)).not.toHaveProperty("via");
+  });
+
+  it("counts a share by format and never lets a failed count fail the share", async () => {
+    const { countShare } = await import("./api");
+    const fetchMock = vi.fn(async () => { throw new Error("offline"); });
+    vi.stubGlobal("fetch", fetchMock);
+    expect(() => countShare("story")).not.toThrow();
+    await new Promise((r) => setTimeout(r, 0));
+    const [url, opts] = fetchMock.mock.calls[0];
+    expect(url).toMatch(/\/card\/shares$/);
+    expect(JSON.parse(opts.body)).toEqual({ format: "story" });
+  });
+
+  it("reads the card link without making one", async () => {
+    const { getShareToken } = await import("./api");
+    const fetchMock = vi.fn(async () => jsonResponse({ share_token: null }));
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await getShareToken()).toEqual({ share_token: null });
+    expect(fetchMock.mock.calls[0][1]?.method ?? "GET").toBe("GET");
+  });
+});

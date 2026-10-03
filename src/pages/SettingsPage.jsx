@@ -157,7 +157,7 @@ export default function SettingsPage() {
     try {
       const { share_token } = await generateShareToken();
       setShareLink(`${window.location.origin}/s/${share_token}`);
-      showToast("Share link created", "success");
+      showToast("Here's your card link", "success");
     } catch (err) { showToast(err.message || "Couldn't create link"); }
     setShareBusy(false);
   };
@@ -167,7 +167,7 @@ export default function SettingsPage() {
     try {
       await revokeShareTokens();
       setShareLink(null);
-      showToast("All share links revoked", "success");
+      showToast("Card link turned off", "success");
     } catch (err) { showToast(err.message || "Couldn't revoke links"); }
     setShareBusy(false);
   };
@@ -405,10 +405,10 @@ export default function SettingsPage() {
 
               <div className="rule" style={{ margin: "24px 0" }} />
 
-              <div className="label" style={{ marginBottom: 8 }}>share link</div>
+              <div className="label" style={{ marginBottom: 8 }}>card link</div>
               <p className="set-card-d">
-                A private, revocable link to your profile card — it works regardless of the setting above.
-                The link is shown once; store it somewhere safe.
+                One private link to your reading DNA card. It works regardless of the setting above,
+                stays the same every time you share, and stops working the moment you turn it off.
               </p>
 
               {shareLink && (
@@ -426,10 +426,10 @@ export default function SettingsPage() {
 
               <div className="set-share-actions">
                 <button className="btn brass" onClick={handleCreateShareLink} disabled={shareBusy}>
-                  {shareBusy ? "Working" : "Create a link"}
+                  {shareBusy ? "Working" : "Show my card link"}
                 </button>
                 <button className="btn ghost" onClick={handleRevokeShareLinks} disabled={shareBusy}>
-                  Revoke all links
+                  Turn off my card link
                 </button>
               </div>
             </div>

@@ -1,409 +1,223 @@
-
-.dna-wrapper {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 22px;
-  padding: 12px;
-}
-
 /* ============================================================
-   THE PLATE
+   THE READING DNA CARD (in the page)
 
-   A dark, foil-edged card on the archetype's own colour. It is
-   deliberately self-contained rather than themed: this object gets
-   saved as an image and shared out of the app entirely, so it has
-   to look like itself on a white page, a dark page, or a screenshot
-   in someone else's feed.
+   The same design as the images people post (components/card/renderCard.js):
+   the archetype's ground, the bloom, the name, three numbers, the red flag.
+   Self-contained rather than themed — it has to look like itself on Vellum,
+   on Lamplight, and on a stranger's /s/ page.
+
+   No fixed shape and no overflow clipping: width follows the column (up to
+   420px), height follows the content. The colours come in as custom
+   properties from the card payload's palette, every pair checked for 4.5:1
+   in the backend's tests.
    ============================================================ */
-.dna-card {
-  position: relative;
-  /* `min(..., 100%)` so a column narrower than the plate shrinks it instead of
-     overflowing. It is a `min`, not a bare percentage, because the plate must
-     never STRETCH either: it is one artifact, rasterised by html2canvas and
-     shared out of the app, and a column that sets its width makes it a different
-     object per page. The DNA tab's rail and the profile's rail each used to do
-     exactly that (340px vs 372px), which left the same reader's fingerprint
-     drawn at two widths — 18 bars and 17 fixed 2px gaps redistributed over 32px
-     less, so the same numbers read as a different silhouette. */
-  width: min(var(--card-w, 372px), 100%);
-  aspect-ratio: 2 / 2.92;
-  padding: 30px 30px 26px;
+.dnacard-wrap {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(168deg,
-    color-mix(in srgb, var(--dc, var(--oxblood)) 62%, #14100a),
-    color-mix(in srgb, var(--dc, var(--oxblood)) 20%, #0a0704));
-  border-radius: 2px;
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  color: #f5ecd2;
-}
-.dna-card--large { --card-w: 440px; }
-.dna-card--small { --card-w: 372px; }
-
-/* Two inset rules, the way a bookplate is ruled — not four corner glyphs. */
-.dna-card::before,
-.dna-card::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-}
-.dna-card::before { inset: 11px; border: 1px solid rgba(224, 196, 122, 0.34); }
-.dna-card::after  { inset: 15px; border: 1px solid rgba(224, 196, 122, 0.13); }
-
-/* Grain overlay for the plate. */
-.dna-frame {
-  position: absolute;
-  inset: 0;
-  background-image: var(--paper-grain);
-  opacity: 0.16;
-  mix-blend-mode: overlay;
-  pointer-events: none;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
 }
 
-.dna-header {
+.dnacard {
+  --dc-top: #22343E;
+  --dc-bottom: #121C22;
+  --dc-accent: #9FC3D4;
+  --dc-ink: #F6EEDF;
   position: relative;
-  display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 22px 22px 24px;
+  border-radius: 6px;
+  color: var(--dc-ink);
+  background: radial-gradient(120% 70% at 50% 25%, var(--dc-top) 0%, var(--dc-bottom) 100%);
+  box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.25));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--font-body);
 }
-.dna-label {
+
+.dnacard-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba(224, 196, 122, 0.9);
-}
-.dna-vol {
-  font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(245, 236, 210, 0.45);
-  margin-top: 5px;
-}
-.dna-glyph {
-  font-family: var(--font-display);
-  font-size: 19px;
-  color: rgba(224, 196, 122, 0.92);
-  line-height: 1;
+  color: var(--dc-accent);
 }
 
-.dna-name {
+.dnacard-bloom {
   position: relative;
-  font-family: var(--font-display);
-  font-size: 37px;
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  line-height: 1.02;
-  margin: 26px 0 0;
-  color: #f5ecd2;
+  align-self: center;
+  width: min(230px, 62%);
+  aspect-ratio: 1;
+  margin: 4px 0;
+  color: var(--dc-ink);
 }
-.dna-name em { color: var(--dc, var(--oxblood)); font-style: italic; filter: brightness(1.6); }
-/* The lines under the name: the season ("in a World-Diver season · since
-   August") and the leaning hedge ("leaning toward the World-Diver"). Small and
-   quiet, so they read as weather around the name, not caveats on it. */
-.dna-hedge {
-  position: relative;
+.dnacard-bloom .bloom { display: block; width: 100%; height: 100%; }
+
+.dnacard-sticker {
+  position: absolute;
+  right: -18%;
+  top: -2%;
+  width: 37%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--dc-accent);
+  color: var(--dc-bottom);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: rotate(12deg);
+  padding: 4px;
+  box-sizing: border-box;
+}
+.dnacard-sticker span {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.24em;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(245, 236, 210, 0.4);
-  margin-top: 22px;
 }
-.dna-hedge + .dna-name { margin-top: 6px; }
-.dna-hedge--after { margin-top: 8px; letter-spacing: 0.14em; }
+.dnacard-sticker em {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1;
+  margin: 3px 2px;
+  overflow-wrap: anywhere;
+}
 
-/* The receipt line: numbers off this reader's shelf, set like a caption. */
-.dna-basis {
-  position: relative;
+.dnacard-kicker {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  color: var(--dc-accent);
+  margin-bottom: -10px;
+}
+
+.dnacard-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(36px, 13vw, 56px);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+  color: var(--dc-ink);
+}
+.dnacard-name span,
+.dnacard-name em { display: block; }
+.dnacard-name em { font-style: italic; color: var(--dc-accent); }
+
+.dnacard-leaning {
+  margin: -4px 0 0;
+  font-size: 14px;
+  color: var(--dc-accent);
+}
+
+.dnacard-line {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.25;
+  text-wrap: pretty;
+}
+
+.dnacard-label {
   font-family: var(--font-mono);
   font-size: 10px;
-  line-height: 1.6;
-  letter-spacing: 0.04em;
-  color: rgba(245, 236, 210, 0.55);
-  margin: 12px 0 0;
-  text-wrap: pretty;
-}
-
-.dna-tagline {
-  position: relative;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 15.5px;
-  line-height: 1.45;
-  color: rgba(245, 236, 210, 0.62);
-  margin-top: 12px;
-  text-wrap: pretty;
-}
-.dna-blurb {
-  position: relative;
-  font-family: var(--font-display);
-  font-size: 14px;
-  line-height: 1.5;
-  color: rgba(245, 236, 210, 0.72);
-  margin: 12px 0 0;
-}
-
-.dna-card-rule {
-  position: relative;
-  height: 1px;
-  background: rgba(224, 196, 122, 0.22);
-  margin: 22px 0 16px;
-}
-.dna-fp-head {
-  position: relative;
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-  margin-bottom: 13px;
-}
-.dna-fp-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.26em;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(245, 236, 210, 0.42) !important;
+  color: var(--dc-accent);
+  margin-bottom: 6px;
 }
-.dna-fp-note {
+.dnacard-numbers ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: baseline;
+}
+.dnacard-numbers li { display: flex; gap: 6px; align-items: baseline; }
+.dnacard-numbers b {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 24px;
+}
+.dnacard-numbers span { font-size: 14px; font-weight: 500; }
+
+.dnacard-flag {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+.dnacard-chip {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(245, 236, 210, 0.28);
-}
-
-/* The fingerprint proper: one bar per register, tallest first, in that
-   register's own colour. Heights are a share of the reader's own peak, so the
-   silhouette is about THEIR shelf and not about how many books they own. */
-.dna-fp-bars {
-  position: relative;
-  display: flex; align-items: flex-end; gap: 2px;
-  height: 56px;
-  margin-bottom: 13px;
-}
-.dna-fp-bar {
-  flex: 1;
-  min-width: 0;
+  background: var(--dc-ink);
+  color: var(--dc-bottom);
+  padding: 3px 6px;
   border-radius: 2px;
-  opacity: 0.88;
-}
-/* A register never reached: present, and visibly nothing. */
-.dna-fp-bar--none {
-  background: rgba(245, 236, 210, 0.28) !important;
-  opacity: 0.55;
 }
 
-.dna-fp-top {
-  position: relative;
-  list-style: none; margin: 0; padding: 0;
-  /* `auto`, not `1fr`: equal fifths are ~58px on the small card, narrower than
-     "recognition" or "indifference", so the longest register names snapped
-     mid-word ("recognitio / n") on a card people share. Sized to content and
-     spread instead — the five names together still fit the card at both sizes,
-     and the bars above are 18 of them, so nothing was ever column-aligned. */
-  display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 3px;
-}
-.dna-fp-cell {
-  min-width: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-}
-.dna-fp-count {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: rgba(224, 196, 122, 0.85);
-}
-.dna-fp-name {
-  width: 100%;
-  font-family: var(--font-display);
-  font-size: 12px;
-  line-height: 14px;
-  text-align: center;
-  white-space: nowrap;
-  color: rgba(245, 236, 210, 0.66);
-}
-/* The narrow variant: five of the longest register names at once
-   ("indifference devastation recognition tenderness amusement") just overrun
-   372px at 12px. Same step the phone breakpoint below already takes. */
-.dna-card--small .dna-fp-name { font-size: 11px; }
-
-.dna-blinds {
-  position: relative;
-  margin-top: auto;
-  padding-top: 20px;
-}
-.dna-blinds .label-sm {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  color: rgba(245, 236, 210, 0.36);
-}
-.dna-blind {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 14.5px;
-  color: rgba(245, 236, 210, 0.58);
-  margin-top: 5px;
-}
-
-.dna-footer {
-  position: relative;
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid rgba(224, 196, 122, 0.18);
-  display: flex; justify-content: space-between; gap: 14px;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(245, 236, 210, 0.4);
-}
-/* When blind spots are present they own the bottom gap, so the footer sits
-   directly under them rather than pushing away a second time. */
-.dna-blinds + .dna-footer { margin-top: 16px; }
-
-.dna-actions {
-  display: flex; gap: 12px;
-  justify-content: center;
-  align-items: center;
-}
-
-.dna-reveal {
-  padding: 0 56px;
-  background: var(--bg-page);
-  min-height: 100%;
-}
-.dna-reveal-grid {
-  padding: 60px 0 80px;
-  display: grid;
-  grid-template-columns: 1fr 460px;
-  gap: 80px;
-  align-items: center;
-}
-.dna-reveal-eyebrow { color: var(--dc, var(--oxblood)) !important; margin-bottom: 18px; }
-.dna-reveal-h1 {
-  font-size: 84px;
-  line-height: 0.94;
-  letter-spacing: -0.03em;
-  font-weight: 400;
-  margin-bottom: 28px;
-  color: var(--ink);
-}
-.dna-reveal-h1 em { color: var(--dc, var(--oxblood)); font-style: italic; }
-.dna-reveal-dek {
-  font-family: var(--font-display);
-  font-size: 21px;
-  line-height: 1.45;
-  color: var(--ink-soft);
-  max-width: 520px;
-  margin-bottom: 24px;
-}
-.dna-reveal-pull {
-  font-family: var(--font-hand);
-  font-size: 26px;
-  line-height: 1.2;
-  color: var(--ink-quiet);
-  max-width: 480px;
-  margin-bottom: 36px;
-  padding-left: 18px;
-  border-left: 2px solid var(--dc, var(--oxblood));
-}
-.dna-reveal-cta { display: flex; gap: 14px; align-items: center; }
-.dna-reveal-note {
-  font-family: var(--font-display);
-  font-style: italic;
-  color: var(--ink-quiet);
-  font-size: 14px;
-}
-
-.dna-reveal-cardwrap { position: relative; justify-self: center; }
-.dna-reveal-halo {
-  position: absolute; inset: -40px;
-  background: radial-gradient(circle at center, color-mix(in srgb, var(--dc, var(--oxblood)) 22%, transparent), transparent 70%);
-  filter: blur(20px);
-  pointer-events: none;
-  animation: bd-glow 3.5s ease-in-out infinite;
-}
-.dna-reveal-deck {
-  position: absolute; top: 14px; left: 18px;
-  width: 440px; height: 640px;
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
+/* Under the card: the share action and the archetype's own description. */
+.dnacard-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.dnacard-share {
+  flex: 1 1 auto;
+  min-height: 48px;
   border-radius: 4px;
-  transform: rotate(-3deg);
-  opacity: 0.6;
+  border: 0;
+  background: var(--ink);
+  color: var(--bg-card, #fbf5e3);
+  font: 600 15px var(--font-body);
+  cursor: pointer;
 }
-.dna-reveal-cardtilt { position: relative; transform: rotate(1.5deg); }
-
-.dna-reveal-rail {
-  padding: 40px 0 60px;
-  border-top: 1px solid var(--rule);
-}
-.dna-reveal-rail-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-}
-.dna-arch-tile {
-  padding: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  opacity: 0.68;
-}
-.dna-arch-tile.current {
-  background: color-mix(in srgb, var(--ac) 12%, var(--bg-card));
-  border-color: var(--ac);
-  opacity: 1;
-}
-.dna-arch-tile-top {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 10px;
-}
-.dna-arch-tile-glyph {
-  font-family: var(--font-display);
-  font-size: 20px;
-  color: var(--ac);
-  line-height: 1;
-}
-.dna-arch-tile-name {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.15;
-  margin-bottom: 4px;
+.dnacard-share:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.dnacard-season-turned {
+  min-height: 44px;
+  width: 100%;
+  border: 1px dashed var(--rule);
+  background: transparent;
   color: var(--ink);
+  border-radius: 4px;
+  font: 500 14px var(--font-body);
+  cursor: pointer;
 }
-.dna-arch-tile-tag {
-  font-family: var(--font-display);
-  font-style: italic;
+.dnacard-season-turned:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* The receipt line under the DNA tab's card: numbers off this reader's shelf. */
+.dna-basis {
+  font-family: var(--font-mono);
   font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 0.03em;
   color: var(--ink-quiet);
+  margin: 0;
+  text-wrap: pretty;
 }
 
-/* responsive */
-@media (max-width: 1080px) {
-  /* No `--card-w: 100%` here any more — `width: min(--card-w, 100%)` above
-     already shrinks the plate into a narrow column, and forcing 100% made it
-     STRETCH to whatever the column was instead. The two rails are capped
-     differently on tablet (.dna-aside 372px, .pf-aside 420px), so that stretch
-     drew the same card 48px wider on the profile than on the DNA tab. The
-     max-width stays as the backstop for pages with no rail at all. */
-  .dna-card { max-width: 420px; }
-  .dna-reveal { padding: 0 28px; }
-  .dna-reveal-grid { grid-template-columns: 1fr; gap: 40px; }
-  .dna-reveal-h1 { font-size: 56px; }
-  .dna-reveal-deck { display: none; }
-  .dna-reveal-rail-grid { grid-template-columns: repeat(2, 1fr); }
+@media (prefers-reduced-motion: no-preference) {
+  .dnacard { animation: dnacard-in 0.35s ease-out both; }
 }
-@media (max-width: 480px) {
-  .dna-card { max-width: 340px; padding: 22px; }
-  .dna-name { font-size: 30px; }
-  .dna-blurb { font-size: 13px; }
-  .dna-tagline { font-size: 14px; }
-  /* The bar block is px-sized while the plate's width is fluid, so it does NOT
-     keep its proportions across widths — which is why the plate is pinned to one
-     width per size rather than left to fill its column. Here it is stepped down
-     once, for the phone, where the labels under the bars run out of room first. */
-  .dna-fp-bars { height: 44px; }
-  .dna-fp-name { font-size: 11px; }
+@keyframes dnacard-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }

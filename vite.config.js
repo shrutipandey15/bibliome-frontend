@@ -168,6 +168,10 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // The share card's link-preview image is served by the backend beside
+      // its /s/ page (nginx sends all of /s/ there in production). Only the
+      // image here: the /s/:token page itself stays the SPA's in dev.
+      "^/s/[^/]+/card\\.jpg": { target: "http://127.0.0.1:8000" },
       // `ws: true` matters here: src/services/realtime.js opens
       // ws(s)://<host>/api/realtime/ws, under the same /api path as every
       // REST call. Without it, Vite's dev proxy silently never upgrades the

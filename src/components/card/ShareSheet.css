@@ -1,0 +1,173 @@
+/* The share sheet. Content only — the backdrop, focus trap and phone
+   bottom-sheet come from <Modal> (`.modal-backdrop` + `.modal-card`). */
+.share-sheet {
+  width: min(440px, 100%);
+  box-sizing: border-box;
+  padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* The card scrolls as a whole; nothing in it may be squeezed to fit, or the
+   preview image spills out of its box. */
+.share-sheet > * { flex-shrink: 0; }
+
+.share-sheet-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* The image they're about to post, small enough to keep the buttons on screen. */
+.share-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 160px;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--bg-field, rgba(0, 0, 0, 0.04));
+}
+.share-preview-img {
+  display: block;
+  max-width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+.share-preview-img--story,
+.share-preview-img--season { max-height: min(42vh, 380px); width: auto; }
+.share-preview-img--square { max-height: min(36vh, 300px); width: auto; }
+.share-preview-img--link { width: 100%; height: auto; }
+.share-preview-wait {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-quiet);
+  text-align: center;
+}
+
+.share-formats,
+.share-switches {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.share-legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+}
+
+.share-formats { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-formats .share-legend { width: 100%; }
+.share-format {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font: 500 14px var(--font-body);
+  color: var(--ink);
+  cursor: pointer;
+}
+.share-format input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.share-format.is-on { background: var(--ink); border-color: var(--ink); color: var(--bg-card, #fbf5e3); }
+.share-format:focus-within { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.share-switches { display: flex; flex-direction: column; gap: 2px; }
+.share-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font: 400 15px var(--font-body);
+  color: var(--ink);
+  cursor: pointer;
+}
+.share-switch input { width: 20px; height: 20px; accent-color: var(--ink); margin: 0; }
+
+.share-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--brass);
+  background: var(--bg-field, rgba(0, 0, 0, 0.04));
+  font: 400 14px/1.45 var(--font-body);
+  color: var(--ink);
+}
+
+.share-actions { display: flex; flex-direction: column; gap: 10px; }
+.share-primary {
+  min-height: 52px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--bg-card, #fbf5e3);
+  font: 600 16px var(--font-body);
+  cursor: pointer;
+}
+.share-secondary { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; }
+.share-btn {
+  min-height: 48px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font: 500 15px var(--font-body);
+  cursor: pointer;
+}
+.share-primary:disabled,
+.share-btn:disabled { opacity: 0.5; cursor: default; }
+.share-primary:focus-visible,
+.share-btn:focus-visible,
+.share-text-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.share-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.share-link:empty { display: none; }
+.share-link-url {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-quiet);
+  overflow-wrap: anywhere;
+}
+.share-text-btn {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 14px var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.share-status {
+  margin: 0;
+  min-height: 1.2em;
+  font: 400 14px var(--font-body);
+  color: var(--ink-quiet);
+}
+.share-status:empty { display: none; }

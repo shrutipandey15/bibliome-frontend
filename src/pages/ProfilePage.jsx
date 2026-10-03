@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useJournal } from "../contexts/JournalContext";
 import { EMOTIONS } from "../services/emotions";
-import { saveCardAsImage } from "../utils/cardUtils";
 import { getMyProfile, updateMyProfile, getInsight } from "../services/api";
 import DNACard from "../components/DNACard";
+import ShareSheet from "../components/card/ShareSheet";
 import { cardArchetype } from "../services/dnaCard";
 import CollectionsEditor from "../components/profile/CollectionsEditor";
 import JoinedCollections from "../components/profile/JoinedCollections";
@@ -251,7 +251,8 @@ export default function ProfilePage() {
   // Which section a phone is showing. Null until the reader picks one; falls
   // back to the first available tab at render.
   const [mobileTab, setMobileTab] = useState(null);
-  const cardRef = useRef(null);
+  // The share sheet, open or not. It fetches the owner's own card itself.
+  const [sharing, setSharing] = useState(false);
 
   const load = useCallback(async () => {
     const p = await getMyProfile();
@@ -295,25 +296,10 @@ export default function ProfilePage() {
   const margins = profile.margins || [];
   const bookCount = profile.book_count ?? 0;
 
-  // The card renders the signature payload AS IT ARRIVES. Everything printed on
-  // the plate — archetype, opened-book count, basis line, register tally — is
-  // counted once by the DNA engine and travels together, so this page cannot
-  // hand the card a figure that disagrees with the figure beside it.
-  //
-  // Two fields used to be overridden here and both were wrong to override:
-  //   - `book_count`: the page's `bookCount` counts the whole shelf including
-  //     want-to-read, which the DNA engine never opened. The card would have
-  //     printed a bigger number than the DNA tab's for the same reader.
-  //   - `emotion_counts`: the profile endpoint computed a SECOND register tally
-  //     of its own, and the card drew it over the basis line built from the
-  //     first. That endpoint no longer ships one; there is one tally now.
-  //
-  // `archetype_share` genuinely is not part of the signature — it moves with the
-  // reader POPULATION rather than with this reader, so it stays merged per
-  // request rather than frozen into anyone's cache.
-  const signature = cardArchetype(profile.signature)
-    ? { ...profile.signature, archetype_share: profile.archetype_share }
-    : null;
+  // The card renders the signature payload AS IT ARRIVES: the backend's card
+  // payload (dna_card), counted once by the DNA engine with the reader's own
+  // switches applied — exactly what a stranger opening this profile sees.
+  const signature = cardArchetype(profile.signature) ? profile.signature : null;
 
   // The earliest date the shelf can evidence, not the signup date — an imported
   // decade of reading must not sit under "since 2026". Falls back to the join
@@ -433,21 +419,17 @@ export default function ProfilePage() {
   const cardEl = (signature || bookCount > 0) && (
     <div className="pf-sig-card">
       {signature ? (
-        <DNACard
-          ref={cardRef}
-          profile={signature}
-          username={profile.handle}
-          size="small"
-          allowShare
-          onSave={() => saveCardAsImage(cardRef.current, profile.handle)}
-          // Same split as the DNA tab's own card (DNAView.jsx): the blurb sits
-          // below the plate, not baked into it — this page had never adopted
-          // that, so the same archetype read as two different-looking cards.
-          showDescription={false}
-          footer={cardArchetype(signature)?.description && (
-            <p className="dna-arch-desc">{cardArchetype(signature).description}</p>
+        <DNACard card={signature}>
+          <div className="dnacard-actions">
+            <button type="button" className="dnacard-share" onClick={() => setSharing(true)}>
+              Share my card
+            </button>
+          </div>
+          {/* The blurb sits below the card, as on the DNA tab. */}
+          {signature.archetype?.description && (
+            <p className="dna-arch-desc">{signature.archetype.description}</p>
           )}
-        />
+        </DNACard>
       ) : <SignaturePending bookCount={bookCount} />}
     </div>
   );
@@ -542,6 +524,14 @@ export default function ProfilePage() {
         <span>bibliome.app</span>
         <span>your study · @{profile.handle}</span>
       </footer>
+      {sharing && (
+        <ShareSheet
+          card={signature}
+          // The card here is the public one; refetch so it shows the switches
+          // the reader just set.
+          onClose={() => { setSharing(false); load(); }}
+        />
+      )}
     </div>
   );
 }

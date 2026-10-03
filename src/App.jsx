@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { Settings, MoreHorizontal, Sun, Moon, User, Sparkles, Plus, ChevronDown, LayoutGrid, Rows3 } from "lucide-react";
-import { Routes, Route, useParams, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
 import { JournalKeyProvider } from "./contexts/JournalKeyContext";
@@ -13,8 +13,7 @@ import { startRealtime, stopRealtime } from "./services/realtime";
 import ThemeToggle from "./components/ThemeToggle";
 import TabBar from "./components/TabBar";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
-import { saveCardAsImage } from "./utils/cardUtils";
-import { getSharedDNA, getEmotionVocab, setReadFor, getDNAProfile } from "./services/api";
+import { getEmotionVocab, setReadFor, getDNAProfile } from "./services/api";
 import EchoCard from "./components/dna/EchoCard";
 import { shouldEcho } from "./components/dna/echo";
 import AuthPage from "./pages/AuthPage";
@@ -31,9 +30,8 @@ import ImportModal from "./components/ImportModal";
 import WelcomeModal from "./components/WelcomeModal";
 import NotificationCenter from "./components/notifications/NotificationCenter";
 import ResonanceMark from "./components/resonance/ResonanceMark";
-import DNACard from "./components/DNACard";
-import { cardArchetype } from "./services/dnaCard";
 import DNAView from "./components/dna/DNAView";
+import SharedCardPage from "./pages/SharedCardPage";
 import ReadForQuestion from "./components/dna/ReadForQuestion";
 import { MIN_BOOKS, openedBooks } from "./components/dna/constants";
 import LandingPage from "./pages/LandingPage";
@@ -71,62 +69,6 @@ const ArchetypePage = lazy(() =>
 const ComparePage = lazy(() =>
   import("./pages/ContentPages").then((m) => ({ default: m.ComparePage })));
 
-
-function SharedProfile() {
-  const { token } = useParams();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const { user: currentUser } = useAuth();
-
-  // A share token is meant for the handful of people it was sent to, not for
-  // search. robots.txt already disallows /s/, but a disallowed URL that gets
-  // linked publicly can still be indexed URL-only — noindex is what actually
-  // keeps it out, for any crawler that fetches the page anyway. [#4]
-  useHead({ robots: "noindex, nofollow", title: "A reader's DNA — Bibliome" });
-
-  useEffect(() => {
-    setLoading(true);
-    getSharedDNA(token)
-      .then((data) => { setProfile(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [token]);
-
-  if (loading) return <div className="loading-screen"><div className="loading-glyph">◈</div><div className="loading-text">Deciphering Link...</div></div>;
-  // Two different nulls behind one screen: a revoked/expired token, and a live
-  // link belonging to a reader whose DNA isn't ready yet (the backend 404s that
-  // case rather than serving a card the app itself wouldn't show them).
-  if (!cardArchetype(profile)) {
-    return (
-      <div className="empty-state empty-state-full">
-        <div className="empty-glyph">?</div>
-        <div className="empty-title">Nothing to see here</div>
-        <div className="empty-sub">This link has expired, or its reader's DNA isn't ready yet.</div>
-        <Link to="/" className="back-btn">Go Home</Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="app public-view">
-      <header className="header">
-        <div className="brand">
-          {/* `.logo` had no stylesheet rule anywhere — this header rendered the
-              brand as unstyled body text. Same wordmark class as the reading room. */}
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}><div className="rr-logo">Biblio<em>me</em></div></Link>
-        </div>
-        <div className="header-right">
-          <Link to="/" className="gen-btn">{currentUser ? "My Dashboard" : "Get Your Own"}</Link>
-        </div>
-      </header>
-      <main className="main" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
-         <div className="dna-reveal-label" style={{ marginTop: 0 }}>Reading Personality</div>
-         {/* The endpoint returns `handle`, never `username` — this read the wrong
-             key and so every shared card was signed @READER. */}
-         <DNACard profile={profile} username={profile.handle || "Reader"} allowShare={false} />
-      </main>
-    </div>
-  );
-}
 
 function buildDashboardStats(entries) {
   const total = entries.length;
@@ -746,7 +688,6 @@ function Dashboard() {
     [entries, analytics.profile],
   );
   const [showReadFor, setShowReadFor] = useState(false);
-  const dnaCardRef = useRef(null);
 
   useEffect(() => {
     if (tab !== "dna") return;
@@ -863,13 +804,6 @@ function Dashboard() {
   const handleGenerateDNA = async () => {
     try { await generate(); setTab("dna"); showToast("Your DNA is ready.", "success"); }
     catch (err) { showToast(err.message || "Failed to generate DNA"); }
-  };
-  const handleSaveCard = async () => {
-    try {
-      const ok = await saveCardAsImage(dnaCardRef.current, user?.username);
-      if (ok) showToast("Card saved", "success");
-    }
-    catch { showToast("Couldn't save card — try a screenshot instead."); }
   };
   const markReadForAsked = () => { try { localStorage.setItem("bibliome_readfor_asked", "1"); } catch { /* ignore */ } };
   const handleSaveReadFor = async (values) => {
@@ -993,10 +927,7 @@ function Dashboard() {
               <ErrorBoundary name="DNA">
                 <DNAView
                   profile={analytics.profile}
-                  username={user?.username}
-                  onSave={handleSaveCard}
                   onEditReadFor={() => setShowReadFor(true)}
-                  cardRef={dnaCardRef}
                   bookCount={entries.length}
                   stats={analytics.stats}
                   onShiftSeen={acknowledgeShift}
@@ -1218,7 +1149,7 @@ export default function App() {
     <UpdateBanner show={updateReady} />
     <Suspense fallback={<RouteLoader />}>
       <Routes>
-        <Route path="/s/:token" element={<SharedProfile />} />
+        <Route path="/s/:token" element={<SharedCardPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Top-level, not under the authed layout: someone deciding whether to
             sign up is exactly who needs to read these. */}

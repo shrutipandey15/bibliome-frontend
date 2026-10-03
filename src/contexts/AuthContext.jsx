@@ -60,9 +60,9 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const register = async (email, username, password, displayName) => {
+  const register = async (email, username, password, displayName, opts) => {
     // register auto-logs-in (same shape as login).
-    const data = await apiRegister(email, username, password, displayName);
+    const data = await apiRegister(email, username, password, displayName, opts);
     if (data.user) {
       setUser(data.user);
       setAuthed(true);

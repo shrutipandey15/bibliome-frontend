@@ -19,6 +19,11 @@ export const ARCHETYPES = [
     name: "The Grief Romantic",
     color: "#3A5A6B",
     glyph: "◈",
+    // The share card's lines, verbatim from the backend (checked by
+    // dna_contract_check.py): first person, said the way a reader would.
+    article: "a",
+    shareLine: "Loss isn't my enemy. Numbness is.",
+    redFlag: "I avoid neat happy endings",
     tagline:
       "You seek books that break your heart because feeling deeply is how you know you're alive. Loss isn't your enemy — numbness is.",
     blurb:
@@ -75,6 +80,9 @@ export const ARCHETYPES = [
     name: "The Control-Seeking Intellectual",
     color: "#5A5A8A",
     glyph: "◇",
+    article: "a",
+    shareLine: "If it scares me, I read until it doesn't.",
+    redFlag: "I'd rather analyse a feeling than have it",
     tagline:
       "You read to master what unsettles you. Understanding is your armor, and every book is a new piece of territory mapped.",
     blurb:
@@ -131,6 +139,9 @@ export const ARCHETYPES = [
     name: "The Soft Masochist",
     color: "#6B3A5D",
     glyph: "◆",
+    article: "a",
+    shareLine: "I choose pain on purpose. Not sorrow — teeth.",
+    redFlag: "I don't trust a book that feels too safe",
     tagline:
       "You choose pain on purpose. Not sorrow — teeth. You're drawn to the book that comes at you over the one that holds you.",
     blurb:
@@ -187,6 +198,9 @@ export const ARCHETYPES = [
     name: "The Comfort Architect",
     color: "#7A8B6F",
     glyph: "○",
+    article: "a",
+    shareLine: "My bookshelf isn't a collection. It's a home.",
+    redFlag: "I re-read instead of risking something new",
     tagline:
       "You build emotional safety through stories. Your bookshelf isn't a collection — it's a home you can always return to.",
     blurb:
@@ -243,6 +257,9 @@ export const ARCHETYPES = [
     name: "The Midnight Arsonist",
     color: "#C47A3A",
     glyph: "△",
+    article: "a",
+    shareLine: "I read to set fire to my own beliefs.",
+    redFlag: "I call gentle books boring",
     tagline:
       "You read like you're setting fire to your own beliefs. Comfort zones are for people who haven't found the right book yet.",
     blurb:
@@ -299,6 +316,9 @@ export const ARCHETYPES = [
     name: "The Quiet Witness",
     color: "#B8964E",
     glyph: "□",
+    article: "a",
+    shareLine: "Books are where I stop performing.",
+    redFlag: "I observe more than I feel",
     tagline:
       "You absorb everything and process in silence. Books are your confessional — the only place you don't perform.",
     blurb:
@@ -355,6 +375,9 @@ export const ARCHETYPES = [
     name: "The Obsessive Romantic",
     color: "#C4553A",
     glyph: "♡",
+    article: "an",
+    shareLine: "I don't read books. I fall into them.",
+    redFlag: "I quit books I can't fall in love with",
     tagline:
       "You don't read books — you fall into them. Every story is a love affair, and you don't do casual.",
     blurb:
@@ -411,6 +434,9 @@ export const ARCHETYPES = [
     name: "The Emotional Archaeologist",
     color: "#7A5A9B",
     glyph: "◎",
+    article: "an",
+    shareLine: "Every book is a dig for a buried part of me.",
+    redFlag: "I find meaning even where there's none",
     tagline:
       "You dig into stories looking for buried parts of yourself. Every book is an excavation site.",
     blurb:
@@ -467,6 +493,9 @@ export const ARCHETYPES = [
     name: "The World-Diver",
     color: "#3A7A8C",
     glyph: "✦",
+    article: "a",
+    shareLine: "I read to live somewhere else.",
+    redFlag: "I skip quiet books that don't take me anywhere",
     tagline:
       "You read to live somewhere else. Vast worlds, long histories, maps in the front pages — you want to be swallowed whole and come back glowing.",
     blurb:
@@ -523,6 +552,9 @@ export const ARCHETYPES = [
     name: "The Adrenaline Seeker",
     color: "#8C3A3A",
     glyph: "✶",
+    article: "an",
+    shareLine: "If it doesn't grab me by the collar, I'm out.",
+    redFlag: "I rush past the quiet parts",
     tagline:
       "You read for the pulse. Twists, fear, the 3am chapter — a book has to grab you by the collar and not let go.",
     blurb:
@@ -579,6 +611,9 @@ export const ARCHETYPES = [
     name: "The Sunshine Romantic",
     color: "#D4876B",
     glyph: "☼",
+    article: "a",
+    shareLine: "I believe in love stories. Not embarrassed about it.",
+    redFlag: "I bail when a story turns dark",
     tagline:
       "You read for the swoon. Banter, butterflies and the happy ending you were promised — you believe in love stories and you're not embarrassed about it.",
     blurb:
@@ -635,6 +670,9 @@ export const ARCHETYPES = [
     name: "The Discerning Reader",
     color: "#6E6E6E",
     glyph: "◌",
+    article: "a",
+    shareLine: "Most books don't reach me. The ones that do, matter.",
+    redFlag: "I decide a book has failed before it's finished",
     tagline:
       "You have high standards. Most books don't reach you — and when one does, it matters.",
     blurb:

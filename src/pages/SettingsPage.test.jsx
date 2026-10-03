@@ -114,14 +114,14 @@ describe("SettingsPage visibility control [F2.8 / B2.1]", () => {
     expect(changeHandle).toHaveBeenCalledWith("quiet_reader");
   });
 
-  it("mints a share link and can revoke", async () => {
+  it("shows the card link and can turn it off", async () => {
     await openVisibility();
-    await userEvent.click(screen.getByRole("button", { name: /Create a link/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Show my card link/i }));
     expect(generateShareToken).toHaveBeenCalled();
     await waitFor(() =>
       expect(screen.getByLabelText("Your share link").value).toContain("/s/tok123"),
     );
-    await userEvent.click(screen.getByRole("button", { name: /Revoke all links/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Turn off my card link/i }));
     expect(revokeShareTokens).toHaveBeenCalled();
   });
 });

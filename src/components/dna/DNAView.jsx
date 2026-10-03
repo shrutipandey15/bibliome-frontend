@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { EMOTIONS, EMO_LIST } from "../../services/emotions";
 import DNACard from "../DNACard";
+import BasisLine from "../card/BasisLine";
+import ShareSheet from "../card/ShareSheet";
+import { applyChoices, seasonJustTurned } from "../card/cardModel";
 import DNAGate from "./DNAGate";
 import Insight from "./Insight";
 import EvolutionView from "./EvolutionView";
@@ -24,15 +27,6 @@ import "./DNAView.css";
 // is for the tagging surfaces. [VISION §4 — `name` is the single-word form.]
 const emoLabel = (slug) => EMOTIONS[slug]?.name?.toLowerCase() || slug;
 const emoColor = (slug) => EMOTIONS[slug]?.color || "var(--ink)";
-
-// Turn a { slug: weight } frequency vector into a sorted, capped list.
-function vectorRows(vec, cap = 6) {
-  return Object.entries(vec || {})
-    .filter(([, w]) => w > 0)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, cap)
-    .map(([slug, weight]) => ({ slug, weight }));
-}
 
 // THE SHAPE OF YOU — the composition portrait (recency-weighted), not the label.
 //
@@ -152,7 +146,12 @@ function Portrait({ counts, current, blindSpots = [] }) {
   );
 }
 
-export default function DNAView({ profile, username, onSave, onEditReadFor, cardRef, bookCount = 0, stats = null, onShiftSeen }) {
+export default function DNAView({ profile, onEditReadFor, bookCount = 0, stats = null, onShiftSeen }) {
+  // Which format the share sheet opened on, or null while it's closed.
+  const [sharing, setSharing] = useState(null);
+  // The switches as the reader last left them in the sheet, until the profile
+  // is next fetched — the card here shows what strangers see.
+  const [choices, setChoices] = useState(null);
   const count = profile?.book_count ?? bookCount;
   const needed = profile?.needed ?? MIN_BOOKS;
   // The mirror auto-computes on read; `enough` is the honest gate. Present
@@ -182,48 +181,12 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
   // section. Absent until it lands — the running head just omits it.
   const avgIntensity = stats?.avg_intensity ?? null;
 
-  // The shareable card uses the legacy signature shape; adapt the v2 payload for it.
-  //
-  // The fingerprint is drawn from `profile.emotion_counts` — REAL books per
-  // register, computed alongside `book_count`/`basis` on this SAME v2 payload, so
-  // it can never disagree with them or with the profile page's card. It used to
-  // read `stats.emotion_counts` off the separately Redis-cached `/dna/stats`
-  // endpoint instead — fine on the numbers most of the time, but that cache is
-  // only invalidated by the entries API's own write paths, so anything else that
-  // changed the shelf (an import, a fixture) could leave it stale for its TTL
-  // while this payload, recomputed by the same call that builds the rest of the
-  // card, never can. `profiles.current` (a weighted recency vector, wrong shape
-  // for a bar chart) stays only as the last-resort fallback for a cache written
-  // before this field existed.
-  const cardProfile = arch && {
-    archetype: arch,
-    book_count: count,
-    emotion_counts: profile.emotion_counts || null,
-    archetype_share: profile.archetype_share,
-    // What the label was nearly instead, and the counts that earn it. `margin` is
-    // not passed: the card reads the hedge off `runner_up`'s presence rather than
-    // re-deriving it from the number, so handing it over would be a dead prop.
-    runner_up: profile.runner_up,
-    leaning: profile.leaning || null,
-    // The season is the owner's weather — only this tab passes it; the public
-    // card payload never carries one.
-    season: profile.season || null,
-    basis: profile.basis,
-    // Last-resort fallback, for a cache written before `emotion_counts` existed.
-    //
-    // `weight`, NOT `count`: these are shares of the recency-weighted vector, and
-    // handing them over as counts made the card print "42" under "books per
-    // register" for a reader with 23 dread books. The card keys its own label off
-    // which key it gets, so the shape has to be honest here.
-    //
-    // `current_books`, NOT `current`: books alone, which is what the backend's
-    // `card_payload` fills this field from for every other surface. `current`
-    // spans the journal, so the same reader's fallback card would have differed
-    // between this tab and their profile — the exact drift this whole adapter is
-    // supposed to close.
-    top_emotions: vectorRows(profile.profiles?.current_books, 5)
-      .map((r) => ({ emotion_id: r.slug, weight: r.weight })),
-  };
+  // The card is the backend's own card payload (dna_card), merged onto this
+  // profile by the /dna/profile route: the same bloom, numbers and lines the
+  // posted image, the profile page and the share link draw. The owner's copy
+  // carries their two switches, and the card here shows what strangers see.
+  const card = profile.card ? { ...profile.card, choices: choices || profile.card.choices } : null;
+  const turned = seasonJustTurned(applyChoices(card), profile.seasons);
 
   const archetypeBody = !arch ? (
     <p className="dna-arch-none">
@@ -231,17 +194,25 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
       are still yours — the label is the one thing that needs a clear
       favourite, and yours is still a tie.
     </p>
-  ) : (
-    <DNACard
-      ref={cardRef}
-      profile={cardProfile}
-      username={username}
-      size="small"
-      allowShare
-      onSave={onSave}
-      showDescription={false}
-      footer={arch.description && <p className="dna-arch-desc">{arch.description}</p>}
-    />
+  ) : card && (
+    <DNACard card={card}>
+      <div className="dnacard-actions">
+        <button type="button" className="dnacard-share" onClick={() => setSharing("story")}>
+          Share my card
+        </button>
+      </div>
+      {/* The season moment: one line, no push. Opens the sheet on the season
+          story, the re-share. */}
+      {turned && (
+        <button type="button" className="dnacard-season-turned" onClick={() => setSharing("season")}>
+          Your season turned — new card ready
+        </button>
+      )}
+      {/* The receipt. The name is a headline for a number the reader can go and
+          check against their own shelf. */}
+      <BasisLine basis={profile.basis} />
+      {arch.description && <p className="dna-arch-desc">{arch.description}</p>}
+    </DNACard>
   );
   const evolution = (
     <EvolutionView
@@ -326,6 +297,13 @@ export default function DNAView({ profile, username, onSave, onEditReadFor, card
           {archetypeBody}
         </aside>
       </div>
+      {sharing && card && (
+        <ShareSheet
+          card={card}
+          initialFormat={sharing}
+          onClose={(c) => { if (c) setChoices(c); setSharing(null); }}
+        />
+      )}
     </div>
   );
 }

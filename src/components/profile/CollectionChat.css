@@ -29,7 +29,7 @@
   --ink-quiet: #6f6656;
   --ink-faint: #8d8474;
   --ink-ghost: #a99e8d;
-  --font-display: "Spectral", "Cormorant Garamond", Georgia, serif;
+  --font-display: "Spectral", "Cormorant Garamond Variable", "Cormorant Garamond", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   color: var(--ink);
   display: flex;

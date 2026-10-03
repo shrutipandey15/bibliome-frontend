@@ -1,16 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
-// Isolate DNAView from the shareable card's network/ShareModal deps. The stub
-// still renders the `footer` slot — DNAView puts the archetype's description
-// there, and swallowing it would hide real layout rather than a network call.
-// `cardProps` captures what DNAView actually handed the card, so a test can
-// assert on fields the stub doesn't render.
+// Isolate DNAView from the card's own rendering and the share sheet's network.
+// The stub still renders its children — DNAView puts the share action, the
+// receipt and the archetype's description there, and swallowing them would
+// hide real layout rather than a network call. `cardProps` captures the card
+// DNAView handed over, so a test can assert on fields the stub doesn't render.
 const cardProps = {};
 vi.mock("../DNACard", () => ({
-  default: ({ footer, profile }) => {
-    Object.assign(cardProps, profile || {});
-    return <div data-testid="dna-card">{footer}</div>;
+  default: ({ children, card }) => {
+    Object.keys(cardProps).forEach((k) => delete cardProps[k]);
+    Object.assign(cardProps, card || {});
+    return <div data-testid="dna-card">{children}</div>;
+  },
+}));
+const sheetProps = vi.fn();
+vi.mock("../card/ShareSheet", () => ({
+  default: (props) => {
+    sheetProps(props);
+    return (
+      <div data-testid="share-sheet">
+        {props.initialFormat}
+        <button type="button" onClick={() => props.onClose({ season: false, red_flag: false })}>close sheet</button>
+      </div>
+    );
   },
 }));
 
@@ -55,6 +68,15 @@ const fullProfile = {
   },
   drift: 0.55,
   reads_for: ["comfort"],
+  // The owner's share card, merged on by the /dna/profile route (backend dna_card).
+  card: {
+    archetype: { id: "grief_romantic", name: "The Grief Romantic", article: "a",
+      share_line: "Loss isn't my enemy. Numbness is.", red_flag: "I avoid neat happy endings" },
+    palette: { top: "#22343E", bottom: "#121C22", accent: "#9FC3D4", ink: "#F6EEDF" },
+    bloom: { size: 1000, layers: [], top: [] },
+    tagged_count: 47, year: 2026, season: null, red_flag: "I avoid neat happy endings",
+    choices: { season: true, red_flag: true },
+  },
 };
 
 const belowGate = {
@@ -91,23 +113,57 @@ describe("DNAView — anti-horoscope guards [F7.1 / F7.8]", () => {
     expect(screen.queryByText(/the mirror starts to see you/i)).toBeNull();
   });
 
-  it("passes the runner-up and basis through to the card, but not the margin [P2-8]", async () => {
-    const spy = vi.fn();
+  it("hands the card the backend's own card payload, with the receipt under it", async () => {
     await renderView({
-      profile: { ...fullProfile, margin: 0.04, runner_up: "The Soft Masochist", basis: { counts: [] } },
-      username: "alice",
-      onSave: spy,
+      profile: { ...fullProfile, basis: { counts: [{ emotion: "grief", books: 9, of: 47 }] } },
     });
-    // The stub records what it was handed; before this the backend computed these
-    // and the card never saw them. `margin` is deliberately NOT forwarded — the
-    // card decides the hedge from `runner_up`'s presence, so the number would be a
-    // dead prop and an invitation to re-derive the threshold a second time.
-    const card = screen.getByTestId("dna-card");
-    expect(card).toBeInTheDocument();
-    expect(cardProps.margin).toBeUndefined();
-    expect(cardProps.runner_up).toBe("The Soft Masochist");
-    expect(cardProps.basis).toEqual({ counts: [] });
-    expect(cardProps.archetype.id).toBe("grief-romantic");
+    // One card shape from one engine: the DNA tab no longer adapts the v2
+    // payload into a card of its own, so it can't disagree with the share link.
+    expect(cardProps.archetype.id).toBe("grief_romantic");
+    expect(cardProps.choices).toEqual({ season: true, red_flag: true });
+    // The receipt sits under the card on the reader's own page.
+    expect(screen.getByText(/heartbreak in 9 of your 47 books/i)).toBeInTheDocument();
+  });
+
+  it("opens the share sheet on the story from 'Share my card'", async () => {
+    await renderView({ profile: fullProfile });
+    expect(screen.queryByTestId("share-sheet")).toBeNull();
+    await act(async () => { screen.getByRole("button", { name: /share my card/i }).click(); });
+    expect(screen.getByTestId("share-sheet")).toHaveTextContent("story");
+  });
+
+  it("never calls a first season a turn", async () => {
+    const since = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+    const card = { ...fullProfile.card, season: { id: "world_diver", name: "The World-Diver", home: false, since } };
+    // A first season is not a turn.
+    await renderView({ profile: { ...fullProfile, card, seasons: [{ id: "world_diver" }] } });
+    expect(screen.queryByText(/your season turned/i)).toBeNull();
+  });
+
+  it("offers the season story when the season has just turned", async () => {
+    const since = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+    const card = { ...fullProfile.card, season: { id: "world_diver", name: "The World-Diver", home: false, since } };
+    await renderView({ profile: { ...fullProfile, card, seasons: [{ id: "world_diver" }, { id: "grief_romantic" }] } });
+    await act(async () => { screen.getByRole("button", { name: /your season turned — new card ready/i }).click(); });
+    expect(screen.getByTestId("share-sheet")).toHaveTextContent("season");
+  });
+
+  it("shows the switches the reader just set once the sheet closes", async () => {
+    await renderView({ profile: fullProfile });
+    await act(async () => { screen.getByRole("button", { name: /share my card/i }).click(); });
+    await act(async () => { screen.getByRole("button", { name: "close sheet" }).click(); });
+    expect(screen.queryByTestId("share-sheet")).toBeNull();
+    expect(cardProps.choices).toEqual({ season: false, red_flag: false });
+  });
+
+  it("says nothing about a season the reader switched off", async () => {
+    const since = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+    const card = {
+      ...fullProfile.card, choices: { season: false, red_flag: true },
+      season: { id: "world_diver", name: "The World-Diver", home: false, since },
+    };
+    await renderView({ profile: { ...fullProfile, card, seasons: [{ id: "a" }, { id: "b" }] } });
+    expect(screen.queryByText(/your season turned/i)).toBeNull();
   });
 
   it("shows the honest empty state when there is no profile at all (never fabricates)", async () => {
