@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { Settings, MoreHorizontal, Sun, Moon, User, Sparkles, Plus, ChevronDown, LayoutGrid, Rows3 } from "lucide-react";
-import { Routes, Route, Link, useNavigate, Navigate, Outlet, useSearchParams } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, Navigate, Outlet, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useJournal, JournalProvider } from "./contexts/JournalContext";
 import { JournalKeyProvider } from "./contexts/JournalKeyContext";
@@ -13,7 +13,7 @@ import { startRealtime, stopRealtime } from "./services/realtime";
 import ThemeToggle from "./components/ThemeToggle";
 import TabBar from "./components/TabBar";
 import { PrivateJournalProvider } from "./contexts/PrivateJournalContext";
-import { getEmotionVocab, setReadFor, getDNAProfile } from "./services/api";
+import { getEmotionVocab, setReadFor, getDNAProfile, getNotificationPrefs, updateNotificationPrefs } from "./services/api";
 import EchoCard from "./components/dna/EchoCard";
 import { shouldEcho } from "./components/dna/echo";
 import AuthPage from "./pages/AuthPage";
@@ -31,10 +31,10 @@ import WelcomeModal from "./components/WelcomeModal";
 import NotificationCenter from "./components/notifications/NotificationCenter";
 import ResonanceMark from "./components/resonance/ResonanceMark";
 import DNAView from "./components/dna/DNAView";
+import DigestLetterPin from "./components/DigestLetterPin";
 import SharedCardPage from "./pages/SharedCardPage";
 import ReadForQuestion from "./components/dna/ReadForQuestion";
 import { MIN_BOOKS, openedBooks } from "./components/dna/constants";
-import LandingPage from "./pages/LandingPage";
 import { Patterns } from "./components/Panels";
 import Register from "./components/profile/Register";
 import { buildRegister } from "./components/profile/registerData";
@@ -44,7 +44,8 @@ import { ShelfDecoration } from "./components/Shelf";
 import { EMO_LIST, EMOTIONS, getPrimaryEmotion, hydrateEmotions } from "./services/emotions";
 import { clearCache } from "./services/offline";
 import { findDuplicateEntry } from "./utils/findDuplicate";
-import { takeInvite } from "./services/pendingInvite";
+import { takeReturn } from "./services/pendingInvite";
+import SignedOutRoot from "./components/SignedOutRoot";
 import { autoSubscribeIfGranted } from "./services/push";
 import "./App.css";
 
@@ -59,6 +60,7 @@ const JournalPage = lazy(() => import("./pages/JournalPage"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const JoinCollectionPage = lazy(() => import("./pages/JoinCollectionPage"));
 const CollectionChatPage = lazy(() => import("./pages/CollectionChatPage"));
+const DigestPage = lazy(() => import("./pages/DigestPage"));
 // The prerendered marketing routes. Lazy like the rest, but note these are the
 // one set of routes that also exist as standalone HTML files in dist/ — a cold
 // load never reaches this chunk at all (vite.config.js prerender plugin).
@@ -674,6 +676,22 @@ function Dashboard() {
   const [echo, setEcho] = useState(null);
   const clearEcho = useCallback(() => setEcho(null), []);
 
+  // Deep links from the weekly digest: `?add=1` opens "Log a book", `?entry=<id>`
+  // opens that book. The param is dropped once acted on, so Back and a refresh
+  // don't reopen the modal.
+  const addParam = searchParams.get("add");
+  const entryParam = searchParams.get("entry");
+  useEffect(() => {
+    if (!addParam && !entryParam) return;
+    if (entryParam && loading) return;     // wait for the shelf to find the book
+    if (addParam) setModal("new");
+    else {
+      const found = entries.find((e) => e.id === entryParam);
+      if (found) setModal(found);
+    }
+    setSearchParams((p) => { p.delete("add"); p.delete("entry"); return p; }, { replace: true });
+  }, [addParam, entryParam, loading, entries, setSearchParams]);
+
   const fabHidden = useFabHidden();
 
   // The DNA tab is one segmented view, not three stacked sections: the reading
@@ -923,6 +941,9 @@ function Dashboard() {
             </nav>
             </div>
 
+            {dnaSection === "read" && searchParams.get("letter") && (
+              <DigestLetterPin period={searchParams.get("letter")} />
+            )}
             {dnaSection === "read" && (
               <ErrorBoundary name="DNA">
                 <DNAView
@@ -1087,11 +1108,29 @@ function AuthedLayout() {
     return () => stopRealtime();
   }, [authed]);
 
-  // Signing in from an invite link returns you to the invitation. [#5]
+  // The weekly digest arrives at 9am in the reader's own timezone, so the server
+  // has to know it. Readers still on the default (UTC) get the browser's, once.
+  // ponytail: someone who deliberately picked UTC while elsewhere gets moved
+  // once; they can set it back in Settings, and it won't be changed again.
   useEffect(() => {
     if (!authed) return;
-    const token = takeInvite();
-    if (token) navigate(`/collections/join/${token}`, { replace: true });
+    let synced = false;
+    try { synced = !!localStorage.getItem("bibliome_tz_synced"); } catch { /* private mode */ }
+    if (synced) return;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    getNotificationPrefs().then((prefs) => {
+      if (prefs && prefs.timezone === "UTC" && tz && tz !== "UTC") return updateNotificationPrefs({ timezone: tz });
+    }).then(() => {
+      try { localStorage.setItem("bibliome_tz_synced", "1"); } catch { /* ignore */ }
+    }).catch(() => { /* try again next load */ });
+  }, [authed]);
+
+  // Signing in returns you to wherever you were headed: a digest, a book, an
+  // invitation. Parked by SignedOutRoot (or the invite page). [#5]
+  useEffect(() => {
+    if (!authed) return;
+    const to = takeReturn();
+    if (to) navigate(to, { replace: true });
   }, [authed, navigate]);
 
   if (!authed) return <Navigate to="/login" replace />;
@@ -1174,7 +1213,7 @@ export default function App() {
           element={
             authed
               ? <AuthedLayout />
-              : <LandingPage onGetStarted={(mode) => navigate(mode === "register" ? "/login?mode=register" : "/login")} />
+              : <SignedOutRoot onGetStarted={(mode) => navigate(mode === "register" ? "/login?mode=register" : "/login")} />
           }
         >
           <Route index element={<Dashboard />} />
@@ -1193,6 +1232,7 @@ export default function App() {
           <Route path="collections/:collectionId/discussion" element={<CollectionChatPage />} />
           <Route path="collections/:collectionId/discussion/:bookId" element={<CollectionChatPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="digest/:period" element={<DigestPage />} />
           <Route path="admin" element={<AdminPage />} />
         </Route>
 

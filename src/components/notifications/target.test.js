@@ -21,9 +21,11 @@ describe("notificationTarget — every notice lands somewhere real", () => {
     expect(notificationTarget(n("resonance_message", { thread_id: "t1" }))).toBe("/resonance");
   });
 
-  it("sends a DNA shift to the DNA tab and the digest to the shelf", () => {
+  it("sends a DNA shift to the DNA tab and the digest to that week's digest page", () => {
     expect(notificationTarget(n("dna_shifted", { old: "A", new: "B" }))).toBe("/?view=dna");
-    expect(notificationTarget(n("weekly_digest", { books_this_week: 3 }, 2))).toBe("/");
+    expect(notificationTarget(n("weekly_digest", { period: "2026-41" }, 2))).toBe("/digest/2026-41");
+    // Digests sent before the email version carry no subject but do carry a period.
+    expect(notificationTarget(n("weekly_digest", {}, 2))).toBe("/");
   });
 
   it("sends anything tier 0 to account security, whatever its kind", () => {

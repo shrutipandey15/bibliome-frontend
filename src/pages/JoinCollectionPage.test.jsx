@@ -15,7 +15,7 @@ vi.mock("../contexts/AuthContext", () => ({
 
 import JoinCollectionPage from "./JoinCollectionPage";
 import { peekCollectionInvite, joinCollection } from "../services/api";
-import { takeInvite } from "../services/pendingInvite";
+import { takeReturn } from "../services/pendingInvite";
 
 const PEEK = {
   collection_id: "c1",
@@ -102,6 +102,6 @@ describe("JoinCollectionPage [#5]", () => {
     expect(await screen.findByText("Winter Reads")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("link", { name: /sign in to join/i }));
 
-    expect(takeInvite()).toBe("TOK9");
+    expect(takeReturn()).toBe("/collections/join/TOK9");
   });
 });

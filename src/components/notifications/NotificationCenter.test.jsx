@@ -18,7 +18,7 @@ const data = {
     { id: "n1", tier: 1, kind: "echo_reply", read: false, created_at: new Date().toISOString(),
       payload: { echo_id: "e1", book_title: "Piranesi", actors: ["quiet_reader"], count: 1 } },
     { id: "n2", tier: 2, kind: "weekly_digest", read: false, created_at: new Date().toISOString(),
-      payload: { period: "2026-W28", books_this_week: 3, memory: "Three months ago, X wrecked you." } },
+      payload: { period: "2026-41", subject: "Something you wrote six weeks ago" } },
     { id: "n3", tier: 0, kind: "password_changed", read: true, created_at: new Date().toISOString(),
       payload: { message: "Your password was changed." } },
   ],
@@ -42,8 +42,8 @@ describe("NotificationCenter [F4.1 / F4.2 / F3.8]", () => {
 
     expect(await screen.findByText(/replied to your echo/i)).toBeInTheDocument();
     expect(screen.getByText(/@quiet_reader/)).toBeInTheDocument();
-    expect(screen.getByText(/your reading week/i)).toBeInTheDocument();
-    expect(screen.getByText(/shelved/i)).toBeInTheDocument();
+    expect(screen.getByText(/your week/i)).toBeInTheDocument();
+    expect(screen.getByText("Something you wrote six weeks ago")).toBeInTheDocument();
   });
 
   it("names the reactor and the reaction when exactly one person reacted", async () => {

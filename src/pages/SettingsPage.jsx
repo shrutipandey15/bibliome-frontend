@@ -20,6 +20,8 @@ const SECTIONS = [
 ];
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
+// Python weekday order, as the server stores it: 0 = Monday.
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const fmtHour = (h) => `${String(h).padStart(2, "0")}:00`;
 
 // The profile_visibility control [F2.8 / B2.1]. Shelf, journal, and DNA are
@@ -467,12 +469,40 @@ export default function SettingsPage() {
                     onChange={(v) => savePrefs({ reply_enabled: v })}
                   />
                   <Toggle
-                    label="Weekly reading digest"
-                    hint="Your reading week + a resurfaced memory, once a week."
+                    label="Weekly digest"
+                    hint="A short letter about you and your shelf, in the app, once a week."
                     checked={prefs.digest_enabled}
                     disabled={prefsBusy}
                     onChange={(v) => savePrefs({ digest_enabled: v })}
                   />
+                  {prefs.digest_enabled && (
+                    <>
+                      <div className="set-quiet">
+                        <label className="set-quiet-field">
+                          <span className="label-sm">day</span>
+                          <select
+                            className="set-input"
+                            value={prefs.digest_day ?? 6}
+                            disabled={prefsBusy}
+                            onChange={(e) => savePrefs({ digest_day: Number(e.target.value) })}
+                          >
+                            {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
+                          </select>
+                        </label>
+                        <label className="set-quiet-field">
+                          <span className="label-sm">time</span>
+                          <select
+                            className="set-input"
+                            value={prefs.digest_hour ?? 9}
+                            disabled={prefsBusy}
+                            onChange={(e) => savePrefs({ digest_hour: Number(e.target.value) })}
+                          >
+                            {HOURS.map((h) => <option key={h} value={h}>{fmtHour(h)}</option>)}
+                          </select>
+                        </label>
+                      </div>
+                    </>
+                  )}
 
                   <div className="rule" style={{ margin: "20px 0" }} />
 

@@ -1,0 +1,48 @@
+/* The in-app weekly digest: one column, the email's sections, nothing held back. */
+.dg-page {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 32px 16px 80px;
+  color: var(--ink);
+}
+.dg-subject {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(26px, 6vw, 34px);
+  line-height: 1.2;
+  margin: 8px 0 12px;
+  text-wrap: balance;
+}
+.dg-intro { font-family: var(--font-display); font-style: italic; color: var(--ink-quiet); font-size: 18px; }
+.dg-quiet { color: var(--ink-quiet); }
+
+.dg-section { margin-top: 20px; padding: 22px 20px; scroll-margin-top: 16px; }
+.dg-title { color: var(--ink-quiet); margin-bottom: 10px; }
+.dg-body p { margin: 0 0 10px; line-height: 1.55; white-space: pre-wrap; }
+.dg-go { margin-top: 6px; }
+.dg-ask { font-family: var(--font-display); font-size: 18px; margin: 14px 0 10px; }
+.dg-note {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--brass);
+  background: var(--bg-sunken);
+  white-space: pre-wrap;
+}
+.dg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dg-action { margin-top: 28px; color: var(--ink-soft); }
+.dg-action a { color: var(--brass); }
+
+.dg-weather { display: grid; gap: 12px; margin-top: 8px; }
+.dg-weather-card { display: flex; height: 64px; border-radius: 8px; overflow: hidden; }
+.dg-weather-band {
+  display: flex;
+  align-items: flex-end;
+  padding: 6px 8px;
+  color: #fff;
+  font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+}
+
+.dg-lead { border-color: var(--brass); }
+.dg-lead .dg-body p { font-family: var(--font-display); font-size: 20px; line-height: 1.4; color: var(--ink); }
+.dg-preview-frame { width: 375px; max-width: 100%; border: 1px solid var(--rule); padding: 0 12px 16px; }

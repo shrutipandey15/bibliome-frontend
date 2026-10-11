@@ -1074,6 +1074,28 @@ export async function updateNotificationPrefs(data) {
   return res.json();
 }
 
+// ── Weekly digest [app/routers/digest.py] ──
+// The in-app copy of one week's email, with nothing held back.
+export async function getDigest(period) {
+  return apiGet(`/digest/${encodeURIComponent(period)}`);
+}
+
+// Click-through for the digest's success metric: "open", a section kind, or
+// "action". Best effort — a lost click is never worth an error on screen.
+export async function recordDigestClick(period, section) {
+  try {
+    await apiFetch(`/digest/${encodeURIComponent(period)}/click`, {
+      method: "POST",
+      body: JSON.stringify({ section }),
+    });
+  } catch { /* ignore */ }
+}
+
+// Admin: this week's digest for recent readers, built but not delivered.
+export async function previewDigests(limit = 10) {
+  return apiGet(`/admin/digest/preview?limit=${limit}`);
+}
+
 // ── Resonance — the quiet one-to-one surface [app/routers/resonance.py] ──
 //
 // Every payload here is anonymised by the server: a match is a book, some shared

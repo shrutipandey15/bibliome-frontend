@@ -55,16 +55,11 @@ function timeAgo(iso) {
 }
 
 function DigestItem({ payload }) {
-  const books = payload?.books_this_week ?? 0;
   return (
     <div className="nc-digest">
-      <div className="label nc-digest-label">· your reading week ·</div>
-      <div className="nc-digest-line">
-        {books > 0
-          ? <>You shelved <strong>{books}</strong> book{books === 1 ? "" : "s"} this week.</>
-          : <>A quiet week — nothing shelved. That's allowed.</>}
-      </div>
-      {payload?.memory && <div className="nc-digest-memory">↺ {payload.memory}</div>}
+      <div className="label nc-digest-label">· your week ·</div>
+      <div className="nc-digest-line">{payload?.subject || "This week's digest is here."}</div>
+      {payload?.tease && <div className="nc-digest-memory">{payload.tease.split("\n")[0]}</div>}
     </div>
   );
 }

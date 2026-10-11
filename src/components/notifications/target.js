@@ -17,7 +17,7 @@
  *   collection_joined   app/routers/profile.py    → { collection_id, actors, count }
  *   collection_deleted  app/routers/profile.py    → { title } — the room is gone, there is nowhere to land
  *   dna_shifted         app/services/dna_service  → { old, new }
- *   weekly_digest       app/services/digest_svc   → { period, books_this_week, memory }
+ *   weekly_digest       app/services/digest_svc   → { period, subject }
  *   tier 0 (security)   app/routers/auth.py       → { message }
  *
  * Resonance lands on the page, not on a specific card: those payloads carry a
@@ -71,9 +71,8 @@ export function notificationTarget(n) {
     case "dna_shifted":
       return "/?view=dna";
     case "weekly_digest":
-      // The digest is about the reading week, and the mirror it summarises lives
-      // on the shelf.
-      return "/";
+      // The in-app copy of that week's email, nothing held back.
+      return p.period ? `/digest/${p.period}` : "/";
     default:
       return null;
   }

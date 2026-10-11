@@ -26,10 +26,10 @@ vi.mock("../services/api", () => ({
   revokeShareTokens: vi.fn().mockResolvedValue(undefined),
   changeHandle: vi.fn().mockResolvedValue({}),
   getNotificationPrefs: vi.fn().mockResolvedValue({
-    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC",
+    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9,
   }),
   updateNotificationPrefs: vi.fn().mockImplementation(async (patch) => ({
-    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", ...patch,
+    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, ...patch,
   })),
   setReadFor: vi.fn().mockResolvedValue({}),
 }));
@@ -98,7 +98,7 @@ describe("SettingsPage visibility control [F2.8 / B2.1]", () => {
     // Weekly digest toggles independently — the individual switches already
     // cover any combination, so there is no separate "fewer notifications"
     // shortcut duplicating them.
-    const digestSwitch = await screen.findByRole("switch", { name: /weekly reading digest/i });
+    const digestSwitch = await screen.findByRole("switch", { name: /weekly digest/i });
     await userEvent.click(digestSwitch);
     expect(updateNotificationPrefs).toHaveBeenCalledWith({ digest_enabled: false });
     expect(screen.queryByRole("button", { name: /fewer notifications/i })).not.toBeInTheDocument();
