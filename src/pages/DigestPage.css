@@ -1,48 +1,334 @@
-/* The in-app weekly digest: one column, the email's sections, nothing held back. */
+/* ============================================================
+   THE WEEKLY DIGEST — a tiny private magazine, one issue a week.
+
+   1. The cover: always night-ink, whatever the theme — the one
+      loud thing on the page. Issue number, headline, one big
+      figure, the lead's book standing on the right, the only
+      primary button.
+   2. "In this issue": numbered, icon'd, tappable — scan first.
+   3. The desk: each smaller section is a different object, so
+      no two read alike — a specimen card in the feeling's own
+      colour, an index card under a paperclip, a postcard, a
+      sealed letter on ruled paper.
+   4. One small thing, then a handwritten sign-off.
+   ============================================================ */
+
+/* Safe areas: in the installed app the page runs under the notch and above
+   the home indicator. */
 .dg-page {
-  max-width: 620px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: 32px 16px 80px;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(96px + env(safe-area-inset-bottom, 0px));
   color: var(--ink);
 }
+.dg-center { text-align: center; padding-top: 64px; }
+.dg-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.dg-back { font-size: 12.5px; min-height: 44px; display: inline-flex; align-items: center; }
+.dg-stale { margin: 0 0 10px; font: 500 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-quiet); text-align: center; }
+.dg-quiet { color: var(--ink-quiet); }
+.dg { display: grid; gap: 22px; }
+/* Grid items default to min-width:auto, so the scrolling cover row would widen
+   the whole page instead of scrolling. */
+.dg > *, .dg-desk > *, .dg-cover-grid > * { min-width: 0; }
+section[id], header[id] { scroll-margin-top: 16px; }
+
+/* ---------- 1. cover ---------- */
+.dg-cover {
+  --night: #15100a;
+  --night-ink: #f3e7cb;
+  --night-soft: #cdbb94;
+  --night-quiet: #9a8867;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 70% at 100% 0%, rgba(210, 161, 74, .22) 0%, transparent 60%),
+    radial-gradient(70% 60% at 0% 100%, rgba(138, 59, 46, .25) 0%, transparent 65%),
+    var(--night);
+  color: var(--night-ink);
+  border-radius: 4px;
+  padding: 22px clamp(20px, 5vw, 40px) 30px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(243, 231, 203, .1);
+}
+.dg-cover::after {   /* paper grain, on dark */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--paper-grain);
+  opacity: .5;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.dg-cover > * { position: relative; z-index: 1; }
+.dg-cover-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font: 500 11px var(--font-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--night-quiet);
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(243, 231, 203, .16);
+}
+.dg-cover-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px 28px;
+  align-items: center;
+  margin-top: 18px;
+}
+.dg-issue {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  background: var(--foil);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 6px;
+}
+.dg-intro { font-family: var(--font-display); font-style: italic; color: var(--night-soft); margin: 0 0 6px; font-size: 16px; }
 .dg-subject {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(26px, 6vw, 34px);
-  line-height: 1.2;
-  margin: 8px 0 12px;
+  font-size: clamp(34px, 9vw, 54px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
   text-wrap: balance;
+  color: var(--night-ink);
 }
-.dg-intro { font-family: var(--font-display); font-style: italic; color: var(--ink-quiet); font-size: 18px; }
-.dg-quiet { color: var(--ink-quiet); }
-
-.dg-section { margin-top: 20px; padding: 22px 20px; scroll-margin-top: 16px; }
-.dg-title { color: var(--ink-quiet); margin-bottom: 10px; }
-.dg-body p { margin: 0 0 10px; line-height: 1.55; white-space: pre-wrap; }
-.dg-go { margin-top: 6px; }
-.dg-ask { font-family: var(--font-display); font-size: 18px; margin: 14px 0 10px; }
-.dg-note {
-  margin: 12px 0;
-  padding: 10px 14px;
-  border-left: 2px solid var(--brass);
-  background: var(--bg-sunken);
-  white-space: pre-wrap;
+.dg-figure { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 12px; }
+.dg-figure b {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(64px, 16vw, 96px);
+  line-height: .9;
+  background: var(--foil);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-.dg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.dg-action { margin-top: 28px; color: var(--ink-soft); }
-.dg-action a { color: var(--brass); }
+.dg-figure span { font: 500 12px var(--font-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--night-soft); }
+.dg-figure .dg-figure-words {
+  font: italic 400 clamp(28px, 7vw, 40px) var(--font-display);
+  letter-spacing: 0;
+  text-transform: none;
+  background: var(--foil);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dg-lead-text { font-family: var(--font-display); font-size: clamp(19px, 4.6vw, 22px); line-height: 1.4; margin: 0 0 10px; color: var(--night-ink); text-wrap: pretty; }
+.dg-cta { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; padding: 12px 20px; min-height: 44px; }
+.dg-greet { margin: 18px 0 0; font: 500 11px var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--night-quiet); }
 
-.dg-weather { display: grid; gap: 12px; margin-top: 8px; }
-.dg-weather-card { display: flex; height: 64px; border-radius: 8px; overflow: hidden; }
-.dg-weather-band {
-  display: flex;
-  align-items: flex-end;
-  padding: 6px 8px;
-  color: #fff;
-  font-size: 13px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+/* cover art */
+.dg-cover-art { display: grid; place-items: center; }
+.dg-art-book { width: 150px; transform: rotate(4deg); filter: drop-shadow(0 22px 26px rgba(0, 0, 0, .55)); }
+.dg-art-blur {
+  width: 150px; height: 210px; display: grid; place-items: center; align-content: center; gap: 10px;
+  background: var(--foil); border-radius: 3px; transform: rotate(4deg);
+  box-shadow: 0 22px 40px -10px rgba(0, 0, 0, .6);
+}
+.dg-art-blur-glyph { font-size: 38px; color: #2a1d0c; opacity: .55; filter: blur(1.5px); }
+.dg-art-blur-name { font: 22px var(--font-display); color: #2a1d0c; filter: blur(6px); text-align: center; padding: 0 12px; user-select: none; }
+.dg-art-orb {
+  width: 150px; height: 150px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--emo) 55%, white) 0%, var(--emo) 55%, color-mix(in srgb, var(--emo) 60%, black) 100%);
+  font: italic 22px var(--font-display); color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, .4);
+  box-shadow: 0 20px 50px -10px color-mix(in srgb, var(--emo) 70%, transparent);
+}
+.dg-art-seal, .dg-art-icon {
+  width: 130px; height: 130px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--night-soft);
+  border: 1px solid rgba(243, 231, 203, .2);
+}
+.dg-art-seal { background: radial-gradient(circle at 40% 35%, #b4483a, #6b2219); color: #f6d9c7; box-shadow: 0 16px 30px -8px rgba(0,0,0,.6); border: 0; }
+.dg-cover .dg-letter p { color: var(--night-ink); }
+.dg-cover .dg-feeling-phrase, .dg-cover .dg-feeling-closest, .dg-cover .dg-ask { color: var(--night-soft); }
+.dg-cover .dg-feeling-essay p { color: var(--night-ink); }
+
+/* ---------- 2. in this issue ---------- */
+.dg-toc { display: grid; gap: 8px; }
+.dg-toc ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.dg-toc a {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--bg-card);
+  color: var(--ink-soft); text-decoration: none;
+  font-size: 13.5px;
+  transition: border-color .15s, transform .15s;
+}
+.dg-toc a:hover { border-color: var(--brass); transform: translateY(-1px); }
+.dg-toc a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.dg-toc-n { font: 500 11px var(--font-mono); color: var(--brass); }
+.dg-toc a > span:last-child::first-letter { text-transform: uppercase; }
+
+/* ---------- 3. the desk ---------- */
+.dg-desk { display: grid; gap: 22px; }
+.dg-piece { position: relative; padding: 22px clamp(18px, 4vw, 28px); border-radius: 4px; }
+.dg-piece-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; color: var(--ink-quiet); }
+.dg-piece-head .label-sm { color: inherit; }
+.dg-piece-n { font: 500 11px var(--font-mono); color: var(--brass); }
+.dg-text { margin: 0 0 10px; line-height: 1.6; color: var(--ink-soft); }
+.dg-text-big { font-family: var(--font-display); font-size: 20px; line-height: 1.45; color: var(--ink); }
+.dg-ask { font-family: var(--font-display); font-style: italic; font-size: 18px; margin: 18px 0 10px; }
+.dg-more {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; min-height: 44px;
+  font: 500 14px var(--font-body); color: var(--brass); text-decoration: none;
+}
+.dg-more:hover { color: var(--ink); }
+.dg-ghostbtn {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 10px 16px;
+  font: 500 13.5px var(--font-body);
+  color: var(--ink); background: transparent;
+  border: 1px solid var(--rule); border-radius: 999px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.dg-ghostbtn:hover { border-color: var(--ink); }
+
+/* specimen card: the feeling's own colour */
+.dg-specimen {
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--emo) 22%, var(--bg-card)) 0%, var(--bg-card) 55%);
+  border: 1px solid color-mix(in srgb, var(--emo) 45%, var(--rule));
+  box-shadow: var(--shadow-md);
+}
+.dg-specimen .dg-piece-head { color: color-mix(in srgb, var(--emo) 70%, var(--ink)); }
+.dg-feeling-name {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 11vw, 52px);
+  line-height: .95;
+  overflow-wrap: anywhere;
+  letter-spacing: -0.02em;
+  color: var(--emo);
+  text-transform: lowercase;
+}
+.dg-feeling-phrase { font: italic 17px var(--font-display); color: var(--ink-quiet); margin: 8px 0 16px; }
+.dg-feeling-essay { margin: 0; padding: 0 0 0 16px; border-left: 3px solid var(--emo); }
+.dg-feeling-essay p { font-family: var(--font-display); font-size: 19px; line-height: 1.5; margin: 0 0 6px; color: var(--ink); }
+.dg-feeling-closest { margin: 16px 0 0; font-size: 14.5px; color: var(--ink-soft); }
+.dg-shelfrow {
+  display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 10px;
+  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+}
+.dg-shelfbook {
+  flex: 0 0 64px; padding: 0; border: 0; background: none; cursor: pointer;
+  scroll-snap-align: start; border-radius: 2px;
+  transition: transform .15s;
+}
+.dg-shelfbook:hover { transform: translateY(-3px) rotate(-1.5deg); }
+.dg-shelfbook:focus-visible { outline: 2px solid var(--emo); outline-offset: 3px; }
+.dg-shelfbook .book-cover-wrap { pointer-events: none; animation: none; }
+
+/* index card under a paperclip */
+.dg-index {
+  background: var(--bg-vellum);
+  border: 1px solid var(--rule-soft);
+  box-shadow: var(--shadow-md);
+  transform: rotate(-0.5deg);
+  margin-top: 8px;
+}
+.dg-clip {
+  position: absolute; top: -12px; right: 28px; width: 18px; height: 46px;
+  border: 3px solid #9aa3ad; border-radius: 10px; border-bottom-color: transparent;
+  transform: rotate(-8deg);
+}
+.dg-index-when { font-size: 34px; line-height: 1; color: var(--brass); margin: 0 0 8px; }
+/* Ruled only where the handwriting is, so the lines sit under the words. */
+.dg-slip {
+  margin: 12px 0 0;
+  padding-top: 2px;
+  background: repeating-linear-gradient(transparent 0 31px, color-mix(in srgb, #7aa2c9 40%, transparent) 31px 32px);
+}
+.dg-slip blockquote {
+  margin: 0; font-size: 22px; line-height: 32px; color: var(--ink-soft); white-space: pre-wrap;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.dg-slip.is-open blockquote { -webkit-line-clamp: unset; display: block; }
+.dg-slip-more { margin-top: 4px; min-height: 44px; background: none; border: 0; padding: 0; font: 500 13.5px var(--font-body); color: var(--brass); cursor: pointer; }
+
+/* postcard */
+.dg-postcard { padding: 0; overflow: hidden; background: var(--bg-card); border: 1px solid var(--rule); box-shadow: var(--shadow-md); }
+.dg-postcard-body { padding: 18px clamp(18px, 4vw, 28px) 22px; }
+.dg-postcard-text { font-family: var(--font-display); font-size: clamp(20px, 5vw, 24px); line-height: 1.35; margin: 0 0 14px; }
+.dg-sky {
+  height: 120px; display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 12px 16px; color: #fff;
+  font: 500 11.5px var(--font-mono); letter-spacing: .16em; text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+  box-shadow: inset 0 -40px 50px -24px rgba(0, 0, 0, .4);
+}
+.dg-sky.is-tall { width: 170px; height: 220px; border-radius: 4px; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 4px; }
+
+/* sealed letter on ruled paper */
+.dg-envelope {
+  background:
+    repeating-linear-gradient(transparent 0 33px, var(--rule-soft) 33px 34px),
+    var(--bg-card);
+  background-position: 0 70px;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-md);
+  padding-top: 28px;
+}
+.dg-wax {
+  position: absolute; top: -16px; right: 22px; width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 40% 35%, #c0533f, #7a261b);
+  color: #f6d9c7; font-size: 18px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .35);
+}
+.dg-letter p { font: italic 19px/34px var(--font-display); margin: 0 0 0; white-space: pre-wrap; }
+.dg-letter p + p { margin-top: 0; }
+.dg-letter-sig.hand { font-family: var(--font-hand); font-style: normal; font-size: 28px; color: var(--brass); text-align: right; }
+
+/* plain (drift, while-away, …) */
+.dg-plain { background: var(--bg-card); background-image: var(--paper-grain); background-blend-mode: multiply; border: 1px solid var(--rule); }
+
+/* ---------- 4. one small thing + sign-off ---------- */
+.dg-action {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+  padding: 16px 18px; border-radius: 999px;
+  border: 1px dashed var(--brass);
+  background: color-mix(in srgb, var(--brass) 7%, var(--bg-card));
+}
+.dg-action-ring { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--brass); }
+.dg-action-label { display: block; margin-top: 2px; font-family: var(--font-display); font-size: 19px; color: var(--ink); text-decoration: none; }
+.dg-action-label:hover { text-decoration: underline; text-decoration-color: var(--brass); }
+.dg-action-arrow { color: var(--brass); }
+.dg-foot { text-align: center; }
+.dg-signoff { font-size: 30px; color: var(--ink-quiet); margin: 8px 0 4px; }
+.dg-settings { font-size: 12.5px; color: var(--ink-faint); }
+
+/* ---------- wider screens: a two-up desk ---------- */
+@media (min-width: 720px) {
+  .dg-desk { grid-template-columns: 1fr 1fr; align-items: start; }
+  .dg-desk > .dg-specimen:only-child, .dg-desk > :first-child:nth-last-child(1) { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .dg-cover-grid { grid-template-columns: 1fr; }
+  .dg-cover-art { order: -1; justify-items: end; margin-bottom: -40px; }
+  .dg-art-book, .dg-art-blur { width: 110px; }
+  .dg-art-blur { height: 150px; }
+  .dg-art-orb, .dg-art-seal, .dg-art-icon { width: 96px; height: 96px; font-size: 16px; }
+  .dg-sky.is-tall { width: 120px; height: 150px; }
+  .dg-action { border-radius: 14px; }
 }
 
-.dg-lead { border-color: var(--brass); }
-.dg-lead .dg-body p { font-family: var(--font-display); font-size: 20px; line-height: 1.4; color: var(--ink); }
-.dg-preview-frame { width: 375px; max-width: 100%; border: 1px solid var(--rule); padding: 0 12px 16px; }
+/* ---------- admin preview frame ---------- */
+.dg-preview-frame { width: 375px; max-width: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .dg > * { animation: dg-in .5s cubic-bezier(.2, .7, .2, 1) both; }
+  .dg > :nth-child(2) { animation-delay: .06s; }
+  .dg > :nth-child(3) { animation-delay: .12s; }
+  .dg > :nth-child(4) { animation-delay: .18s; }
+  @keyframes dg-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}

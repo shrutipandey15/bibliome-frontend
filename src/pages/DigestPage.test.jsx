@@ -8,6 +8,12 @@ vi.mock("../services/api", () => ({
   recordDigestClick: vi.fn(),
 }));
 
+vi.mock("../components/ThemeToggle", () => ({ default: () => null }));
+
+vi.mock("../contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { username: "ada", display_name: "Ada" } }),
+}));
+
 const editEntry = vi.fn();
 vi.mock("../contexts/JournalContext", () => ({
   useJournal: () => ({
@@ -47,21 +53,26 @@ function renderAt(path, element, route) {
 }
 
 describe("DigestPage", () => {
-  beforeEach(() => { vi.clearAllMocks(); editEntry.mockResolvedValue({}); });
+  beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); editEntry.mockResolvedValue({}); });
 
   it("reveals what the email held back: the note itself", async () => {
     getDigest.mockResolvedValue(DIGEST);
     renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
     expect(await screen.findByText("the statues in the rain")).toBeInTheDocument();
     expect(screen.getByText("How does it feel now?")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /open/i })).toHaveAttribute("href", "/?view=dna");
+    expect(screen.getByRole("link", { name: /see your dna/i })).toHaveAttribute("href", "/?view=dna");
     expect(recordDigestClick).toHaveBeenCalledWith("2026-41", "open");
+    expect(screen.getByText("for Ada")).toBeInTheDocument();
+    // "In this issue" lists every section, numbered, as jump links.
+    const toc = screen.getByRole("navigation", { name: /in this issue/i });
+    expect([...toc.querySelectorAll("a")].map((a) => a.getAttribute("href")))
+      .toEqual(["#past_self", "#emotion_of_week", "#drift"]);
   });
 
   it("counts a tap through a section", async () => {
     getDigest.mockResolvedValue(DIGEST);
     renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
-    await userEvent.click(await screen.findByRole("link", { name: /open/i }));
+    await userEvent.click(await screen.findByRole("link", { name: /see your dna/i }));
     expect(recordDigestClick).toHaveBeenCalledWith("2026-41", "drift");
   });
 
@@ -76,12 +87,51 @@ describe("DigestPage", () => {
     expect(editEntry).toHaveBeenCalledWith("e1", {
       emotions: [{ emotion_id: "grief", strength: 7 }, { emotion_id: "awe", strength: 6 }],
     });
-    expect(await screen.findByText(/tagged piranesi/i)).toBeInTheDocument();
+    expect(await screen.findByText((_, el) => el?.tagName === "P" && el.textContent === "Tagged Piranesi with awe.")).toBeInTheDocument();
   });
 
   it("says so plainly when the week has no digest", async () => {
     getDigest.mockRejectedValue(new Error("404"));
     renderAt("/digest/1999-01", <DigestPage />, "/digest/:period");
     expect(await screen.findByText(/isn't here/i)).toBeInTheDocument();
+  });
+});
+
+describe("DigestPage in the installed app", () => {
+  beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); });
+
+  it("always offers a way back to the shelf", async () => {
+    getDigest.mockResolvedValue(DIGEST);
+    renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
+    expect(await screen.findByRole("link", { name: /back to shelf/i })).toHaveAttribute("href", "/");
+  });
+
+  it("offline, shows the copy it kept from last time and says so", async () => {
+    getDigest.mockResolvedValueOnce(DIGEST);
+    const first = renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
+    await screen.findByText("the statues in the rain");
+    first.unmount();
+
+    getDigest.mockRejectedValueOnce(Object.assign(new Error("net"), { kind: "offline" }));
+    renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
+    expect(await screen.findByText(/offline · showing the copy/i)).toBeInTheDocument();
+    expect(screen.getByText("the statues in the rain")).toBeInTheDocument();
+  });
+
+  it("offline with nothing kept, says offline rather than 'not here'", async () => {
+    getDigest.mockRejectedValueOnce(Object.assign(new Error("net"), { kind: "offline" }));
+    renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
+    expect(await screen.findByText(/you're offline/i)).toBeInTheDocument();
+    expect(screen.queryByText(/isn't here/i)).toBeNull();
+  });
+});
+
+describe("weekRange", () => {
+  it("names the ISO week Monday to Sunday", async () => {
+    const { weekRange } = await import("./DigestPage");
+    expect(weekRange("2026-41")).toBe("5 – 11 October 2026");
+    expect(weekRange("2026-44")).toBe("26 Oct – 1 Nov 2026");
+    expect(weekRange("2027-01")).toBe("4 – 10 January 2027");
+    expect(weekRange("nonsense")).toBeNull();
   });
 });

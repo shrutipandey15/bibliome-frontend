@@ -34,6 +34,29 @@ export function setCachedEntries(entries) {
   }
 }
 
+// The last weekly digest the reader opened, so tapping the push with no signal
+// still shows the letter. One at a time, never a backlog. Same privacy tier as
+// the shelf above (book titles and book notes), never journal prose.
+const DIGEST_KEY = "bibliome_digest";
+
+export function getCachedDigest(period) {
+  try {
+    const hit = JSON.parse(localStorage.getItem(DIGEST_KEY) || "null");
+    return hit && hit.period === period ? hit.digest : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedDigest(period, digest) {
+  try {
+    localStorage.setItem(DIGEST_KEY, JSON.stringify({ period, digest }));
+  } catch { /* storage full or blocked: just no offline copy */ }
+}
+
 export function clearCache() {
-  localStorage.removeItem(ENTRIES_KEY);
+  try {
+    localStorage.removeItem(ENTRIES_KEY);
+    localStorage.removeItem(DIGEST_KEY);
+  } catch { /* storage blocked */ }
 }
