@@ -97,7 +97,7 @@ export default function EchoComposer({ onPosted, onClose }) {
             {body.length} / {MAX_BODY}
           </span>
         </div>
-        <p className="ec-friction">Say the true thing, not the clever thing.</p>
+        <p className="ec-friction">ok say it. what did it do to you. no one's grading this.</p>
         <div className="ec-write-rule" />
         <textarea
           className="ec-body"

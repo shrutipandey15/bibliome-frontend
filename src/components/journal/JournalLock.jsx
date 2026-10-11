@@ -53,11 +53,8 @@ export default function JournalLock() {
         </>
       ) : (
         <>
-          <h2>Your journal is locked.</h2>
-          <p>
-            The key only ever lived in the last tab's memory. Nothing kept it —
-            not this browser, not our server. That's the arrangement.
-          </p>
+          <h2>it's locked.</h2>
+          <p>even we can't read it, that's the whole deal. password pls.</p>
         </>
       )}
 

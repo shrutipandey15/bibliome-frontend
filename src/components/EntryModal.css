@@ -379,7 +379,10 @@
 /* responsive */
 @media (max-width: 900px) {
   .em-card { grid-template-columns: minmax(0, 1fr); }
-  .em-left { min-height: 220px; }
+  /* Stacked above the form, the card is a title strip, not a third of the
+     screen: the intensity block and author line wait for the side layout. */
+  .em-left { min-height: 0; padding: 20px 28px; }
+  .em-left-int-wrap, .em-left-author { display: none; }
 }
 @media (max-width: 640px) {
   .em-right { padding: 20px 18px 0; }

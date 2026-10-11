@@ -113,7 +113,7 @@ describe("EchoesPage feed [F3.3]", () => {
     getEchoFeed.mockResolvedValue(feed);
     render(<EchoesPage />);
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
-    expect(screen.getByText(/that's all of it/i)).toBeInTheDocument();
+    expect(screen.getByText(/you're caught up/i)).toBeInTheDocument();
     // Terminus, not infinite scroll: no "load older" button when caught up.
     expect(screen.queryByRole("button", { name: /load older/i })).toBeNull();
   });
@@ -139,7 +139,7 @@ describe("EchoesPage feed [F3.3]", () => {
     render(<EchoesPage />);
     await waitFor(() => expect(screen.getByText("first echo")).toBeInTheDocument());
     expect(screen.getByRole("button", { name: /load older echoes/i })).toBeInTheDocument();
-    expect(screen.queryByText(/that's all of it/i)).toBeNull();
+    expect(screen.queryByText(/you're caught up/i)).toBeNull();
   });
 
   it("makes all 21 feelings reachable in the feeling rail [F6.3 / P5-5]", async () => {

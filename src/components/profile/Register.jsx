@@ -131,7 +131,7 @@ export default function Register({ register, hideMasthead = false }) {
       <p className="reg-dek">
         {warming
           ? "Everything your shelf has earned so far. The mirror is still warming up — the readings fill in once it has five books with a feeling."
-          : "Everything your shelf has earned, and what it is still short of. Nothing here is a target; it is a record."}
+          : "not goals. not a streak. just evidence of what you've survived."}
       </p>
       <Next next={next} />
       {bands.map((b) => <Band key={b.key} band={b} />)}

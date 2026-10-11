@@ -5,6 +5,7 @@ import { markSeen } from "../components/resonance/signal";
 import MatchCard, { ThreadRow } from "../components/resonance/MatchCard";
 import ResonanceThread from "../components/resonance/ResonanceThread";
 import ThemeToggle from "../components/ThemeToggle";
+import TabBar from "../components/TabBar";
 import PushPrompt from "../components/PushPrompt";
 import "./ResonancePage.css";
 
@@ -140,13 +141,14 @@ export default function ResonancePage() {
 
   return (
     <div className="resonance-page">
+      <TabBar active={null} barOnly />
       <header className="rp-masthead">
         <div>
           <div className="label">· one reader at a time ·</div>
           <h1 className="rp-h1">Resonance<span className="rp-stop">.</span></h1>
           <p className="rp-dek">
-            Someone else finished the same book feeling what you felt. You get the book,
-            the feeling, and the choice to say something — never a name, a face, or a shelf.
+            someone out there felt the exact same thing about the exact same book. you
+            don't know who. yet. names only show up if you both say yes.
           </p>
         </div>
         <div className="rp-head-actions">

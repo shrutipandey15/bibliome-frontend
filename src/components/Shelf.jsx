@@ -34,7 +34,7 @@ export function SpineBook({ entry, onClick, lean = null, hideTitle = false, inde
         width: `${w}px`,
         "--spine-color": spineColor,
         "--spine-h": `${h}px`,
-        animationDelay: `${index * 0.04}s`,
+        animationDelay: `${Math.min(index, 8) * 0.04}s`,
       }}
     >
       <div className="spine-mark" />

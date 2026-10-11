@@ -151,15 +151,7 @@ function ReadingRoomHeader({ user, tab, onAddBook, onShelveBook, onRevealDNA, ca
           <button className="btn ghost rr-add-btn rr-wide-only" onClick={onShelveBook}>
             <span className="rr-add-btn-label">+ TO READ</span>
           </button>
-          {/* Shows only once the shelf clears the 5-book gate and the reader
-              hasn't opened DNA yet — so it isn't shouting at everyone. A quiet
-              brass link, not a foil slab: the single loud control on this page
-              is earned by nothing that lives here permanently. */}
-          {showDNA && (
-            <button className="btn ghost rr-dna-btn rr-wide-only" onClick={onRevealDNA} disabled={generating}>
-              {generating ? "Reading your DNA…" : "Read your DNA →"}
-            </button>
-          )}
+          {/* No "Read your DNA" here: the hero carries the one on this page. */}
           {/* Resonance's whole entry point. Renders NOTHING unless the reader
               has a match — no tab, no permanent affordance, no count. A reader
               who has never matched will not know the feature is there, which is
@@ -324,7 +316,7 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
         <FactSlip fact={fact} />
         <div className="rr-hero-aside">
           <span className="quote">“</span>
-          <span className="aside-text">Every book changed you in ways you can't articulate. This tries.</span>
+          <span className="aside-text">these books did things to you. we have receipts. we saw everything.</span>
         </div>
       </div>
 
@@ -1098,6 +1090,17 @@ function Dashboard() {
   );
 }
 
+/* The four tabs across the top of every signed-in route that isn't the
+   Dashboard (which draws its own, inside its header). Desktop only — phones get
+   the fixed bottom bar from each page. */
+function RouteRibbon() {
+  const { pathname } = useLocation();
+  const { entries } = useJournal();
+  if (pathname === "/") return null;
+  const active = pathname.startsWith("/echoes") ? "echoes" : pathname.startsWith("/journal") ? "journal" : null;
+  return <TabBar active={active} shelfCount={entries.length} ribbonOnly />;
+}
+
 function AuthedLayout() {
   const { authed } = useAuth();
   const navigate = useNavigate();
@@ -1151,6 +1154,7 @@ function AuthedLayout() {
           unlocked, and PrivateJournalProvider fetches nothing before then. */}
       <JournalKeyProvider>
         <PrivateJournalProvider>
+          <RouteRibbon />
           <Outlet />
         </PrivateJournalProvider>
       </JournalKeyProvider>

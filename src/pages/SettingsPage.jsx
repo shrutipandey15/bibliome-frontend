@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import Modal from "../components/Modal";
 import PasswordField from "../components/PasswordField";
 import PushToggle from "../components/PushToggle";
+import TabBar from "../components/TabBar";
 import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor, exportMyData, deleteAccount } from "../services/api";
 import { useJournalKey } from "../contexts/JournalKeyContext";
 import ReadForQuestion from "../components/dna/ReadForQuestion";
@@ -272,6 +273,7 @@ export default function SettingsPage() {
 
   return (
     <div className="set-page">
+      <TabBar active={null} barOnly />
       <div className="set-header">
         <button className="btn ghost set-back" onClick={() => navigate("/")} style={{ fontSize: 12 }}>← back to shelf</button>
         <div className="set-header-title">
@@ -344,7 +346,7 @@ export default function SettingsPage() {
           {section === "profile" && (
             <div className="card editorial set-card">
               <div className="label" style={{ marginBottom: 12 }}>profile</div>
-              <h3 className="set-card-h">How the world sees you.</h3>
+              <h3 className="set-card-h">what the internet gets to call you.</h3>
               <div className="set-field">
                 <div className="label-sm set-field-label">display name</div>
                 <input
@@ -399,7 +401,7 @@ export default function SettingsPage() {
           {section === "visibility" && (
             <div className="card editorial set-card">
               <div className="label" style={{ marginBottom: 12 }}>visibility</div>
-              <h3 className="set-card-h">Who can find you.</h3>
+              <h3 className="set-card-h">who gets to perceive you.</h3>
               <p className="set-card-d">
                 Your shelf, journal, and DNA are <em>always</em> private. This governs only your profile page.
               </p>
@@ -464,7 +466,7 @@ export default function SettingsPage() {
           {section === "notifications" && (
             <div className="card editorial set-card">
               <div className="label" style={{ marginBottom: 12 }}>notifications</div>
-              <h3 className="set-card-h">Calm by default.</h3>
+              <h3 className="set-card-h">we won't spam you. we're not that app.</h3>
               {/* This used to read "nothing per-event", which was not what the
                   server does: replies and resonance notices are written the
                   moment they happen. What it actually does is collapse REPEAT
@@ -487,7 +489,7 @@ export default function SettingsPage() {
                 <>
                   <Toggle
                     label="Weekly digest"
-                    hint="A short letter about you and your shelf, in the app, once a week."
+                    hint="a little letter about you and your shelf, once a week. nosy, but in a cute way."
                     checked={prefs.digest_enabled}
                     disabled={prefsBusy}
                     onChange={(v) => savePrefs({ digest_enabled: v })}
@@ -523,7 +525,7 @@ export default function SettingsPage() {
 
                   <Toggle
                     label="Daily book fact"
-                    hint="One odd, true little thing about books, every day."
+                    hint="one weird true book fact a day. you didn't ask. you're getting it anyway."
                     checked={prefs.fact_enabled ?? true}
                     disabled={prefsBusy}
                     onChange={(v) => savePrefs({ fact_enabled: v })}
@@ -548,7 +550,7 @@ export default function SettingsPage() {
 
                   <div className="label-sm set-field-label">quiet hours</div>
                   <p className="set-card-d" style={{ fontSize: 13, marginTop: 4 }}>
-                    Non-urgent notifications wait until quiet hours end.
+                    we shut up during these hours. (security alerts still get through, sorry.)
                   </p>
                   <div className="set-quiet">
                     <label className="set-quiet-field">
@@ -606,7 +608,7 @@ export default function SettingsPage() {
           {section === "security" && (
             <div className="card editorial set-card">
               <div className="label" style={{ marginBottom: 12 }}>change password</div>
-              <h3 className="set-card-h">Write a new key.</h3>
+              <h3 className="set-card-h">new password. make it unhinged. (but also remember it.)</h3>
               <div className="set-field">
                 <div className="label-sm set-field-label">current password</div>
                 <PasswordField className="set-input" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="your current key" />

@@ -141,8 +141,8 @@ export default function EchoesPage() {
             <div className="label">· the one public room ·</div>
             <h1 className="ep-h1">The <em>Echoes</em>.</h1>
             <p className="ep-dek">
-              The raw thing a book did to you, and other people doing the same. No
-              followers. No counts. No feed that never ends.
+              people being normal about books (they are not being normal). no
+              followers. no likes. it ends when it ends.
             </p>
           </div>
           <div className="ep-head-actions">
@@ -256,9 +256,9 @@ export default function EchoesPage() {
             {caughtUp ? (
               <div className="ep-caughtup">
                 <div className="ep-caughtup-glyph" aria-hidden="true">◆</div>
-                <div className="ep-caughtup-line">That's all of it.</div>
+                <div className="ep-caughtup-line">that's it. you're caught up.</div>
                 {/* Naming the design as deliberate: the feed stopping is the feature. */}
-                <div className="ep-caughtup-sub">The feed ends. That's the whole point.</div>
+                <div className="ep-caughtup-sub">go read something.</div>
                 <button className="ep-caughtup-cta" onClick={() => setComposing(true)}>
                   Add your own →
                 </button>
@@ -379,7 +379,7 @@ function FeelingRail({ emotion, onEmotion, onCompose }) {
             <span>write an echo</span>
             <span className="ep-rail-write-mark" aria-hidden="true">↵</span>
           </button>
-          <p className="ep-rail-friction">Say the true thing, not the clever thing.</p>
+          <p className="ep-rail-friction">ok say it. what did it do to you. no one's grading this.</p>
         </div>
 
         <div className="ep-rail-rule" />

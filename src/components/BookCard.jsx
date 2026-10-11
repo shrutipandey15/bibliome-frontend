@@ -35,7 +35,7 @@ export default function BookCard({ entry, index = 0, onClick, width = 144, showC
   return (
     <div
       className="book-cover-wrap anim-fadeup"
-      style={{ width: "100%", maxWidth: width, "--cover-w": "100%", animationDelay: `${index * 0.05}s` }}
+      style={{ width: "100%", maxWidth: width, "--cover-w": "100%", animationDelay: `${Math.min(index, 8) * 0.05}s` }}
     >
       <div
         className="book-cover"

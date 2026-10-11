@@ -127,10 +127,12 @@ export function Heatmap({ data }) {
               true once the matrix draws a window, and the corner caption saying
               "your last 24 of 69" directly under a promise of "every book" is
               worse than either statement alone. */}
+          {/* Rows and columns swap with the layout: books run down on a phone,
+              across on a wide screen (see CompactMatrix). */}
           <p className="hm-dek">
-            Your books × the emotions you assigned them. Darker means felt harder.
-            Watch for the rows that run dark and the columns that stack up — a
-            pattern worth noticing, not a verdict yet.
+            {narrow
+              ? "dark rows = books that ruined your week. tall columns = your type. yes you have a type. no you can't deny it."
+              : "dark columns = books that ruined your week. long rows = your type. yes you have a type. no you can't deny it."}
           </p>
         </div>
         <div className="label hm-corner">
@@ -394,7 +396,7 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
               <div className="hm-rail-aside">
                 {heatBookCount < 10
                   ? "Every feeling you haven't reached for yet. This early it mostly means you haven't hit that book."
-                  : "The feelings your shelf keeps stepping around."}
+                  : "feelings you're actively avoiding. we noticed. we always notice."}
               </div>
             </div>
           )}

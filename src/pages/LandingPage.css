@@ -477,7 +477,6 @@
     border-color: var(--oxblood);
     background: color-mix(in srgb, var(--oxblood) 8%, transparent);
   }
-  .lrr-nav-actions .lrr-nav-signin { display: none; }  /* one primary action on phones */
 }
 
 /* ── Section heads stop being two columns ──

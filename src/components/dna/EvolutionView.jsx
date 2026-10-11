@@ -139,7 +139,7 @@ export default function EvolutionView({ profiles, drift = 0, snapshotCount = nul
         </div>
       ) : (
         <p className="evo-drift-summary">
-          {toTop ? <>Steady — still {emoLabel(toTop)}.</> : "Not enough movement to read yet."}
+          {toTop ? <>nothing's changed. still choosing {emoLabel(toTop)}. still choosing violence.</> : "Not enough movement to read yet."}
         </p>
       )}
 

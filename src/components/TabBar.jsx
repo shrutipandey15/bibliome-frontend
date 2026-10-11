@@ -15,8 +15,9 @@ import { Library, Dna, MessageCircle, NotebookPen } from "lucide-react";
  *   - Dashboard renders it plainly. Above 640 that's the folder ribbon it has
  *     always been; below, the fixed bottom bar.
  *   - Echo and Journal pass `barOnly`, which hides it above 640 — those pages
- *     carry their own mastheads and a ribbon would be a second, competing
- *     header. On a phone they get the bar like everyone else.
+ *     carry their own mastheads. On a phone they get the bar like everyone else.
+ *   - AuthedLayout renders one `ribbonOnly` copy at the top of every route that
+ *     isn't the Dashboard, so a wide screen never loses the four tabs either.
  *
  * Styles stay in App.css beside the rest of the .rr-* chrome, deliberately: that
  * sheet is global and already loads before any lazy page, so moving them into a
@@ -31,11 +32,11 @@ const TABS = [
   { id: "journal", label: "Journal", Icon: NotebookPen,   to: "/journal" },
 ];
 
-export default function TabBar({ active, shelfCount, barOnly = false, fab = null }) {
+export default function TabBar({ active, shelfCount, barOnly = false, ribbonOnly = false, fab = null }) {
   const navigate = useNavigate();
 
   return (
-    <nav className={`rr-tabs ${barOnly ? "rr-tabs-baronly" : ""}`} aria-label="Sections">
+    <nav className={`rr-tabs ${barOnly ? "rr-tabs-baronly" : ""} ${ribbonOnly ? "rr-tabs-ribbon" : ""}`} aria-label="Sections">
       {fab}
       {TABS.map((t) => {
         const on = active === t.id;

@@ -58,7 +58,9 @@ describe("Register", () => {
 
   it("carries no streak / countdown / urgency language", () => {
     const { container } = render(<Register register={base} />);
-    expect(container.textContent).not.toMatch(/streak|days left|hurry|keep it up|don't break/i);
+    // The dek's "not a streak." disowns the idea; any other mention is pressure.
+    const text = container.textContent.replace(/not a streak\./i, "");
+    expect(text).not.toMatch(/streak|days left|hurry|keep it up|don't break/i);
   });
 
   it("shows the masthead by default and drops it when told to (fold mounts it itself)", () => {

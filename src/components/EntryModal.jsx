@@ -351,7 +351,7 @@ export default function EntryModal({
         <div className="em-left-frame" />
         <div className="em-left-content">
           <div>
-            <div className="em-left-eyebrow">ENTRY № {entryNo} · {isEdit ? "IN YOUR SHELF" : "NEW · UNSHELVED"}</div>
+            <div className="em-left-eyebrow">{isEdit ? `ENTRY № ${entryNo} · IN YOUR SHELF` : "NEW ENTRY · NOT ON THE SHELF YET"}</div>
             <div className="em-left-author">{author || "—"}</div>
           </div>
           <div>
@@ -365,7 +365,9 @@ export default function EntryModal({
               <div className="em-left-int-word">
                 {topStrength != null
                   ? `${INTENSITY_LABELS[topStrength] || ""}.`
-                  : `${emotions.length} feeling${emotions.length === 1 ? "" : "s"} tagged`}
+                  : emotions.length
+                    ? `${emotions.length} feeling${emotions.length === 1 ? "" : "s"} tagged`
+                    : "feelings: tbd"}
               </div>
             </div>
           </div>
@@ -399,7 +401,7 @@ export default function EntryModal({
           <>
             <div className="label" style={{ marginBottom: 8 }}>{isEdit ? `edit · entry no. ${entryNo}` : "new entry"}</div>
             <h2 className="em-h">
-              {firstWords ? <>What did <em>{firstWords}</em> do to you?</> : "Begin a new entry."}
+              {firstWords ? <>What did <em>{firstWords}</em> do to you?</> : "ok. who did this to you."}
             </h2>
           </>
         )}
@@ -773,7 +775,7 @@ export default function EntryModal({
           </summary>
 
           <div className="em-field">
-            <div className="label-sm em-field-label">the line that hit hardest</div>
+            <div className="label-sm em-field-label">the line that lives in your head rent free</div>
             <textarea
               className="em-input em-textarea em-quote"
               placeholder="Optional — the quote you can't forget…"

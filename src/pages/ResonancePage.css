@@ -1286,3 +1286,8 @@
 /* Single column: the summary row already carries the cover. */
 .rm-fold-body { padding: 2px 16px 18px; border-top: 1px solid var(--rule-soft); margin-top: 2px; }
 .rm-fold-body .rm-body { padding-top: 14px; }
+
+/* The list view carries the fixed bottom tab bar on phones; clear it. */
+@media (max-width: 640px) {
+  .resonance-page:has(> .rr-tabs) { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+}

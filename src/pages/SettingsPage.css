@@ -166,12 +166,10 @@
 }
 
 @media (max-width: 640px) {
-  /* index.html sets viewport-fit=cover, so the layout viewport runs under the
-     home indicator. This page renders no tab bar and no FAB — it is a leaf
-     reached from the header — so it needs the inset and nothing more. */
+  /* Clears the fixed bottom tab bar (56px) and the home-indicator inset. */
   .set-page {
     padding: 18px 18px 32px;
-    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   /* ── Header: three stacked full-width rows → two ──

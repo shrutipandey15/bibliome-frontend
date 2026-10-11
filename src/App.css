@@ -245,6 +245,9 @@
    phone they need the bottom bar like every other destination. The 640 block
    further down re-shows it, winning on source order. */
 .rr-tabs-baronly { display: none; }
+/* The desktop ribbon on routes outside the Dashboard (AuthedLayout). It has no
+   header around it there, so it carries the header's rule itself. */
+.rr-tabs-ribbon { padding-top: calc(14px + env(safe-area-inset-top, 0px)); border-bottom: 1px solid var(--rule); margin-bottom: 0; }
 
 .rr-tab {
   position: relative;
@@ -945,13 +948,11 @@
      that shared space rather than from a fifth flex item.
 
      Indices are 3 and 4, not 2 and 3: `{fab}` renders as `.rr-tabs`'s FIRST
-     child (see TabBar.jsx), ahead of the four `.rr-tab`s, so every tab's
-     `:nth-child` position is shifted up by one. Both current callers
-     (App.jsx, EchoesPage.jsx) always pass a `fab`, so this holds for both —
-     but it means a future TabBar caller that renders no `fab` would need
-     these shifted back down by one, since `{null}` contributes no child. */
-  .rr-tab:nth-child(3) { margin-right: 46px; }
-  .rr-tab:nth-child(4) { margin-left: 46px; }
+     child (see TabBar.jsx), ahead of the four `.rr-tab`s. Gated on the FAB
+     being there: a bar without one (Journal, Settings) has no notch to keep. */
+  .rr-fab ~ .rr-tab:nth-child(3) { margin-right: 46px; }
+  .rr-fab ~ .rr-tab:nth-child(4) { margin-left: 46px; }
+  .rr-tabs-ribbon { display: none; }
   /* The count is desktop inventory detail; the bar marks the active tab with
      colour. */
   .rr-tab-count { display: none; }
@@ -1049,7 +1050,9 @@
      takes only the width its two glyphs need. */
   .rr-filterbar {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    /* Sort gets the wider share: its values ("most recent", "alphabetical")
+       run longer than a feeling, which truncates with an ellipsis anyway. */
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto;
     align-items: stretch;
     gap: 10px;
     padding-top: 12px;
@@ -1215,6 +1218,12 @@
     min-height: 44px;
     padding: 5px 16px;
   }
+}
+/* 320px phones: the toggle's padding is the last ~20px "alphabetical" needs.
+   After the coarse-pointer block, which would otherwise win on source order. */
+@media (max-width: 360px) {
+  .rr-view-toggle button { padding: 5px 9px; }
+  .rr-filter-sort .rr-sort-select { font-size: 14px; }
 }
 
 /* Tabs are the primary navigation and the flat row is ~30px tall. This applies
