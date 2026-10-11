@@ -64,6 +64,19 @@ function DigestItem({ payload }) {
   );
 }
 
+function FactItem({ payload }) {
+  return (
+    <div className="nc-digest">
+      <div className="label nc-digest-label">· today in books ·</div>
+      <div className="nc-digest-line">{payload?.text}</div>
+      {payload?.shelf_note && <div className="nc-digest-memory">{payload.shelf_note}</div>}
+      {payload?.source && (
+        <a className="nc-digest-memory" href={payload.source} target="_blank" rel="noopener noreferrer">Source ↗</a>
+      )}
+    </div>
+  );
+}
+
 function itemText(n) {
   const p = n.payload || {};
   if (n.kind === "echo_reply") {
@@ -219,7 +232,9 @@ export default function NotificationCenter() {
                       <div className="nc-item-body">
                         {n.kind === "weekly_digest"
                           ? <DigestItem payload={n.payload} />
-                          : <div className="nc-item-text">{itemText(n)}</div>}
+                          : n.kind === "daily_fact"
+                            ? <FactItem payload={n.payload} />
+                            : <div className="nc-item-text">{itemText(n)}</div>}
                         <div className="nc-item-time">{timeAgo(n.created_at)}</div>
                       </div>
                       {/* A quiet affordance, not a call to action. */}

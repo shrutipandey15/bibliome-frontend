@@ -26,6 +26,8 @@ describe("notificationTarget — every notice lands somewhere real", () => {
     expect(notificationTarget(n("weekly_digest", { period: "2026-41" }, 2))).toBe("/digest/2026-41");
     // Digests sent before the email version carry no subject but do carry a period.
     expect(notificationTarget(n("weekly_digest", {}, 2))).toBe("/");
+    // A fact is complete in place and carries its own source link.
+    expect(notificationTarget(n("daily_fact", { text: "x" }, 2))).toBeNull();
   });
 
   it("sends anything tier 0 to account security, whatever its kind", () => {

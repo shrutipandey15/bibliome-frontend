@@ -1091,6 +1091,16 @@ export async function recordDigestClick(period, section) {
   } catch { /* ignore */ }
 }
 
+// Today's book fact for the shelf card; null when none arrived in the last day.
+export async function getTodayFact() {
+  try {
+    const res = await apiFetch("/facts/today");
+    return res.ok ? res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 // Admin: this week's digest for recent readers, built but not delivered.
 export async function previewDigests(limit = 10) {
   return apiGet(`/admin/digest/preview?limit=${limit}`);

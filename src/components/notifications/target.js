@@ -70,6 +70,10 @@ export function notificationTarget(n) {
       return null;
     case "dna_shifted":
       return "/?view=dna";
+    case "daily_fact":
+      // Complete where it is, and it carries its own Source link; a row that
+      // navigated would have to be a button, and a link can't live in one.
+      return null;
     case "weekly_digest":
       // The in-app copy of that week's email, nothing held back.
       return p.period ? `/digest/${p.period}` : "/";

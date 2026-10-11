@@ -13,12 +13,14 @@ import NotificationCenter from "./NotificationCenter";
 import { getNotifications, markNotificationsRead } from "../../services/api";
 
 const data = {
-  unread_count: 2,
+  unread_count: 3,
   notifications: [
     { id: "n1", tier: 1, kind: "echo_reply", read: false, created_at: new Date().toISOString(),
       payload: { echo_id: "e1", book_title: "Piranesi", actors: ["quiet_reader"], count: 1 } },
     { id: "n2", tier: 2, kind: "weekly_digest", read: false, created_at: new Date().toISOString(),
       payload: { period: "2026-41", subject: "Something you wrote six weeks ago" } },
+    { id: "n4", tier: 2, kind: "daily_fact", read: false, created_at: new Date().toISOString(),
+      payload: { text: "Tsundoku is buying books and letting them pile up.", source: "https://en.wikipedia.org/wiki/Tsundoku" } },
     { id: "n3", tier: 0, kind: "password_changed", read: true, created_at: new Date().toISOString(),
       payload: { message: "Your password was changed." } },
   ],
@@ -32,7 +34,7 @@ describe("NotificationCenter [F4.1 / F4.2 / F3.8]", () => {
     const { container } = render(<NotificationCenter />);
     await waitFor(() => expect(container.querySelector(".nc-dot")).toBeInTheDocument());
     // Calm-first: the bell's accessible name mentions unread, but no number is painted on it.
-    expect(screen.getByRole("button", { name: /2 unread/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /3 unread/i })).toBeInTheDocument();
   });
 
   it("renders batched reply notices and the weekly digest [F3.8 / F4.2]", async () => {
@@ -44,6 +46,8 @@ describe("NotificationCenter [F4.1 / F4.2 / F3.8]", () => {
     expect(screen.getByText(/@quiet_reader/)).toBeInTheDocument();
     expect(screen.getByText(/your week/i)).toBeInTheDocument();
     expect(screen.getByText("Something you wrote six weeks ago")).toBeInTheDocument();
+    expect(screen.getByText(/tsundoku is buying books/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /source/i })).toHaveAttribute("href", "https://en.wikipedia.org/wiki/Tsundoku");
   });
 
   it("names the reactor and the reaction when exactly one person reacted", async () => {

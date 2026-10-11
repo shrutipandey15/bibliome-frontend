@@ -32,6 +32,7 @@ import NotificationCenter from "./components/notifications/NotificationCenter";
 import ResonanceMark from "./components/resonance/ResonanceMark";
 import DNAView from "./components/dna/DNAView";
 import DigestLetterPin from "./components/DigestLetterPin";
+import FactCard from "./components/facts/FactCard";
 import SharedCardPage from "./pages/SharedCardPage";
 import ReadForQuestion from "./components/dna/ReadForQuestion";
 import { MIN_BOOKS, openedBooks } from "./components/dna/constants";
@@ -856,6 +857,7 @@ function Dashboard() {
       />
 
       <main>
+        {tab === "shelf" && entries.length > 0 && <FactCard />}
         {tab === "shelf" && (
           <ErrorBoundary name="Shelf">
             {entriesError && entries.length === 0 ? (

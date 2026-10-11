@@ -504,6 +504,29 @@ export default function SettingsPage() {
                     </>
                   )}
 
+                  <Toggle
+                    label="Daily book fact"
+                    hint="One odd, true little thing about books, every day."
+                    checked={prefs.fact_enabled ?? true}
+                    disabled={prefsBusy}
+                    onChange={(v) => savePrefs({ fact_enabled: v })}
+                  />
+                  {(prefs.fact_enabled ?? true) && (
+                    <div className="set-quiet">
+                      <label className="set-quiet-field">
+                        <span className="label-sm">arrives at</span>
+                        <select
+                          className="set-input"
+                          value={prefs.fact_hour ?? 10}
+                          disabled={prefsBusy}
+                          onChange={(e) => savePrefs({ fact_hour: Number(e.target.value) })}
+                        >
+                          {HOURS.map((h) => <option key={h} value={h}>{fmtHour(h)}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+
                   <div className="rule" style={{ margin: "20px 0" }} />
 
                   <div className="label-sm set-field-label">quiet hours</div>

@@ -26,10 +26,10 @@ vi.mock("../services/api", () => ({
   revokeShareTokens: vi.fn().mockResolvedValue(undefined),
   changeHandle: vi.fn().mockResolvedValue({}),
   getNotificationPrefs: vi.fn().mockResolvedValue({
-    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9,
+    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, fact_enabled: true, fact_hour: 10,
   }),
   updateNotificationPrefs: vi.fn().mockImplementation(async (patch) => ({
-    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, ...patch,
+    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, fact_enabled: true, fact_hour: 10, ...patch,
   })),
   setReadFor: vi.fn().mockResolvedValue({}),
 }));
