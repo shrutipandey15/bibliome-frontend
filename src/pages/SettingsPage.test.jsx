@@ -26,10 +26,10 @@ vi.mock("../services/api", () => ({
   revokeShareTokens: vi.fn().mockResolvedValue(undefined),
   changeHandle: vi.fn().mockResolvedValue({}),
   getNotificationPrefs: vi.fn().mockResolvedValue({
-    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, fact_enabled: true, fact_hour: 10,
+    digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, fact_enabled: true, fact_hour: 10,
   }),
   updateNotificationPrefs: vi.fn().mockImplementation(async (patch) => ({
-    reply_enabled: true, digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, fact_enabled: true, fact_hour: 10, ...patch,
+    digest_enabled: true, quiet_hours_start: null, quiet_hours_end: null, timezone: "UTC", digest_day: 6, digest_hour: 9, fact_enabled: true, fact_hour: 10, ...patch,
   })),
   setReadFor: vi.fn().mockResolvedValue({}),
 }));
@@ -89,11 +89,9 @@ describe("SettingsPage visibility control [F2.8 / B2.1]", () => {
     render(<SettingsPage />);
     await userEvent.click(screen.getByRole("button", { name: /Notifications/i }));
 
-    // Toggling the reply switch persists reply_enabled=false.
-    const replySwitch = await screen.findByRole("switch", { name: /replies to your echoes/i });
-    await waitFor(() => expect(replySwitch).toHaveAttribute("aria-checked", "true"));
-    await userEvent.click(replySwitch);
-    expect(updateNotificationPrefs).toHaveBeenCalledWith({ reply_enabled: false });
+    // Direct notices (replies, resonance, chat) have no off switch any more.
+    await screen.findByRole("switch", { name: /weekly digest/i });
+    expect(screen.queryByRole("switch", { name: /replies to your echoes/i })).toBeNull();
 
     // Weekly digest toggles independently — the individual switches already
     // cover any combination, so there is no separate "fewer notifications"

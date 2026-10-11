@@ -462,13 +462,6 @@ export default function SettingsPage() {
               ) : (
                 <>
                   <Toggle
-                    label="Replies to your echoes"
-                    hint="Batched — 'three readers replied', not three pings."
-                    checked={prefs.reply_enabled}
-                    disabled={prefsBusy}
-                    onChange={(v) => savePrefs({ reply_enabled: v })}
-                  />
-                  <Toggle
                     label="Weekly digest"
                     hint="A short letter about you and your shelf, in the app, once a week."
                     checked={prefs.digest_enabled}
