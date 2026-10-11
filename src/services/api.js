@@ -502,6 +502,34 @@ export async function changePassword(currentPassword, newPassword, journalKeyBun
   return res.json();
 }
 
+// Everything the account holds, as one JSON file (GET /user/export). Saved via a
+// blob link so the payload lands in a file, never a tab.
+export async function exportMyData() {
+  const res = await apiFetch("/user/export");
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.detail || "Couldn't build your export.");
+  }
+  const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1] || "bibliome-export.json";
+  const url = URL.createObjectURL(await res.blob());
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Erase the account and everything attached to it (POST /user/delete).
+// `confirm` must be the backend's ACCOUNT_DELETE_CONFIRMATION phrase.
+export async function deleteAccount(password, confirm) {
+  const res = await apiFetch("/user/delete", {
+    method: "POST",
+    body: JSON.stringify({ password, confirm }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.detail || "Couldn't delete your account.");
+  }
+}
+
 // ── Profile — the private mirror as a place [F2.8 / B2.1 §Feature 2] ──
 // Composed dict: { restricted, handle, display_name, bio, profile_visibility,
 // personality_type, member_since, is_self, signature, now_reading[], collections[],

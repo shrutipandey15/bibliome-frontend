@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { EMOTIONS, getPrimaryEmotion } from "../services/emotions";
 import "./BookCard.css";
+import { titleCase } from "../utils/titleCase";
 
 /* `width` is a CAP, not a fixed size. It used to be applied literally, so a
    150px card sat inside whatever track the grid gave it — fine at desktop
@@ -8,6 +9,14 @@ import "./BookCard.css";
    own cell, scrolling the whole page sideways. Fluid with a max-width renders
    identically wherever the track is wider than the cap (every desktop
    breakpoint) and simply shrinks below it. */
+/* A loaded image that isn't a cover: Open Library's 1×1 "no cover" pixel, or
+   Google Books' "image not available" PNG, which is always 128×170 (zoom=1) or
+   575×750 (zoom=2). Real Google covers are JPEGs at other sizes. */
+export function isPlaceholderCover(img) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  return w < 10 || h < 10 || (w === 128 && h === 170) || (w === 575 && h === 750);
+}
+
 export default function BookCard({ entry, index = 0, onClick, width = 144, showCaption = true }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgFailed, setImgFailed] = useState(!entry.cover_url);
@@ -17,7 +26,7 @@ export default function BookCard({ entry, index = 0, onClick, width = 144, showC
 
   const handleImgLoad = (e) => {
     const img = e.target;
-    if (img.naturalWidth < 10 || img.naturalHeight < 10) { setImgFailed(true); return; }
+    if (isPlaceholderCover(img)) { setImgFailed(true); return; }
     setImgLoaded(true);
   };
 
@@ -65,7 +74,7 @@ export default function BookCard({ entry, index = 0, onClick, width = 144, showC
           <div className="cover-fallback">
             <div className="cf-glyph">{primary.glyph || "§"}</div>
             <div className="cf-author">{entry.author}</div>
-            <div className="cf-title">{entry.title}</div>
+            <div className="cf-title">{titleCase(entry.title)}</div>
           </div>
         )}
 
@@ -76,7 +85,7 @@ export default function BookCard({ entry, index = 0, onClick, width = 144, showC
 
       {showCaption && (
         <div className="book-caption">
-          <div className="bc-title">{entry.title}</div>
+          <div className="bc-title">{titleCase(entry.title)}</div>
           <div className="bc-author">{entry.author}</div>
           <div className="bc-emos">
             {emos.map((e) => {

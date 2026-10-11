@@ -1,3 +1,5 @@
+import { isPlaceholderCover } from "../BookCard";
+import { titleCase } from "../../utils/titleCase";
 import { useState } from "react";
 import { EMOTIONS } from "../../services/emotions";
 import NoteComposer from "./NoteComposer";
@@ -25,7 +27,8 @@ import NoteComposer from "./NoteComposer";
 function Cover({ url, title, author }) {
   const [failed, setFailed] = useState(false);
   if (url && !failed) {
-    return <img className="rm-cover-img" src={url} alt="" onError={() => setFailed(true)} />;
+    return <img className="rm-cover-img" src={url} alt="" onError={() => setFailed(true)}
+      onLoad={(e) => { if (isPlaceholderCover(e.target)) setFailed(true); }} />;
   }
   return (
     <div className="rm-plate" style={{ "--plate-c": plateColor(title) }} aria-hidden="true">
@@ -89,7 +92,7 @@ export default function MatchCard({ match, onReach, onAccept, onDecline, onOpenT
   const [composing, setComposing] = useState(false);
   const [error, setError] = useState("");
   const { status, direction } = match;
-  const title = match.book_title || "An untitled volume";
+  const title = titleCase(match.book_title) || "An untitled volume";
 
   const submitNote = async (note) => {
     setError("");
@@ -292,7 +295,7 @@ export function ThreadRow({ match, onOpen, active = false }) {
       <span className="rt-row-body">
         <span className="rt-row-who">@{match.handle || "your reader"}</span>
         <span className="rt-row-book">
-          {match.book_title}
+          {titleCase(match.book_title)}
           {match.book_author && <span className="rt-row-author"> · {match.book_author}</span>}
         </span>
       </span>

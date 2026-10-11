@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { EMOTIONS } from "../../services/emotions";
 import { getEchoThread, postReply, reactToEcho } from "../../services/api";
 import "./EchoThread.css";
+import { titleCase } from "../../utils/titleCase";
 
 /**
  * Echo thread: the echo + its replies + a reply box. [F3.4 / B3.4]
@@ -99,7 +100,7 @@ export default function EchoThread({ echoId, onReport, onClose }) {
         </div>
         <p className="et-body">{echo.body}</p>
         <div className="et-foot">
-          {hasBook && <span className="et-book">{echo.book_title}</span>}
+          {hasBook && <span className="et-book">{titleCase(echo.book_title)}</span>}
           <span className="et-handle">@{echo.handle}</span>
           <span className="et-date">{fmtDate(echo.created_at)}</span>
         </div>

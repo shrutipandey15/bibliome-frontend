@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import Modal from "../components/Modal";
 import PasswordField from "../components/PasswordField";
 import PushToggle from "../components/PushToggle";
-import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor } from "../services/api";
+import { getSettings, updateSettings, generateShareToken, revokeShareTokens, changeHandle, getNotificationPrefs, updateNotificationPrefs, setReadFor, exportMyData, deleteAccount } from "../services/api";
 import { useJournalKey } from "../contexts/JournalKeyContext";
 import ReadForQuestion from "../components/dna/ReadForQuestion";
 import "./SettingsPage.css";
@@ -79,6 +79,10 @@ export default function SettingsPage() {
   const [savingReadFor, setSavingReadFor] = useState(false);
   // Phones only: the rail is CSS-hidden below 640 and this sheet replaces it.
   const [secSheet, setSecSheet] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deletePw, setDeletePw] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const showToast = (message, type = "error") => {
     setToast({ message, type });
@@ -218,6 +222,26 @@ export default function SettingsPage() {
       }
     } catch (err) { showToast(err.message); }
     setChangingPw(false);
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try { await exportMyData(); }
+    catch (err) { setToast({ message: err.message, type: "error" }); }
+    setExporting(false);
+  };
+
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    setDeleting(true);
+    try {
+      await deleteAccount(deletePw, deleteConfirm);
+      await logout().catch(() => {});
+      navigate("/");
+    } catch (err) {
+      setToast({ message: err.message, type: "error" });
+      setDeleting(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -614,6 +638,9 @@ export default function SettingsPage() {
               <p className="set-card-d">
                 Public echoes are explicitly opt-in, per entry.
               </p>
+              <button className="btn" onClick={handleExport} disabled={exporting}>
+                {exporting ? "packing it up…" : "export everything (json)"}
+              </button>
             </div>
           )}
 
@@ -623,6 +650,37 @@ export default function SettingsPage() {
               <h3 className="set-card-h">Close the drawer.</h3>
               <p className="set-card-d">Signing out clears your local cache.</p>
               <button className="btn oxblood" onClick={handleLogout}>sign out</button>
+
+              <h3 className="set-card-h" style={{ marginTop: 32 }}>Delete the account.</h3>
+              <p className="set-card-d">
+                Everything goes: shelf, journal, DNA, echoes, messages. There is no undo
+                and no restore. Export first if you want a copy.
+              </p>
+              <form onSubmit={handleDelete} className="set-delete">
+                <label className="label-sm" htmlFor="del-pw">your password</label>
+                <PasswordField
+                  id="del-pw"
+                  className="set-input"
+                  autoComplete="current-password"
+                  value={deletePw}
+                  onChange={(e) => setDeletePw(e.target.value)}
+                />
+                <label className="label-sm" htmlFor="del-confirm">type DELETE MY ACCOUNT</label>
+                <input
+                  id="del-confirm"
+                  className="set-input"
+                  autoComplete="off"
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="btn oxblood"
+                  disabled={deleting || !deletePw || deleteConfirm !== "DELETE MY ACCOUNT"}
+                >
+                  {deleting ? "deleting…" : "delete forever"}
+                </button>
+              </form>
             </div>
           )}
         </div>

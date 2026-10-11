@@ -42,7 +42,7 @@ import { buildRegister } from "./components/profile/registerData";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Shelf from "./components/Shelf";
 import { ShelfDecoration } from "./components/Shelf";
-import { EMO_LIST, EMOTIONS, getPrimaryEmotion, hydrateEmotions } from "./services/emotions";
+import { EMO_LIST, EMOTIONS, getPrimaryEmotion, hydrateEmotions, isLiveEmotion } from "./services/emotions";
 import { clearCache } from "./services/offline";
 import { findDuplicateEntry } from "./utils/findDuplicate";
 import { takeReturn } from "./services/pendingInvite";
@@ -73,17 +73,20 @@ const ComparePage = lazy(() =>
   import("./pages/ContentPages").then((m) => ({ default: m.ComparePage })));
 
 
-function buildDashboardStats(entries) {
+function buildDashboardStats(allEntries) {
+  // Opened books only, live feelings only — the same population the DNA counts
+  // (dna_insights.build_dna: opened_only + canonicalize), so the shelf and the
+  // DNA tab can't print different numbers for the same thing.
+  const entries = openedBooks(allEntries);
   const total = entries.length;
   const intensities = entries.map((e) => e.intensity).filter((v) => typeof v === "number");
   const avg = intensities.length ? (intensities.reduce((a, b) => a + b, 0) / intensities.length).toFixed(1) : "—";
   // emotion frequency
   const freq = {};
-  entries.forEach((e) => (e.emotions || []).forEach((em) => {
-    const id = em.emotion_id;
-    if (!id) return;
-    freq[id] = (freq[id] || 0) + 1;
-  }));
+  entries.forEach((e) => {
+    const ids = new Set((e.emotions || []).map((em) => em.emotion_id).filter(isLiveEmotion));
+    ids.forEach((id) => { freq[id] = (freq[id] || 0) + 1; });
+  });
   const topEmotion = Object.entries(freq).sort((a, b) => b[1] - a[1])[0] || [null, 0];
   // How many of the twenty-one registers this shelf has ever reached for. The
   // fourth figure the strip needed: real, countable here, and the same one the
@@ -277,7 +280,7 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
   const top = EMOTIONS[stats.topEmotion?.[0]];
   const topCount = stats.topEmotion?.[1] ?? 0;
   const total = stats.total;
-  const number = total > 0 ? total : 0;
+  const number = stats.total;
   // Today's book fact stands on the "in rotation" shelf as a bookmark; on a
   // phone, where that shelf is hidden, it's a slip under the call to action.
   const fact = useTodayFact();
@@ -286,8 +289,9 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
       <div>
         <div className="label" style={{ marginBottom: 16 }}>currently shelving · entry no. {String(number).padStart(3, "0")}</div>
         <h1>
-          {number > 0 ? `${number} volume${number === 1 ? "" : "s"},` : "An empty room,"}<br />
-          <em>{number > 0 ? "one quiet" : "one waiting"}</em> year.
+          {number > 0
+            ? <>{number} book{number === 1 ? "" : "s"} in and <em>you're still not okay</em> about it.</>
+            : <>An empty room,<br /><em>one waiting</em> year.</>}
         </h1>
         {/* Countable, or nothing. The old dek asserted a mood ("keeping the lights
             on for a friend who isn't home yet") and a "spike of catharsis" that
@@ -348,8 +352,8 @@ function ReadingRoomStatStrip({ stats }) {
   // six, so the strip crowded into the left half and left a bare rule hanging in
   // the space where the missing ones would have been.
   const items = [
-    { l: "volumes",        v: String(stats.total).padStart(2, "0") },
-    { l: "registers felt", v: String(stats.registers ?? 0).padStart(2, "0"), suf: `/${EMO_LIST.length}` },
+    { l: "volumes",        v: String(stats.total) },
+    { l: "registers felt", v: String(stats.registers ?? 0), suf: `/${EMO_LIST.length}` },
     { l: "avg intensity",  v: stats.avg, suf: "/10" },
     { l: "top emotion",    v: top.name, color: top.color },
   ];
@@ -954,7 +958,7 @@ function Dashboard() {
                 <DNAView
                   profile={analytics.profile}
                   onEditReadFor={() => setShowReadFor(true)}
-                  bookCount={entries.length}
+                  bookCount={openedCount}
                   stats={analytics.stats}
                   onShiftSeen={acknowledgeShift}
                 />

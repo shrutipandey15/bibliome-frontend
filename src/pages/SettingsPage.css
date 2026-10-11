@@ -403,3 +403,7 @@
   line-height: 1.55;
   color: var(--ink-faint);
 }
+
+/* Account deletion: password + typed phrase, stacked. */
+.set-delete { display: grid; gap: 8px; max-width: 360px; margin-top: 12px; }
+.set-delete .btn { justify-self: start; margin-top: 8px; }

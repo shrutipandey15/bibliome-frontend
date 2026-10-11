@@ -1,4 +1,4 @@
-import { EMOTIONS } from "../../services/emotions";
+import { EMO_LIST, isLiveEmotion } from "../../services/emotions";
 
 /**
  * Builds the Register structure the <Register> component renders, from data the
@@ -49,10 +49,10 @@ const MILESTONES = [
   },
   {
     kind: "full_spectrum",
-    label: `Read across all ${Object.keys(EMOTIONS).length || 18} emotional registers`,
+    label: `Read across all ${EMO_LIST.length} emotional registers`,
     opens: "you've reached for every feeling in the vocabulary at least once",
     req: "record every feeling in the vocabulary",
-    need: Object.keys(EMOTIONS).length || 18, unit: "registers",
+    need: EMO_LIST.length, unit: "registers",
   },
   {
     kind: "year_of_reflection",
@@ -79,14 +79,14 @@ function milestoneRows(entries) {
     const when = e.created_at;
     stamp("first_book", when);
     (e.emotions || []).forEach((em) => {
-      if (em.emotion_id && EMOTIONS[em.emotion_id]) tagged.add(em.emotion_id);
+      if (isLiveEmotion(em.emotion_id)) tagged.add(em.emotion_id);
     });
     if (e.arc_start_emotion_id || e.finish_thought) {
       finishes += 1;
       stamp("first_finish", when);
     }
     if (tagged.size >= 10) stamp("deep_range", when);
-    if (tagged.size >= (Object.keys(EMOTIONS).length || 18)) stamp("full_spectrum", when);
+    if (tagged.size >= EMO_LIST.length) stamp("full_spectrum", when);
     if (first && new Date(when) - first >= YEAR_MS) stamp("year_of_reflection", when);
   }
 

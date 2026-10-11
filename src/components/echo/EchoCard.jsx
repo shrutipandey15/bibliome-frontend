@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { EMOTIONS } from "../../services/emotions";
 import { reactToEcho, postReply } from "../../services/api";
 import "./EchoCard.css";
+import { titleCase } from "../../utils/titleCase";
 
 /**
  * A single echo. [F3.3 → rebuilt F6.1 / F6.2]
@@ -177,7 +178,7 @@ export default function EchoCard({ echo, onReadMore, onReport, onMute, onBlock, 
         <div className="eco-foot">
           {/* Title only — the author is on the shelf entry, and the footer is a
               caption line, not a citation. */}
-          {echo.book_title && <span className="eco-book">{echo.book_title}</span>}
+          {echo.book_title && <span className="eco-book">{titleCase(echo.book_title)}</span>}
           {/* Handle: plain text, NOT a link — no people-browsing. [F3.7] */}
           <span className="eco-handle">@{echo.handle}</span>
         </div>
@@ -278,7 +279,7 @@ export default function EchoCard({ echo, onReadMore, onReport, onMute, onBlock, 
           <ul className="eco-replies" aria-live="polite">
             {visibleReplies.map((r) => (
               <li key={r.id} className={`eco-reply ${r._pending ? "pending" : ""}`}>
-                <span className="eco-reply-handle">@{r.handle}</span>
+                <span className="eco-reply-handle">@{r.handle}</span>{" "}
                 <span className="eco-reply-body">{r.body}</span>
               </li>
             ))}

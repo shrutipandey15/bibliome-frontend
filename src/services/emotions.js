@@ -117,6 +117,9 @@ for (const [slug, family, name, phrase, color, desc] of SEED) {
 export const EMO_LIST = Object.entries(EMOTIONS);
 
 export const RETIRED_EMOTIONS = new Set(RETIRED.map(([slug]) => slug));
+// A feeling that counts: in the vocabulary and not retired. Mirrors the backend's
+// canonicalize(), so client tallies agree with the DNA's.
+export const isLiveEmotion = (slug) => !!EMOTIONS[slug] && !RETIRED_EMOTIONS.has(slug);
 for (const [slug, name, phrase, color] of RETIRED) {
   EMOTIONS[slug] = { name, label: phrase, color, desc: "", symbol: null, retired: true, ...(PRESENTATION[slug] || {}) };
 }

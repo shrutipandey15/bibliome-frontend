@@ -2,6 +2,7 @@ import { Fragment, useState, useEffect } from "react";
 import { EMOTIONS, EMO_LIST } from "../services/emotions";
 import useIsNarrow from "../hooks/useIsNarrow";
 import "./Panels.css";
+import { titleCase } from "../utils/titleCase";
 
 /**
  * How many books the matrix draws before it offers the rest.
@@ -51,7 +52,7 @@ function CompactMatrix({ books, emos, cellMap }) {
         ))}
         {books.map((b) => (
           <Fragment key={b.entry_id}>
-            <div className="hmc-title" title={b.title}>{b.title}</div>
+            <div className="hmc-title" title={titleCase(b.title)}>{titleCase(b.title)}</div>
             {emos.map((eid) => {
               const v = cellMap[`${b.entry_id}-${eid}`];
               const e = EMOTIONS[eid];
@@ -59,7 +60,7 @@ function CompactMatrix({ books, emos, cellMap }) {
                 <div
                   key={eid}
                   className="hmc-cell"
-                  title={v ? `${b.title} · ${e?.name} ${v}/10` : undefined}
+                  title={v ? `${titleCase(b.title)} · ${e?.name} ${v}/10` : undefined}
                   style={{
                     background: v ? e?.color : "transparent",
                     opacity: v ? 0.18 + (v / 10) * 0.82 : 0.07,
@@ -150,7 +151,7 @@ export function Heatmap({ data }) {
           >
             <div />
             {visibleBooks.map((b) => (
-              <div key={b.entry_id} className="hm-col-head">{b.title}</div>
+              <div key={b.entry_id} className="hm-col-head" title={titleCase(b.title)}>{titleCase(b.title)}</div>
             ))}
             {emos.map((eid) => {
               const e = EMOTIONS[eid];
@@ -160,7 +161,7 @@ export function Heatmap({ data }) {
                   <div className="hm-row-label">
                     <span className="hm-row-dot" style={{ background: e.color }} />
                     <span className="hm-row-name">{e.name}</span>
-                    <span className="hm-row-count">{String(emoTotals[eid] || 0).padStart(2, "0")}</span>
+                    <span className="hm-row-count">{emoTotals[eid] || 0}</span>
                   </div>
                   {visibleBooks.map((b) => {
                     const v = cellMap[`${b.entry_id}-${eid}`];
@@ -259,8 +260,7 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
   const ranked = EMO_LIST
     .map(([id, e]) => [id, e, counts[id] || 0])
     .filter(([, , n]) => n > 0)
-    .sort((a, b) => b[2] - a[2])
-    .slice(0, 10);
+    .sort((a, b) => b[2] - a[2]);
   const totalBooks = stats.total_books;
 
   return (
@@ -315,7 +315,7 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
             const pct = (n / totalBooks) * 100;
             return (
               <div key={id} className="st-ledger-row" style={{ borderBottom: i < ranked.length - 1 ? "1px solid var(--rule-soft)" : "none" }}>
-                <span className="st-ledger-no">№{String(i + 1).padStart(2, "0")}</span>
+                <span className="st-ledger-no">№{i + 1}</span>
                 <span className="st-ledger-dot" style={{ background: e.color }} />
                 <span className="st-ledger-name">{e.name}</span>
                 <span className="st-ledger-bar">
@@ -371,7 +371,7 @@ export function Patterns({ stats, heatmap, embedded = false, hideMasthead = fals
           {hardest && totalBooks >= 3 && (
             <div className="card editorial st-card-hardest">
               <div className="label" style={{ marginBottom: 12 }}>most intense read</div>
-              <div className="st-hardest-title">{hardest.title}</div>
+              <div className="st-hardest-title">{titleCase(hardest.title)}</div>
               <div className="label-sm">{hardest.author} · intensity {hardest.intensity}/10</div>
               {hardest.quote && (
                 <div className="st-hardest-echo">“{hardest.quote}”</div>

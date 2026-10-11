@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { getPrimaryEmotion } from "../services/emotions";
+import { titleCase } from "../utils/titleCase";
 
 export function SpineBook({ entry, onClick, lean = null, hideTitle = false, index = 0 }) {
   const intensity = entry.intensity || 5;
@@ -13,7 +14,7 @@ export function SpineBook({ entry, onClick, lean = null, hideTitle = false, inde
   // Keyboard parity + a real label: narrow spines show no inline text, so the
   // only sighted affordance was the hover `title` tooltip (dead on touch, invisible
   // to keyboard/SR users). role=button needs focus + Enter/Space to be operable. [F2.9 / P5-9]
-  const label = entry.author ? `${entry.title} · ${entry.author}` : entry.title;
+  const label = entry.author ? `${titleCase(entry.title)} · ${entry.author}` : titleCase(entry.title);
   const activate = () => onClick && onClick();
 
   return (
@@ -45,7 +46,7 @@ export function SpineBook({ entry, onClick, lean = null, hideTitle = false, inde
       )}
       {!hideTitle && w >= 14 && (
         <div className="spine-title" style={{ fontSize: w < 22 ? 9 : w < 30 ? 10 : 11.5 }}>
-          {entry.title}
+          {titleCase(entry.title)}
         </div>
       )}
       {!hideTitle && w >= 26 && entry.author && (
