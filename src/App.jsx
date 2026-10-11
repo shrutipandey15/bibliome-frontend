@@ -32,7 +32,7 @@ import NotificationCenter from "./components/notifications/NotificationCenter";
 import ResonanceMark from "./components/resonance/ResonanceMark";
 import DNAView from "./components/dna/DNAView";
 import DigestLetterPin from "./components/DigestLetterPin";
-import FactCard from "./components/facts/FactCard";
+import { FactBookmark, FactSlip, useTodayFact } from "./components/facts/FactBookmark";
 import SharedCardPage from "./pages/SharedCardPage";
 import ReadForQuestion from "./components/dna/ReadForQuestion";
 import { MIN_BOOKS, openedBooks } from "./components/dna/constants";
@@ -278,6 +278,9 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
   const topCount = stats.topEmotion?.[1] ?? 0;
   const total = stats.total;
   const number = total > 0 ? total : 0;
+  // Today's book fact stands on the "in rotation" shelf as a bookmark; on a
+  // phone, where that shelf is hidden, it's a slip under the call to action.
+  const fact = useTodayFact();
   return (
     <div className="rr-hero">
       <div>
@@ -314,6 +317,7 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
             </button>
           )}
         </div>
+        <FactSlip fact={fact} />
         <div className="rr-hero-aside">
           <span className="quote">“</span>
           <span className="aside-text">Every book changed you in ways you can't articulate. This tries.</span>
@@ -326,7 +330,7 @@ function ReadingRoomHero({ entries, stats, user, onBookClick, onRevealDNA, canGe
           <Shelf
             entries={featured}
             leans={{ 1: "left", 3: "right" }}
-            decoration={<ShelfDecoration kind="stack" />}
+            decoration={<><ShelfDecoration kind="stack" /><FactBookmark fact={fact} /></>}
             onBookClick={onBookClick}
           />
         ) : (
@@ -857,7 +861,6 @@ function Dashboard() {
       />
 
       <main>
-        {tab === "shelf" && entries.length > 0 && <FactCard />}
         {tab === "shelf" && (
           <ErrorBoundary name="Shelf">
             {entriesError && entries.length === 0 ? (

@@ -1114,6 +1114,11 @@ export async function answerQuestion(period, body) {
   return res.json();
 }
 
+// Admin: digest click-through per section type, over the last `weeks` weeks.
+export async function getDigestClicks(weeks = 8) {
+  return apiGet(`/admin/digest/clicks?weeks=${weeks}`);
+}
+
 // Admin: shared weekly-question notes waiting for review, and the verdict.
 export async function getPendingAnswers() {
   return apiGet("/admin/answers/pending");

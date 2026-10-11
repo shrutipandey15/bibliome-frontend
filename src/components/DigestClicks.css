@@ -1,0 +1,28 @@
+/* Admin: digest click-through. One measure, one hue (brass), thin bars with a
+   rounded data end on a recessive track; values in ink, never in the bar colour. */
+.dc { display: grid; gap: 18px; }
+.dc-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+.dc-chip { min-height: 36px; padding: 6px 14px; border: 1px solid var(--rule); border-radius: 999px;
+  background: transparent; color: var(--ink-soft); font: 500 13px var(--font-body); cursor: pointer; }
+.dc-chip.is-on { background: var(--ink); color: var(--bg-page); border-color: var(--ink); }
+.dc-tiles { display: flex; gap: 12px; flex-wrap: wrap; }
+.dc-tile { display: grid; gap: 2px; min-width: 140px; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 3px; background: var(--bg-card); }
+.dc-tile b { font: 400 34px/1.1 var(--font-display); color: var(--ink); }
+.dc-tile small, .dc-val small, .dc-led small { color: var(--ink-quiet); font-size: 12px; }
+.dc-table { width: 100%; border-collapse: collapse; }
+.dc-table caption { text-align: left; padding-bottom: 8px; }
+.dc-table th, .dc-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--rule-soft); vertical-align: middle; }
+.dc-table thead th { font: 500 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-quiet); }
+.dc-table tbody th { font: 400 16px var(--font-display); color: var(--ink); white-space: nowrap; }
+.dc-table td:nth-child(2) { width: 50%; }
+.dc-bar { height: 10px; background: var(--bg-sunken); border-radius: 0 4px 4px 0; margin-bottom: 4px; }
+.dc-bar span { display: block; height: 100%; background: var(--brass); border-radius: 0 4px 4px 0; }
+.dc-val { font: 500 13px var(--font-body); color: var(--ink); font-variant-numeric: tabular-nums; }
+.dc-led { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-soft); }
+@media (max-width: 560px) {
+  .dc-table th, .dc-table td { padding: 10px 4px; }
+  .dc-table tbody th { white-space: normal; font-size: 15px; }
+  .dc-table td:nth-child(2) { width: 38%; }
+  .dc-val { white-space: nowrap; }
+  .dc-val small, .dc-led small { display: block; }
+}
