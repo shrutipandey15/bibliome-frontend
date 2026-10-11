@@ -1101,6 +1101,30 @@ export async function getTodayFact() {
   }
 }
 
+// The weekly question: one answer per week, sent again to change it.
+export async function answerQuestion(period, body) {
+  const res = await apiFetch(`/digest/${encodeURIComponent(period)}/answer`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(typeof d.detail === "string" ? d.detail : "Couldn't save that.");
+  }
+  return res.json();
+}
+
+// Admin: shared weekly-question notes waiting for review, and the verdict.
+export async function getPendingAnswers() {
+  return apiGet("/admin/answers/pending");
+}
+
+export async function reviewAnswer(id, approve) {
+  const res = await apiFetch(`/admin/answers/${id}/review`, { method: "POST", body: JSON.stringify({ approve }) });
+  if (!res.ok) throw new ApiError(res.status, errorKind(res.status));
+  return res.json();
+}
+
 // Admin: this week's digest for recent readers, built but not delivered.
 export async function previewDigests(limit = 10) {
   return apiGet(`/admin/digest/preview?limit=${limit}`);

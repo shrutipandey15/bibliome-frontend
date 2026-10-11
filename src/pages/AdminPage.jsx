@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { apiFetch, getModerationQueue, resolveReport } from "../services/api";
 import DigestPreview from "../components/DigestPreview";
+import AnswerReview from "../components/AnswerReview";
 import "./AdminPage.css";
 
 export default function AdminPage() {
@@ -193,7 +194,7 @@ export default function AdminPage() {
               contents grow without anyone doing anything, and its badge is the
               whole reason it exists — otherwise you still have to remember to
               go and look, which is what the queue not being here amounted to. */}
-          {["dashboard", "moderation", "users", "catalog", "audit", "database", "digest"].map((t) => (
+          {["dashboard", "moderation", "users", "catalog", "audit", "database", "digest", "answers"].map((t) => (
             <button
               key={t}
               className={`admin-tab ${tab === t ? "active" : ""}`}
@@ -215,6 +216,7 @@ export default function AdminPage() {
       </header>
 
       {tab === "digest" && <DigestPreview />}
+      {tab === "answers" && <AnswerReview />}
 
       {tab === "dashboard" && stats && (
         <div className="admin-section">

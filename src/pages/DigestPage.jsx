@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowRight, CircleDashed, CloudSun, Compass, Eye, Fingerprint, Hourglass, Mail, PenLine, Share2, Sparkles,
+  ArrowRight, CircleDashed, CloudSun, Compass, Eye, Fingerprint, Hourglass, Mail, MessageCircleQuestion,
+  PenLine, Share2, Sparkles,
 } from "lucide-react";
-import { getDigest, recordDigestClick } from "../services/api";
+import { answerQuestion, getDigest, recordDigestClick } from "../services/api";
 import { getCachedDigest, setCachedDigest } from "../services/offline";
 import ThemeToggle from "../components/ThemeToggle";
 import { EMOTIONS } from "../services/emotions";
@@ -99,6 +100,7 @@ export function weekRange(period) {
 const ICON = {
   past_self: PenLine, archetype_letter: Mail, weather: CloudSun, while_away: Hourglass,
   emotion_of_week: Sparkles, drift: Compass, dna_waiting: Fingerprint, revealed: Eye,
+  weekly_question: MessageCircleQuestion,
 };
 
 // Where a section's link goes, said plainly.
@@ -120,7 +122,11 @@ function dropEcho(s, subject) {
 
 // The one big number on the cover, when the lead has one.
 function bigFigure(s) {
-  if (s.kind === "while_away" && s.data.years) return { n: s.data.years, unit: s.data.years === 1 ? "year ago" : "years ago" };
+  const d = s.data || {};
+  if (s.kind === "while_away" && d.type === "spike") return { n: `${d.x}×`, unit: "the usual views" };
+  if (s.kind === "while_away" && d.type === "published") return { n: d.years, unit: "years since it came out" };
+  if (s.kind === "while_away" && d.type === "author_born") return { n: d.years, unit: d.alive ? "years old this week" : "years since they were born" };
+  if (s.kind === "while_away" && d.years) return { n: d.years, unit: d.years === 1 ? "year ago" : "years ago" };
   if (s.kind === "past_self" && s.data.when) return { words: `${s.data.when} ago` };
   return null;
 }
@@ -253,6 +259,7 @@ function LeadBody({ s, preview, track }) {
   if (s.kind === "archetype_letter") return <Letter text={s.body} />;
   if (s.kind === "weather") return <p className="dg-lead-text">{s.data.forecast}</p>;
   if (s.kind === "emotion_of_week") return <FeelingBody s={s} preview={preview} track={track} plain />;
+  if (s.kind === "weekly_question") return <QuestionBody s={s} preview={preview} track={track} />;
   return (
     <>
       {s.body.split("\n").filter(Boolean).map((l, i) => <p key={i} className="dg-lead-text">{l}</p>)}
@@ -308,6 +315,13 @@ function Piece({ s, n, period, preview, track }) {
             <p className="dg-postcard-text">{s.data.forecast}</p>
             {!preview && <ShareForecast text={s.data.forecast} />}
           </div>
+        </section>
+      );
+    case "weekly_question":
+      return (
+        <section id={s.kind} className="dg-piece dg-question">
+          {head}
+          <QuestionBody s={s} preview={preview} track={track} />
         </section>
       );
     case "archetype_letter":
@@ -437,5 +451,114 @@ function TagFeeling({ s, track }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * The weekly question: last week's answers (if three or more readers shared),
+ * then this week's question and the reader's own answer. Nobody is ever named;
+ * written notes appear only after review. Sharing is off unless ticked.
+ */
+function QuestionBody({ s, preview, track }) {
+  const r = s.reveal || {};
+  return (
+    <div className="dg-q">
+      {r.results && <QuestionResults question={s.data.results_question} results={r.results} />}
+      <p className="dg-q-ask">{s.data.question}</p>
+      {!preview && <AnswerForm s={s} mine={r.mine} track={track} />}
+    </div>
+  );
+}
+
+function QuestionResults({ question, results }) {
+  const top = results.books[0]?.count || 1;
+  return (
+    <div className="dg-q-results">
+      <div className="label-sm">last week · {results.count} readers answered</div>
+      <p className="dg-q-last">“{question}”</p>
+      {results.books.length > 0 && (
+        <ol className="dg-q-books">
+          {results.books.map((b) => (
+            <li key={b.title}>
+              <span className="dg-q-bar" style={{ width: `${(b.count / top) * 100}%` }} aria-hidden="true" />
+              <span className="dg-q-title">{b.title}</span>
+              <span className="dg-q-n">{b.count}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {results.notes.map((n, i) => (
+        <blockquote key={i} className="dg-q-note">
+          {n.note}
+          {n.book_title && <cite> — on {n.book_title}</cite>}
+        </blockquote>
+      ))}
+    </div>
+  );
+}
+
+function AnswerForm({ s, mine, track }) {
+  const { entries } = useJournal();
+  const [entryId, setEntryId] = useState("");
+  const [title, setTitle] = useState(mine?.book_title || "");
+  const [note, setNote] = useState(mine?.note || "");
+  const [share, setShare] = useState(!!mine?.share);
+  const [state, setState] = useState(mine ? "saved" : "idle"); // idle | saving | saved | error
+  const [error, setError] = useState(null);
+  const shelf = entries.filter((e) => e.status !== "want_to_read");
+
+  const submit = async (ev) => {
+    ev.preventDefault();
+    setState("saving");
+    setError(null);
+    try {
+      await answerQuestion(s.data.question_period, {
+        entry_id: entryId || null,
+        book_title: entryId ? null : title.trim() || null,
+        note: note.trim() || null,
+        share,
+      });
+      track("weekly_question");
+      setState("saved");
+    } catch (e) {
+      setError(e.message || "Couldn't save that.");
+      setState("error");
+    }
+  };
+
+  if (state === "saved") {
+    return (
+      <div className="dg-q-saved">
+        <p>Your answer is in.{share ? " Others' answers arrive in next week's issue." : " It stays with you."}</p>
+        <button className="dg-ghostbtn" onClick={() => setState("idle")}>Change it</button>
+      </div>
+    );
+  }
+  return (
+    <form className="dg-q-form" onSubmit={submit}>
+      <label className="dg-q-field">
+        <span className="label-sm">a book</span>
+        <select className="set-input" value={entryId} onChange={(e) => setEntryId(e.target.value)}>
+          <option value="">{shelf.length ? "Pick from your shelf…" : "Type one below"}</option>
+          {shelf.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}
+        </select>
+      </label>
+      {!entryId && (
+        <input className="set-input" placeholder="…or type a title" maxLength={300}
+          value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Book title" />
+      )}
+      <label className="dg-q-field">
+        <span className="label-sm">a few words, if you like <span className="dg-q-count">{note.length}/280</span></span>
+        <textarea className="set-input" rows={3} maxLength={280} value={note} onChange={(e) => setNote(e.target.value)} />
+      </label>
+      <label className="dg-q-share">
+        <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
+        <span>Share my answer with other readers, anonymously. Written words are read by a person before anyone sees them.</span>
+      </label>
+      {error && <p className="dg-q-error" role="alert">{error}</p>}
+      <button className="btn brass" type="submit" disabled={state === "saving" || (!entryId && !title.trim() && !note.trim())}>
+        {state === "saving" ? "Saving…" : "Answer"}
+      </button>
+    </form>
   );
 }

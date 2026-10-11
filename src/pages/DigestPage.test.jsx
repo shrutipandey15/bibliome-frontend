@@ -6,6 +6,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 vi.mock("../services/api", () => ({
   getDigest: vi.fn(),
   recordDigestClick: vi.fn(),
+  answerQuestion: vi.fn(),
 }));
 
 vi.mock("../components/ThemeToggle", () => ({ default: () => null }));
@@ -27,7 +28,7 @@ vi.mock("../contexts/JournalContext", () => ({
 }));
 
 import DigestPage from "./DigestPage";
-import { getDigest, recordDigestClick } from "../services/api";
+import { answerQuestion, getDigest, recordDigestClick } from "../services/api";
 
 const DIGEST = {
   period: "2026-41",
@@ -123,6 +124,41 @@ describe("DigestPage in the installed app", () => {
     renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
     expect(await screen.findByText(/you're offline/i)).toBeInTheDocument();
     expect(screen.queryByText(/isn't here/i)).toBeNull();
+  });
+});
+
+const QUESTION = {
+  kind: "weekly_question", title: "the weekly question", body: "This week's question: Which book would you save from a fire?",
+  link: "/digest/2026-41#weekly_question",
+  data: { question: "Which book would you save from a fire?", question_period: "2026-41",
+          results_question: "Which book would you reread on a rainy night?" },
+  reveal: { mine: null, results: { count: 3, books: [{ title: "Piranesi", author: null, count: 2 }, { title: "Circe", author: null, count: 1 }],
+                                   notes: [{ note: "a house of endless halls", book_title: "Piranesi" }] } },
+};
+
+describe("DigestPage: the weekly question", () => {
+  beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); });
+
+  it("shows last week's answers anonymously, then asks this week's", async () => {
+    getDigest.mockResolvedValue({ ...DIGEST, sections: [DIGEST.sections[0], QUESTION] });
+    renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
+    expect(await screen.findByText(/3 readers answered/i)).toBeInTheDocument();
+    const top = [...document.querySelectorAll(".dg-q-books li")].map((li) => li.textContent);
+    expect(top).toEqual(["Piranesi2", "Circe1"]);
+    expect(screen.getByText(/a house of endless halls/)).toBeInTheDocument();
+    expect(screen.getByText("Which book would you save from a fire?")).toBeInTheDocument();
+  });
+
+  it("answers with a shelf book, sharing only if ticked", async () => {
+    answerQuestion.mockResolvedValue({});
+    getDigest.mockResolvedValue({ ...DIGEST, sections: [DIGEST.sections[0], QUESTION] });
+    renderAt("/digest/2026-41", <DigestPage />, "/digest/:period");
+    const share = await screen.findByRole("checkbox", { name: /share my answer/i });
+    expect(share).not.toBeChecked();
+    await userEvent.selectOptions(screen.getByRole("combobox"), "e1");
+    await userEvent.click(screen.getByRole("button", { name: /^answer$/i }));
+    expect(answerQuestion).toHaveBeenCalledWith("2026-41", { entry_id: "e1", book_title: null, note: null, share: false });
+    expect(await screen.findByText(/it stays with you/i)).toBeInTheDocument();
   });
 });
 
