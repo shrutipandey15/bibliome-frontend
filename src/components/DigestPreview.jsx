@@ -20,6 +20,7 @@ export default function DigestPreview() {
   if (!data) return <div className="admin-section">Building this week's digests…</div>;
   return (
     <div className="admin-section">
+      <p className="dg-quiet">Book news (anniversaries, birthdays, views) shows only what's already been looked up; new lookups happen when digests are sent.</p>
       {data.missing_copy.length > 0 && (
         <p>{data.missing_copy.length} piece(s) of copy still unwritten in digest_copy.py — nothing is delivered until they are.</p>
       )}
